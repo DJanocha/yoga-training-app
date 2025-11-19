@@ -6,6 +6,8 @@ import { Flame, Trophy, Clock, Star } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 // import { sum } from 'lodash'
 import { useQuery } from '@tanstack/react-query'
+import { RedirectToSignIn, SignedIn, AuthLoading, } from 'better-auth-ui'
+import { authClient } from '@/lib/auth-client'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -14,8 +16,26 @@ export const Route = createFileRoute('/')({
 const sum = (arr: number[]) => {
   return arr.reduce((acc, curr) => acc + curr, 0)
 }
+
 function Home() {
+  return (
+    <>
+      <AuthLoading>
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </AuthLoading>
+      <RedirectToSignIn />
+      <SignedIn>
+        <HomeContent />
+      </SignedIn>
+    </>
+  )
+}
+
+function HomeContent() {
   const trpc = useTRPC()
+  const {data: session} = authClient.useSession()
   const { data: settings, isLoading: settingsLoading } = useQuery(trpc.settings.get.queryOptions())
   const { data: stats, isLoading: statsLoading } = useQuery(trpc.executions.getDetailedStats.queryOptions())
   const { data: weekData, isLoading: weekLoading } = useQuery(trpc.executions.getWeeklyProgress.queryOptions())
@@ -23,14 +43,15 @@ function Home() {
   const currentStreak = settings?.currentStreak || 0
   const weeklyGoal = settings?.weeklyGoal || 3
 
-  console.log('IN INDEX PAGE 1')
   if (settingsLoading || statsLoading || weekLoading) {
-    console.log('IN INDEX PAGE 2 (loading)')
     return (
       <div className="flex justify-center items-center p-8">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
+  }
+  if(!session?.user){
+    return <RedirectToSignIn/>
   }
 
   // Calculate weekly progress
@@ -45,7 +66,7 @@ function Home() {
           <h1 className="text-3xl font-bold">YogaFlow</h1>
           <p className="text-muted-foreground">
             {settings?.userName
-              ? `Welcome back, ${settings.userName}!`
+              ? `Welcome back, ${session.user.name}!`
               : 'Build your yoga practice'}
           </p>
         </div>

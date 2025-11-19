@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import { z } from 'zod'
 import {
-  users,
+  user,
   exercises,
   sequences,
   sequenceExecutions,
@@ -11,10 +11,10 @@ import {
 import { refinedExerciseSchema, refinedSequenceSchema, refinedUserSettingsSchema } from './types'
 
 // ============================================================================
-// USERS SCHEMAS
+// USER SCHEMAS (from better-auth)
 // ============================================================================
-export const insertUserSchema = createInsertSchema(users)
-export const selectUserSchema = createSelectSchema(users)
+export const insertUserSchema = createInsertSchema(user)
+export const selectUserSchema = createSelectSchema(user)
 
 // ============================================================================
 // EXERCISES SCHEMAS

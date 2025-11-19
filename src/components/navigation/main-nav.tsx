@@ -1,6 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { WifiOff } from 'lucide-react'
+import { UserButton, SignedIn, SignedOut } from 'better-auth-ui'
 
 export function MainNav() {
   const location = useLocation()
@@ -41,6 +42,19 @@ export function MainNav() {
               </Link>
             )
           })}
+          <div className="flex items-center justify-center px-2">
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+            <SignedOut>
+              <Link
+                to="/login"
+                className="text-xs font-medium text-muted-foreground hover:text-primary"
+              >
+                Sign In
+              </Link>
+            </SignedOut>
+          </div>
         </div>
       </nav>
     </>

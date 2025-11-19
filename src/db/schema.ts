@@ -9,15 +9,9 @@ import {
   index,
 } from 'drizzle-orm/pg-core'
 
-// ============================================================================
-// USERS TABLE
-// ============================================================================
-export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  clerkId: text('clerk_id').notNull().unique(),
-  email: text('email').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
+// Re-export auth tables from better-auth schema
+export { user, session, account, verification } from './auth-schema'
+import { user } from './auth-schema'
 
 // ============================================================================
 // EXERCISES TABLE
@@ -28,7 +22,7 @@ export const exercises = pgTable(
     id: serial('id').primaryKey(),
     userId: text('user_id')
       .notNull()
-      .references(() => users.clerkId, { onDelete: 'cascade' }),
+      .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     description: text('description'),
     tips: text('tips'),
@@ -64,7 +58,7 @@ export const sequences = pgTable(
     id: serial('id').primaryKey(),
     userId: text('user_id')
       .notNull()
-      .references(() => users.clerkId, { onDelete: 'cascade' }),
+      .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     description: text('description'),
     level: text('level'), // 'beginner' | 'intermediate' | 'advanced'
@@ -96,7 +90,7 @@ export const sequenceExecutions = pgTable(
     id: serial('id').primaryKey(),
     userId: text('user_id')
       .notNull()
-      .references(() => users.clerkId, { onDelete: 'cascade' }),
+      .references(() => user.id, { onDelete: 'cascade' }),
     sequenceId: integer('sequence_id')
       .notNull()
       .references(() => sequences.id, { onDelete: 'cascade' }),
@@ -130,7 +124,7 @@ export const userSettings = pgTable(
     userId: text('user_id')
       .notNull()
       .unique()
-      .references(() => users.clerkId, { onDelete: 'cascade' }),
+      .references(() => user.id, { onDelete: 'cascade' }),
     userName: text('user_name').notNull(),
     beepEnabled: boolean('beep_enabled').default(false).notNull(),
     beepStartSeconds: integer('beep_start_seconds').default(3).notNull(),
@@ -162,7 +156,7 @@ export const achievements = pgTable(
     id: serial('id').primaryKey(),
     userId: text('user_id')
       .notNull()
-      .references(() => users.clerkId, { onDelete: 'cascade' }),
+      .references(() => user.id, { onDelete: 'cascade' }),
     badgeId: text('badge_id').notNull(),
     unlockedAt: timestamp('unlocked_at').notNull(),
     category: text('category').notNull(), // 'milestone' | 'streak' | 'personal-record' | 'consistency'

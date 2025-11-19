@@ -1,11 +1,28 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
+import { RedirectToSignIn, SignedIn, AuthLoading } from 'better-auth-ui'
 
 export const Route = createFileRoute('/sequences/')({
   component: Sequences,
 })
 
 function Sequences() {
+  return (
+    <>
+      <AuthLoading>
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </AuthLoading>
+      <RedirectToSignIn />
+      <SignedIn>
+        <SequencesContent />
+      </SignedIn>
+    </>
+  )
+}
+
+function SequencesContent() {
   const { data: sequences, isLoading } = useTRPC.sequences.list.useQuery()
 
   if (isLoading || !sequences) {

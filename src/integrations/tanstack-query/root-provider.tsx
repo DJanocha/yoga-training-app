@@ -9,6 +9,18 @@ import { TRPCProvider } from '../../lib/trpc'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { env } from '@/env'
 
+import { AuthQueryProvider } from '@daveyplate/better-auth-tanstack'
+import { AuthUIProviderTanstack } from 'better-auth-ui/tanstack'
+import { authClient } from '@/lib/auth-client'
+import { Link as RouterLink } from '@tanstack/react-router'
+
+// Create a wrapper for Link that better-auth-ui can use
+const Link = (props: { href: string; className?: string; children: React.ReactNode }) => (
+  <RouterLink to={props.href} className={props.className}>
+    {props.children}
+  </RouterLink>
+)
+
 function getUrl() {
   const base = (() => {
     if (typeof window !== 'undefined') return ''
@@ -54,7 +66,24 @@ export function Provider({
   return (
     <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        {children}
+        <AuthQueryProvider>
+          <AuthUIProviderTanstack
+            authClient={authClient}
+            navigate={(path: string) => {
+              if (typeof window !== 'undefined') {
+                window.location.href = path
+              }
+            }}
+            replace={(path: string) => {
+              if (typeof window !== 'undefined') {
+                window.location.replace(path)
+              }
+            }}
+            Link={Link}
+          >
+            {children}
+          </AuthUIProviderTanstack>
+        </AuthQueryProvider>
       </QueryClientProvider>
     </TRPCProvider>
   )

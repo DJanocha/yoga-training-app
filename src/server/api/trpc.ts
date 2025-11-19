@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
-import { auth } from '@clerk/tanstack-react-start/server'
+import { auth } from '@/lib/auth'
 
 /**
  * 1. CONTEXT
@@ -16,9 +16,11 @@ import { auth } from '@clerk/tanstack-react-start/server'
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (_opts: FetchCreateContextFnOptions) => {
-  const authData = await auth()
-  const userId = authData.userId ?? null
+export const createTRPCContext = async (opts: FetchCreateContextFnOptions) => {
+  const session = await auth.api.getSession({
+    headers: opts.req.headers,
+  })
+  const userId = session?.user?.id ?? null
 
   return {
     userId,

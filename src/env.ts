@@ -10,6 +10,8 @@ export const env = createEnv({
     DATABASE_URL: z.url().min(1),
     PORT: z.coerce.number().default(3333),
     API_PORT: z.coerce.number().default(3335),
+    BETTER_AUTH_SECRET: z.string().min(32),
+    BETTER_AUTH_URL: z.url().optional(),
   },
   /**
    * The prefix that client-side variables must have. This is enforced both at
@@ -20,8 +22,6 @@ export const env = createEnv({
   client: {},
   shared: {
     VITE_APP_TITLE: z.string().min(1).optional(),
-    VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-    // VITE_DATABASE_URL: z.url().min(1),
   },
 
   /**

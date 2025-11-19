@@ -1,15 +1,33 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
-import { UserButton } from '@clerk/tanstack-react-start'
-import { Download, Check } from 'lucide-react'
+import { signOut } from '@/lib/auth-client'
+import { Download, Check, LogOut } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
+import { RedirectToSignIn, SignedIn, AuthLoading } from 'better-auth-ui'
 
 export const Route = createFileRoute('/settings/')({
   component: Settings,
 })
 
 function Settings() {
+  return (
+    <>
+      <AuthLoading>
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </AuthLoading>
+      <RedirectToSignIn />
+      <SignedIn>
+        <SettingsContent />
+      </SignedIn>
+    </>
+  )
+}
+
+function SettingsContent() {
+  const navigate = useNavigate()
   const utils = useTRPC.useUtils()
   const { data: settings, isLoading } = useTRPC.settings.get.useQuery()
   const updateSettings = useTRPC.settings.update.useMutation({
@@ -278,10 +296,16 @@ function Settings() {
           )}
 
           <div className="flex justify-between items-center gap-2 pt-4 border-t">
-            <div className="flex items-center gap-2">
-              <UserButton />
-              <span className="text-sm text-muted-foreground">Manage account</span>
-            </div>
+            <button
+              onClick={async () => {
+                await signOut()
+                navigate({ to: '/login' })
+              }}
+              className="inline-flex items-center gap-2 justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
             <button
               onClick={handleSave}
               aria-label="Save all settings changes"
