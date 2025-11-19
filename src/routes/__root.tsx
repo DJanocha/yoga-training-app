@@ -46,7 +46,16 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
   }),
-
+  errorComponent: (props) => {
+    return <RootDocument>{props.error.message}</RootDocument>
+  },
+  notFoundComponent: () => (
+    <RootDocument>
+      <div className="flex items-center justify-center min-h-screen">
+        <h1 className="text-2xl font-bold">Page not found</h1>
+      </div>
+    </RootDocument>
+  ),
   shellComponent: RootDocument,
 })
 

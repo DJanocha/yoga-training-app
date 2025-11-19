@@ -11,6 +11,9 @@ importers:
       '@clerk/clerk-react':
         specifier: ^5.49.0
         version: 5.56.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/tanstack-react-start':
+        specifier: 0.27.2-snapshot.v20251113231557
+        version: 0.27.2-snapshot.v20251113231557(@tanstack/react-router@1.136.8(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@tanstack/react-start@1.136.8(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.2.2(@types/node@22.19.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@faker-js/faker':
         specifier: ^10.0.0
         version: 10.1.0
@@ -400,6 +403,10 @@ packages:
   '@clack/prompts@0.10.1':
     resolution: {integrity: sha512-Q0T02vx8ZM9XSv9/Yde0jTmmBQufZhPJfYAg2XrrrxWWaZgq1rr8nU8Hv710BQ1dhoP8rtY7YUdpGej2Qza/cw==}
 
+  '@clerk/backend@2.23.0':
+    resolution: {integrity: sha512-2wqdnYMtBdmqTOSyl8aEVaUezcDlizOY4hnXIRQ1A6ss1QjYiZJofjhpFJgC9SxNA29Nb9szkOsXQ7eI+gLY9g==}
+    engines: {node: '>=18.17.0'}
+
   '@clerk/clerk-react@5.56.0':
     resolution: {integrity: sha512-m3o/mY7bILxGE+o3lepclCFGMk18MttWz4Zs+jZp3RGAqu9GYjfBe41SletsdaSQLWYdxUzSLzZJ16pRY/wBDw==}
     engines: {node: '>=18.17.0'}
@@ -418,6 +425,19 @@ packages:
         optional: true
       react-dom:
         optional: true
+
+  '@clerk/tanstack-react-start@0.27.2-snapshot.v20251113231557':
+    resolution: {integrity: sha512-ujGX+qUTltBfZ0fhaZYAMRzISW2N33sQkdA4KUEfnDhVqvgtCz5hWd1GxFhrgYKWR2znHSwUtA6PaLjnti1HVQ==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      '@tanstack/react-router': ^1.132.0
+      '@tanstack/react-start': ^1.132.0
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+
+  '@clerk/types@4.101.0':
+    resolution: {integrity: sha512-Y9fRBgNoztH42a0sVIcNGdMX7KZl7i/+07fi35lw2K2Tqpc3cFUlZ5J4KAEAT8EN3/E6iPgsxHOyvCrTmQ2V+A==}
+    engines: {node: '>=18.17.0'}
 
   '@csstools/color-helpers@5.1.0':
     resolution: {integrity: sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA==}
@@ -1410,6 +1430,9 @@ packages:
     peerDependencies:
       solid-js: ^1.6.12
 
+  '@stablelib/base64@1.0.1':
+    resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
+
   '@t3-oss/env-core@0.13.8':
     resolution: {integrity: sha512-L1inmpzLQyYu4+Q1DyrXsGJYCXbtXjC4cICw1uAKv0ppYPQv656lhZPU91Qd1VS6SO/bou1/q5ufVzBGbNsUpw==}
     peerDependencies:
@@ -2002,6 +2025,10 @@ packages:
   cookie-es@2.0.0:
     resolution: {integrity: sha512-RAj4E421UYRgqokKUmotqAwuplYw15qtdXfY+hGzgCJ/MBjCVZcSoHK/kH9kocfjRjcDME7IiDWR/1WX1TM2Pg==}
 
+  cookie@1.0.2:
+    resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
+    engines: {node: '>=18'}
+
   copy-anything@4.0.5:
     resolution: {integrity: sha512-7Vv6asjS4gMOuILabD3l739tsaxFQmC+a7pLZm02zyvs8p977bL3zEgq3yDk5rn9B0PbYgIv++jmHcuUab4RhA==}
     engines: {node: '>=18'}
@@ -2247,6 +2274,9 @@ packages:
 
   exsolve@1.0.8:
     resolution: {integrity: sha512-LmDxfWXwcTArk8fUEnOfSZpHOJ6zOMUJKOtFLFqJLoKJetuQG874Uc7/Kki7zFLzYybmZhp1M7+98pfMqeX8yA==}
+
+  fast-sha256@1.3.0:
+    resolution: {integrity: sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==}
 
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
@@ -2804,6 +2834,9 @@ packages:
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
+
+  standardwebhooks@1.0.0:
+    resolution: {integrity: sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg==}
 
   std-env@3.10.0:
     resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
@@ -3394,6 +3427,17 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
+  '@clerk/backend@2.23.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@clerk/shared': 3.35.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/types': 4.101.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      cookie: 1.0.2
+      standardwebhooks: 1.0.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
   '@clerk/clerk-react@5.56.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@clerk/shared': 3.35.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -3412,6 +3456,25 @@ snapshots:
     optionalDependencies:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
+
+  '@clerk/tanstack-react-start@0.27.2-snapshot.v20251113231557(@tanstack/react-router@1.136.8(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@tanstack/react-start@1.136.8(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.2.2(@types/node@22.19.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@clerk/backend': 2.23.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/clerk-react': 5.56.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/shared': 3.35.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/types': 4.101.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@tanstack/react-router': 1.136.8(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@tanstack/react-start': 1.136.8(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.2.2(@types/node@22.19.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6))
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      tslib: 2.8.1
+
+  '@clerk/types@4.101.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@clerk/shared': 3.35.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@csstools/color-helpers@5.1.0': {}
 
@@ -4108,6 +4171,8 @@ snapshots:
   '@solid-primitives/utils@6.3.2(solid-js@1.9.10)':
     dependencies:
       solid-js: 1.9.10
+
+  '@stablelib/base64@1.0.1': {}
 
   '@t3-oss/env-core@0.13.8(typescript@5.9.3)(zod@4.1.12)':
     optionalDependencies:
@@ -4864,6 +4929,8 @@ snapshots:
 
   cookie-es@2.0.0: {}
 
+  cookie@1.0.2: {}
+
   copy-anything@4.0.5:
     dependencies:
       is-what: 5.5.0
@@ -5079,6 +5146,8 @@ snapshots:
   expect-type@1.2.2: {}
 
   exsolve@1.0.8: {}
+
+  fast-sha256@1.3.0: {}
 
   fdir@6.5.0(picomatch@4.0.3):
     optionalDependencies:
@@ -5579,6 +5648,11 @@ snapshots:
   srvx@0.8.16: {}
 
   stackback@0.0.2: {}
+
+  standardwebhooks@1.0.0:
+    dependencies:
+      '@stablelib/base64': 1.0.1
+      fast-sha256: 1.3.0
 
   std-env@3.10.0: {}
 
