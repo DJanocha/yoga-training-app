@@ -1,7 +1,7 @@
 import type { TRPCRouterRecord } from '@trpc/server'
 import { eq, and, isNull, desc } from 'drizzle-orm'
-import { db } from '~/db'
-import { sequences } from '~/db/schema'
+import {db } from '@/db'
+import { sequences } from '../../../db/schema'
 import {
   getSequenceByIdInputValidator,
   calculateSequenceDurationInputValidator,
@@ -10,7 +10,7 @@ import {
   deleteSequenceInputValidator,
   duplicateSequenceInputValidator,
   toggleSequenceFavoriteInputValidator,
-} from '~/validators/api/sequences'
+} from '../../../validators/api/sequences'
 import { protectedProcedure } from '../trpc'
 
 export const sequencesRouter = {

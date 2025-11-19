@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { insertExerciseSchema, updateExerciseSchema } from '~/db/schemas'
-import { Level, Category, BodyPart } from '~/db/types'
+import { insertExerciseSchema, updateExerciseSchema } from '../../db/schemas'
+import { Level, Category, BodyPart } from '../../db/types'
 
 /**
  * Validator for filtering exercises by level, category, and body part

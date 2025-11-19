@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
-import { trpc } from '~/lib/trpc'
+import { useTRPC } from '@/lib/trpc'
 
 export function useTheme() {
-  const { data: settings } = trpc.settings.get.useQuery()
+  const { data: settings } = useTRPC.settings.get.useQuery()
   const theme = settings?.theme || 'energy'
 
   useEffect(() => {

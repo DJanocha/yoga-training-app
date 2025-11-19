@@ -7,6 +7,10 @@ import tailwindcss from '@tailwindcss/vite'
 import neon from './neon-vite-plugin.ts'
 
 const config = defineConfig({
+  resolve: {alias: [{
+    find: "use-sync-external-store/shim/index.js",
+    replacement: "react",
+  }]},
   plugins: [
     devtools(),
     neon,

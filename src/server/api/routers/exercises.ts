@@ -1,14 +1,14 @@
 import type { TRPCRouterRecord } from '@trpc/server'
 import { eq, and, isNull, sql } from 'drizzle-orm'
-import { db } from '~/db'
-import { exercises } from '~/db/schema'
+import {db } from '@/db'
+import { exercises } from '../../../db/schema'
 import {
   getFilteredExercisesInputValidator,
   getExerciseByIdInputValidator,
   createExerciseInputValidator,
   updateExerciseInputValidator,
   deleteExerciseInputValidator,
-} from '~/validators/api/exercises'
+} from '../../../validators/api/exercises'
 import { protectedProcedure } from '../trpc'
 
 export const exercisesRouter = {

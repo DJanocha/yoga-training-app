@@ -14,37 +14,37 @@ This document defines the standard patterns for creating forms in this codebase.
 ### Basic Structure
 
 ```tsx
-import { useForm } from '@tanstack/react-form'
-import { useMutation } from 'convex/react'
-import { api } from '../../convex/_generated/api'
-import { Alert, AlertTitle, AlertDescription } from '~/components/ui/alert'
-import { useState } from 'react'
+import { useForm } from "@tanstack/react-form";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useState } from "react";
 
 export function ExampleForm({ onSuccess }: { onSuccess: () => void }) {
-  const mutation = useMutation(api.module.mutationName)
-  const [error, setError] = useState<string | null>(null)
+  const mutation = useMutation(api.module.mutationName);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
-      name: '',
-      email: '',
+      name: "",
+      email: "",
     },
     onSubmit: async ({ value }) => {
-      setError(null)
+      setError(null);
       try {
-        await mutation(value)
-        onSuccess()
+        await mutation(value);
+        onSuccess();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
+        setError(err instanceof Error ? err.message : "An error occurred");
       }
     },
-  })
+  });
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
+        e.preventDefault();
+        form.handleSubmit();
       }}
       className="space-y-6"
     >
@@ -58,8 +58,7 @@ export function ExampleForm({ onSuccess }: { onSuccess: () => void }) {
       <form.Field
         name="name"
         validators={{
-          onChange: ({ value }) =>
-            !value ? 'Name is required' : undefined,
+          onChange: ({ value }) => (!value ? "Name is required" : undefined),
         }}
         children={(field) => (
           <div>
@@ -88,10 +87,10 @@ export function ExampleForm({ onSuccess }: { onSuccess: () => void }) {
         disabled={form.state.isSubmitting}
         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
       >
-        {form.state.isSubmitting ? 'Saving...' : 'Save'}
+        {form.state.isSubmitting ? "Saving..." : "Save"}
       </button>
     </form>
-  )
+  );
 }
 ```
 
@@ -100,12 +99,14 @@ export function ExampleForm({ onSuccess }: { onSuccess: () => void }) {
 ### 1. Error Handling
 
 **DO:**
+
 - Use Alert component for async mutation errors
 - Show errors inline, never use `alert()`
 - Clear error state on new submission attempts
 - Provide specific error messages from backend
 
 **DON'T:**
+
 - Use `alert()` for any errors
 - Use generic "Something went wrong" messages
 - Leave errors from previous attempts visible during retry
@@ -113,6 +114,7 @@ export function ExampleForm({ onSuccess }: { onSuccess: () => void }) {
 ### 2. Validation
 
 **Field-level validation:**
+
 ```tsx
 validators={{
   onChange: ({ value }) => {
@@ -124,6 +126,7 @@ validators={{
 ```
 
 **Form-level validation:**
+
 ```tsx
 validators={{
   onSubmit: ({ value }) => {
@@ -138,23 +141,28 @@ validators={{
 ### 3. Loading States
 
 Always disable submit button during submission:
+
 ```tsx
 disabled={form.state.isSubmitting}
 ```
 
 Show loading text:
+
 ```tsx
-{form.state.isSubmitting ? 'Saving...' : 'Save'}
+{
+  form.state.isSubmitting ? "Saving..." : "Save";
+}
 ```
 
 ### 4. Success Handling
 
 Use callbacks, not alerts:
+
 ```tsx
 onSubmit: async ({ value }) => {
-  await mutation(value)
-  onSuccess() // Close modal, navigate, etc.
-}
+  await mutation(value);
+  onSuccess(); // Close modal, navigate, etc.
+};
 ```
 
 ## Common Patterns
@@ -168,55 +176,56 @@ defaultValues: {
 ```
 
 Submit only if not empty:
+
 ```tsx
 const data = {
   name: value.name,
   description: value.description.trim() || undefined,
-}
+};
 ```
 
 ### Arrays (e.g., tags, links)
 
 ```tsx
-const [items, setItems] = useState<string[]>([])
-const [inputValue, setInputValue] = useState('')
+const [items, setItems] = useState<string[]>([]);
+const [inputValue, setInputValue] = useState("");
 
 const addItem = () => {
   if (inputValue.trim()) {
-    setItems([...items, inputValue.trim()])
-    setInputValue('')
+    setItems([...items, inputValue.trim()]);
+    setInputValue("");
   }
-}
+};
 
 const removeItem = (index: number) => {
-  setItems(items.filter((_, i) => i !== index))
-}
+  setItems(items.filter((_, i) => i !== index));
+};
 ```
 
 ### File Uploads
 
 ```tsx
-const [fileId, setFileId] = useState<Id<'_storage'> | undefined>()
-const [uploading, setUploading] = useState(false)
-const generateUploadUrl = useMutation(api.module.generateUploadUrl)
+const [fileId, setFileId] = useState<Id<"_storage"> | undefined>();
+const [uploading, setUploading] = useState(false);
+const generateUploadUrl = useMutation(api.module.generateUploadUrl);
 
 const handleFileUpload = async (file: File) => {
-  setUploading(true)
+  setUploading(true);
   try {
-    const uploadUrl = await generateUploadUrl()
+    const uploadUrl = await generateUploadUrl();
     const result = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': file.type },
+      method: "POST",
+      headers: { "Content-Type": file.type },
       body: file,
-    })
-    const { storageId } = await result.json()
-    setFileId(storageId)
+    });
+    const { storageId } = await result.json();
+    setFileId(storageId);
   } catch (err) {
-    setError('Failed to upload file')
+    setError("Failed to upload file");
   } finally {
-    setUploading(false)
+    setUploading(false);
   }
-}
+};
 ```
 
 ## Alert Variants
@@ -244,34 +253,36 @@ const handleFileUpload = async (file: File) => {
 ## Migration from Old Pattern
 
 **Before (React state + alert):**
+
 ```tsx
-const [name, setName] = useState('')
+const [name, setName] = useState("");
 
 const handleSubmit = async (e: FormEvent) => {
-  e.preventDefault()
+  e.preventDefault();
   try {
-    await mutation({ name })
+    await mutation({ name });
   } catch (error) {
-    alert('Failed to save')
+    alert("Failed to save");
   }
-}
+};
 ```
 
 **After (TanStack Form + Alert):**
+
 ```tsx
-const [error, setError] = useState<string | null>(null)
+const [error, setError] = useState<string | null>(null);
 
 const form = useForm({
-  defaultValues: { name: '' },
+  defaultValues: { name: "" },
   onSubmit: async ({ value }) => {
-    setError(null)
+    setError(null);
     try {
-      await mutation(value)
+      await mutation(value);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save')
+      setError(err instanceof Error ? err.message : "Failed to save");
     }
   },
-})
+});
 ```
 
 ## References

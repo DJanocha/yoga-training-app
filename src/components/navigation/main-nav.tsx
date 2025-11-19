@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { useOnlineStatus } from '~/hooks/useOnlineStatus'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { WifiOff } from 'lucide-react'
 
 export function MainNav() {

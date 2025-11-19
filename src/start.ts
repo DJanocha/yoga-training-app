@@ -3,6 +3,9 @@ import { createStart } from '@tanstack/react-start'
 
 export const startInstance = createStart(() => {
   return {
-    requestMiddleware: [clerkMiddleware()],
+    // Temporarily disable Clerk middleware due to compatibility issues
+    // with the snapshot version
+    requestMiddleware: [],
+    // requestMiddleware: [clerkMiddleware()],
   }
 })

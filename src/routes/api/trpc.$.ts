@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
-import { appRouter, createTRPCContext } from '~/server/api'
+import { appRouter, createTRPCContext } from '../../server/api'
 
 const handler = (req: Request) =>
   fetchRequestHandler({

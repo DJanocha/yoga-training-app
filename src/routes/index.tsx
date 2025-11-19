@@ -1,118 +1,173 @@
-import { createFileRoute } from '@tanstack/react-router'
-import {
-  Zap,
-  Server,
-  Route as RouteIcon,
-  Shield,
-  Waves,
-  Sparkles,
-} from 'lucide-react'
+import { Link, createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/')({ component: App })
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Flame, Trophy, Clock, Star } from 'lucide-react'
+import { useTRPC } from '@/lib/trpc'
+// import { sum } from 'lodash'
+import { useQuery } from '@tanstack/react-query'
 
-function App() {
-  const features = [
-    {
-      icon: <Zap className="w-12 h-12 text-cyan-400" />,
-      title: 'Powerful Server Functions',
-      description:
-        'Write server-side code that seamlessly integrates with your client components. Type-safe, secure, and simple.',
-    },
-    {
-      icon: <Server className="w-12 h-12 text-cyan-400" />,
-      title: 'Flexible Server Side Rendering',
-      description:
-        'Full-document SSR, streaming, and progressive enhancement out of the box. Control exactly what renders where.',
-    },
-    {
-      icon: <RouteIcon className="w-12 h-12 text-cyan-400" />,
-      title: 'API Routes',
-      description:
-        'Build type-safe API endpoints alongside your application. No separate backend needed.',
-    },
-    {
-      icon: <Shield className="w-12 h-12 text-cyan-400" />,
-      title: 'Strongly Typed Everything',
-      description:
-        'End-to-end type safety from server to client. Catch errors before they reach production.',
-    },
-    {
-      icon: <Waves className="w-12 h-12 text-cyan-400" />,
-      title: 'Full Streaming Support',
-      description:
-        'Stream data from server to client progressively. Perfect for AI applications and real-time updates.',
-    },
-    {
-      icon: <Sparkles className="w-12 h-12 text-cyan-400" />,
-      title: 'Next Generation Ready',
-      description:
-        'Built from the ground up for modern web applications. Deploy anywhere JavaScript runs.',
-    },
-  ]
+export const Route = createFileRoute('/')({
+  component: Home,
+})
+
+const sum = (arr: number[]) => {
+  return arr.reduce((acc, curr) => acc + curr, 0)
+}
+function Home() {
+  const trpc = useTRPC()
+  const { data: settings, isLoading: settingsLoading } = useQuery(trpc.settings.get.queryOptions())
+  const { data: stats, isLoading: statsLoading } = useQuery(trpc.executions.getDetailedStats.queryOptions())
+  const { data: weekData, isLoading: weekLoading } = useQuery(trpc.executions.getWeeklyProgress.queryOptions())
+
+  const currentStreak = settings?.currentStreak || 0
+  const weeklyGoal = settings?.weeklyGoal || 3
+
+  console.log('IN INDEX PAGE 1')
+  if (settingsLoading || statsLoading || weekLoading) {
+    console.log('IN INDEX PAGE 2 (loading)')
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  // Calculate weekly progress
+  const workoutsThisWeek = sum(weekData?.map(day => day.workouts) || [])
+  const weeklyProgressPercent = Math.min((workoutsThisWeek / weeklyGoal) * 100, 100)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      <section className="relative py-20 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"></div>
-        <div className="relative max-w-5xl mx-auto">
-          <div className="flex items-center justify-center gap-6 mb-6">
-            <img
-              src="/tanstack-circle-logo.png"
-              alt="TanStack Logo"
-              className="w-24 h-24 md:w-32 md:h-32"
-            />
-            <h1 className="text-6xl md:text-7xl font-black text-white [letter-spacing:-0.08em]">
-              <span className="text-gray-300">TANSTACK</span>{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                START
-              </span>
-            </h1>
-          </div>
-          <p className="text-2xl md:text-3xl text-gray-300 mb-4 font-light">
-            The framework for next generation AI applications
+    <div className="container mx-auto px-4 py-8 max-w-2xl pb-24">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold">YogaFlow</h1>
+          <p className="text-muted-foreground">
+            {settings?.userName
+              ? `Welcome back, ${settings.userName}!`
+              : 'Build your yoga practice'}
           </p>
-          <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
-            Full-stack framework powered by TanStack Router for React and Solid.
-            Build modern applications with server functions, streaming, and type
-            safety.
-          </p>
-          <div className="flex flex-col items-center gap-4">
-            <a
-              href="https://tanstack.com/start"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-cyan-500/50"
-            >
-              Documentation
-            </a>
-            <p className="text-gray-400 text-sm mt-2">
-              Begin your TanStack Start journey by editing{' '}
-              <code className="px-2 py-1 bg-slate-700 rounded text-cyan-400">
-                /src/routes/index.tsx
-              </code>
-            </p>
-          </div>
         </div>
-      </section>
 
-      <section className="py-16 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10"
-            >
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold text-white mb-3">
-                {feature.title}
-              </h3>
-              <p className="text-gray-400 leading-relaxed">
-                {feature.description}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Flame className="h-4 w-4 text-orange-500" />
+                Streak
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{currentStreak}</div>
+              <p className="text-xs text-muted-foreground">
+                {currentStreak === 1 ? 'day' : 'days'}
               </p>
-            </div>
-          ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-yellow-500" />
+                Total Workouts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.totalWorkouts || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">completed</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-500" />
+                Total Time
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.totalMinutes || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">minutes</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Star className="h-4 w-4 text-purple-500" />
+                Avg Rating
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.avgRating ? stats.avgRating.toFixed(1) : '-'}
+              </div>
+              <p className="text-xs text-muted-foreground">out of 5</p>
+            </CardContent>
+          </Card>
         </div>
-      </section>
+
+        {/* Weekly Goal Progress */}
+        {weeklyGoal > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">
+                Weekly Goal Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {workoutsThisWeek} / {weeklyGoal} workouts
+                </span>
+                <span className="font-medium">{Math.round(weeklyProgressPercent)}%</span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 transition-all duration-300"
+                  style={{ width: `${weeklyProgressPercent}%` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Personal Records */}
+        {stats && stats.personalRecords > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-yellow-500" />
+                Personal Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                You've set {stats.personalRecords} personal{' '}
+                {stats.personalRecords === 1 ? 'record' : 'records'}!
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Quick Actions */}
+        <div className="space-y-3">
+          <Link to="/sequences">
+            <Button className="w-full">Start Workout</Button>
+          </Link>
+          <Link to="/sequences">
+            <Button variant="outline" className="w-full bg-transparent">
+              Browse Sequences
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

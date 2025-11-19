@@ -1,8 +1,8 @@
 import type { TRPCRouterRecord } from '@trpc/server'
 import { eq, and, isNotNull } from 'drizzle-orm'
-import { db } from '~/db'
-import { userSettings, sequenceExecutions, achievements } from '~/db/schema'
-import { updateUserSettingsInputValidator } from '~/validators/api/settings'
+import {db } from '@/db'
+import { userSettings, sequenceExecutions, achievements } from '../../../db/schema'
+import { updateUserSettingsInputValidator } from '../../../validators/api/settings'
 import { protectedProcedure } from '../trpc'
 
 export const settingsRouter = {

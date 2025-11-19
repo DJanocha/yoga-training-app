@@ -1,7 +1,7 @@
-import { trpc } from '~/lib/trpc'
+import { useTRPC } from '@/lib/trpc'
 
 export function useHaptic() {
-  const { data: settings } = trpc.settings.get.useQuery()
+  const { data: settings } = useTRPC.settings.get.useQuery()
   const hapticEnabled = settings?.hapticEnabled ?? true
 
   const vibrate = (pattern: number | number[]) => {

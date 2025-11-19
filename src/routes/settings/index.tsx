@@ -1,18 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { usePWAInstall } from '~/hooks/usePWAInstall'
+import { usePWAInstall } from '@/hooks/usePWAInstall'
 import { UserButton } from '@clerk/tanstack-react-start'
 import { Download, Check } from 'lucide-react'
-import { trpc } from '~/lib/trpc'
+import { useTRPC } from '@/lib/trpc'
 
 export const Route = createFileRoute('/settings/')({
   component: Settings,
 })
 
 function Settings() {
-  const utils = trpc.useUtils()
-  const { data: settings, isLoading } = trpc.settings.get.useQuery()
-  const updateSettings = trpc.settings.update.useMutation({
+  const utils = useTRPC.useUtils()
+  const { data: settings, isLoading } = useTRPC.settings.get.useQuery()
+  const updateSettings = useTRPC.settings.update.useMutation({
     onSuccess: () => {
       utils.settings.get.invalidate()
     },

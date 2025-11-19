@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { trpc } from '~/lib/trpc'
+import { useTRPC } from '@/lib/trpc'
 
 export const Route = createFileRoute('/sequences/')({
   component: Sequences,
 })
 
 function Sequences() {
-  const { data: sequences, isLoading } = trpc.sequences.list.useQuery()
+  const { data: sequences, isLoading } = useTRPC.sequences.list.useQuery()
 
   if (isLoading || !sequences) {
     return (

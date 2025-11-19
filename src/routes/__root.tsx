@@ -6,7 +6,6 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
-import Header from '../components/Header'
 
 import ClerkProvider from '../integrations/clerk/provider'
 
@@ -16,13 +15,14 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 
-import type { TRPCRouter } from '@/integrations/trpc/router'
+import type { AppRouter } from '../server/api'
 import type { TRPCOptionsProxy } from '@trpc/tanstack-react-query'
+import { env } from '@/env'
 
 interface MyRouterContext {
   queryClient: QueryClient
 
-  trpc: TRPCOptionsProxy<TRPCRouter>
+  trpc: TRPCOptionsProxy<AppRouter>
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
@@ -60,6 +60,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+
   return (
     <html lang="en">
       <head>
@@ -67,7 +68,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ClerkProvider>
-          <Header />
           {children}
           <TanStackDevtools
             config={{

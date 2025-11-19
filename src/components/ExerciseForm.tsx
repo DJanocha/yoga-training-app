@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
-import { trpc } from '~/lib/trpc'
-import type { Level, Category, BodyPart } from '~/db/types'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useTRPC } from '@/lib/trpc'
+import type { Level, Category, BodyPart } from '@/db/types'
 
 interface ExerciseFormProps {
   exerciseId: number | null
@@ -10,21 +10,21 @@ interface ExerciseFormProps {
 }
 
 export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
-  const utils = trpc.useUtils()
+  const utils = useTRPC.useUtils()
 
-  const { data: exercise, isLoading } = trpc.exercises.byId.useQuery(
+  const { data: exercise, isLoading } = useTRPC.exercises.byId.useQuery(
     { id: exerciseId! },
     { enabled: exerciseId !== null },
   )
 
-  const create = trpc.exercises.create.useMutation({
+  const create = useTRPC.exercises.create.useMutation({
     onSuccess: () => {
       utils.exercises.list.invalidate()
       utils.exercises.filteredList.invalidate()
     },
   })
 
-  const update = trpc.exercises.update.useMutation({
+  const update = useTRPC.exercises.update.useMutation({
     onSuccess: () => {
       utils.exercises.list.invalidate()
       utils.exercises.filteredList.invalidate()

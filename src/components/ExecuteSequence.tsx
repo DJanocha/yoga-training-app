@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Star, Trophy } from 'lucide-react'
-import { useHaptic } from '~/hooks/useHaptic'
-import { trpc } from '~/lib/trpc'
+import { useHaptic } from '@/hooks/useHaptic'
+import { useTRPC } from '@/lib/trpc'
 
 interface ExecuteSequenceProps {
   sequenceId: number;
@@ -9,21 +9,21 @@ interface ExecuteSequenceProps {
 }
 
 export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
-  const utils = trpc.useUtils()
-  const { data: sequence, isLoading: sequenceLoading } = trpc.sequences.byId.useQuery({ id: sequenceId })
-  const { data: exercises, isLoading: exercisesLoading } = trpc.exercises.list.useQuery()
-  const { data: settings, isLoading: settingsLoading } = trpc.settings.get.useQuery()
+  const utils = useTRPC.useUtils()
+  const { data: sequence, isLoading: sequenceLoading } = useTRPC.sequences.byId.useQuery({ id: sequenceId })
+  const { data: exercises, isLoading: exercisesLoading } = useTRPC.exercises.list.useQuery()
+  const { data: settings, isLoading: settingsLoading } = useTRPC.settings.get.useQuery()
 
-  const startExecution = trpc.executions.start.useMutation()
-  const updateExecution = trpc.executions.updateExecution.useMutation({
+  const startExecution = useTRPC.executions.start.useMutation()
+  const updateExecution = useTRPC.executions.updateExecution.useMutation({
     onSuccess: () => {
       utils.executions.getHistory.invalidate()
       utils.executions.getUserStats.invalidate()
     },
   })
-  const submitRatingMutation = trpc.executions.submitRating.useMutation()
-  const calculateStreak = trpc.settings.calculateStreak.useMutation()
-  const checkBadges = trpc.settings.checkBadges.useMutation()
+  const submitRatingMutation = useTRPC.executions.submitRating.useMutation()
+  const calculateStreak = useTRPC.settings.calculateStreak.useMutation()
+  const checkBadges = useTRPC.settings.checkBadges.useMutation()
   const haptic = useHaptic();
 
 
@@ -305,7 +305,7 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
       ? { name: "Break", photoUrls: [], links: [] }
       : exercises.find((e) => e.id === currentExercise.exerciseId);
 
-  const { data: lastAttemptData } = trpc.executions.getLastAttempt.useQuery(
+  const { data: lastAttemptData } = useTRPC.executions.getLastAttempt.useQuery(
     { exerciseId: currentExercise.exerciseId as number },
     { enabled: currentExercise.exerciseId !== "break" }
   );

@@ -1,14 +1,14 @@
 import type { TRPCRouterRecord } from '@trpc/server'
 import { eq, and, isNotNull, gte, lte, desc } from 'drizzle-orm'
-import { db } from '~/db'
-import { sequenceExecutions, sequences, exercises as exercisesTable, achievements } from '~/db/schema'
+import {db } from '@/db'
+import { sequenceExecutions, sequences, exercises as exercisesTable, achievements } from '../../../db/schema'
 import {
   startExecutionInputValidator,
   updateExecutionInputValidator,
   getExecutionHistoryInputValidator,
   getLastAttemptInputValidator,
   submitRatingInputValidator,
-} from '~/validators/api/executions'
+} from '../../../validators/api/executions'
 import { protectedProcedure } from '../trpc'
 
 export const executionsRouter = {

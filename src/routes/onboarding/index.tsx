@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { trpc } from '~/lib/trpc'
+import { useTRPC } from '@/lib/trpc'
 
 export const Route = createFileRoute('/onboarding/')({
   component: Onboarding,
@@ -8,7 +8,7 @@ export const Route = createFileRoute('/onboarding/')({
 
 function Onboarding() {
   const navigate = useNavigate()
-  const updateSettings = trpc.settings.update.useMutation()
+  const updateSettings = useTRPC.settings.update.useMutation()
   const [step, setStep] = useState(0)
   const [profile, setProfile] = useState({ name: '', level: 'beginner' })
   const [saving, setSaving] = useState(false)
