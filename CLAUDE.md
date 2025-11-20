@@ -162,6 +162,10 @@ Type-safe API endpoints defined in `src/server/api/routers/`:
 
 ## Key Patterns
 
+### TypeScript Style
+
+- **Prefer `type` over `interface`**: Always use `type` aliases instead of `interface` declarations for type definitions
+
 ### tRPC Patterns
 
 1. **Router structure**:
