@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { ExerciseForm } from './ExerciseForm'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Dumbbell } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 import type { Level, Category, BodyPart } from '@/db/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { MobilePageHeader } from '@/components/mobile-page-header'
+import { EmptyState } from '@/components/empty-state'
 
 export function ExerciseList() {
   const trpc = useTRPC()
@@ -91,15 +93,31 @@ export function ExerciseList() {
     )
   }
 
+  const handleSearch = () => {
+    // TODO: Open search
+    setShowFilters(!showFilters)
+  }
+
   return (
-    <div className="p-4 max-w-4xl mx-auto pb-24">
-      <div className="mb-6 space-y-4">
+    <div className="space-y-4">
+      {/* Mobile Header */}
+      <MobilePageHeader
+        title="Exercises"
+        onAdd={() => setShowForm(true)}
+        onSearch={handleSearch}
+      />
+
+      {/* Desktop Header */}
+      <div className="hidden md:block mb-6">
         <button
           onClick={() => setShowForm(true)}
           className="w-full min-h-[44px] px-6 py-3 bg-blue-600 text-white text-base font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
         >
           + Add Exercise
         </button>
+      </div>
+
+      <div className="space-y-4">
 
         {/* Filter Toggle */}
         <button
@@ -184,13 +202,19 @@ export function ExerciseList() {
       </div>
 
       {exercises.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <p className="text-lg">
-            {level || category || bodyPart
-              ? 'No exercises match your filters.'
-              : 'No exercises yet. Create your first one!'}
-          </p>
-        </div>
+        level || category || bodyPart ? (
+          <div className="text-center py-12 text-gray-500">
+            <p className="text-lg">No exercises match your filters.</p>
+          </div>
+        ) : (
+          <EmptyState
+            icon={Dumbbell}
+            title="No exercises yet"
+            description="Create your first exercise to start building your workout library."
+            actionLabel="+ Create Exercise"
+            onAction={() => setShowForm(true)}
+          />
+        )
       ) : (
         <div className="space-y-3">
           {exercises.map((exercise) => (

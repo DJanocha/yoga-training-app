@@ -2,6 +2,9 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from 'better-auth-ui'
 import { useQuery } from '@tanstack/react-query'
+import { ListOrdered } from 'lucide-react'
+import { MobilePageHeader } from '@/components/mobile-page-header'
+import { EmptyState } from '@/components/empty-state'
 
 export const Route = createFileRoute('/sequences/')({
   component: Sequences,
@@ -35,9 +38,27 @@ function SequencesContent() {
     )
   }
 
+  const handleAdd = () => {
+    // TODO: Open create sequence modal/page
+    console.log('Create sequence')
+  }
+
+  const handleSearch = () => {
+    // TODO: Open search
+    console.log('Search sequences')
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Mobile Header */}
+      <MobilePageHeader
+        title="Sequences"
+        onAdd={handleAdd}
+        onSearch={handleSearch}
+      />
+
+      {/* Desktop Header */}
+      <div className="hidden md:flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Sequences</h1>
           <p className="text-muted-foreground">Browse and start workouts</p>
@@ -52,9 +73,10 @@ function SequencesContent() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {sequences && sequences.length > 0 ? (
-          sequences.map((seq) => (
+      {/* Content */}
+      {sequences && sequences.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {sequences.map((seq) => (
             <div
               key={seq.id}
               className="rounded-lg border bg-card text-card-foreground shadow-sm transition-colors hover:border-primary"
@@ -78,13 +100,17 @@ function SequencesContent() {
                 </button>
               </div>
             </div>
-          ))
-        ) : (
-          <div className="col-span-full rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No sequences yet. Create your first plan to get started.
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={ListOrdered}
+          title="No sequences yet"
+          description="Create your first workout sequence to get started with your training."
+          actionLabel="+ Create Sequence"
+          onAction={handleAdd}
+        />
+      )}
     </div>
   )
 }
