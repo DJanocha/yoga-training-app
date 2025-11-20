@@ -1,7 +1,9 @@
 import {
   HeadContent,
+  Outlet,
   Scripts,
   createRootRouteWithContext,
+  useLocation,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -16,11 +18,32 @@ import type { AppRouter } from '../server/api'
 import type { TRPCOptionsProxy } from '@trpc/tanstack-react-query'
 
 import { Toaster } from '@/components/ui/sonner'
+import { AppSidebarLayout } from '@/components/app-sidebar'
 
 interface MyRouterContext {
   queryClient: QueryClient
 
   trpc: TRPCOptionsProxy<AppRouter>
+}
+
+// Routes that should NOT show the sidebar navigation
+const noSidebarRoutes = ['/login', '/auth', '/onboarding']
+
+function RootComponent() {
+  const location = useLocation()
+  const shouldShowSidebar = !noSidebarRoutes.some(route =>
+    location.pathname === route || location.pathname.startsWith(`${route}/`)
+  )
+
+  if (shouldShowSidebar) {
+    return (
+      <AppSidebarLayout>
+        <Outlet />
+      </AppSidebarLayout>
+    )
+  }
+
+  return <Outlet />
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
@@ -34,7 +57,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Yoga Training',
       },
     ],
     links: [
@@ -44,6 +67,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
   }),
+  component: RootComponent,
   errorComponent: (props) => {
     return <RootDocument>{props.error.message}</RootDocument>
   },
