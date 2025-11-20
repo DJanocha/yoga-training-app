@@ -1,19 +1,34 @@
 import { useState } from 'react'
 import { ExerciseForm } from './ExerciseForm'
-import { ChevronDown, ChevronUp, Dumbbell } from 'lucide-react'
+import { Dumbbell } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 import type { Level, Category, BodyPart } from '@/db/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MobilePageHeader } from '@/components/mobile-page-header'
 import { EmptyState } from '@/components/empty-state'
+import { ActionBar } from '@/components/action-bar'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 
 export function ExerciseList() {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+
+  // Filter state
   const [level, setLevel] = useState<string>("")
   const [category, setCategory] = useState<string>("")
   const [bodyPart, setBodyPart] = useState<string>("")
-  const [showFilters, setShowFilters] = useState(false)
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("")
+
+  // Selected item for copy functionality
+  const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined)
+
+  // Create form state
+  const [newExerciseName, setNewExerciseName] = useState("")
+
+  // UI state
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set())
 
 
@@ -93,113 +108,111 @@ export function ExerciseList() {
     )
   }
 
-  const handleSearch = () => {
-    // TODO: Open search
-    setShowFilters(!showFilters)
+  // Calculate active filter count
+  const filterCount = [level, category, bodyPart].filter(Boolean).length
+
+  // Handle copy/duplicate exercise
+  const handleCopyExercise = (itemId: string) => {
+    // TODO: Implement exercise duplication
+    console.log('Copy exercise:', itemId)
   }
 
-  return (
+  // Handle create exercise from quick form
+  const handleQuickCreate = () => {
+    if (newExerciseName.trim()) {
+      // For now, open the full form
+      // TODO: Implement quick create mutation
+      setShowForm(true)
+      setNewExerciseName("")
+    }
+  }
+
+  // Filter content for ActionBar
+  const filterContent = (
     <div className="space-y-4">
-      {/* Mobile Header */}
-      <MobilePageHeader
-        title="Exercises"
-        onAdd={() => setShowForm(true)}
-        onSearch={handleSearch}
+      <div>
+        <Label className="text-sm font-medium">Level</Label>
+        <Select value={level} onValueChange={setLevel}>
+          <SelectTrigger className="mt-1.5">
+            <SelectValue placeholder="All levels" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All levels</SelectItem>
+            <SelectItem value="beginner">Beginner</SelectItem>
+            <SelectItem value="intermediate">Intermediate</SelectItem>
+            <SelectItem value="advanced">Advanced</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label className="text-sm font-medium">Category</Label>
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="mt-1.5">
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            <SelectItem value="yoga">Yoga</SelectItem>
+            <SelectItem value="calisthenics">Calisthenics</SelectItem>
+            <SelectItem value="cardio">Cardio</SelectItem>
+            <SelectItem value="flexibility">Flexibility</SelectItem>
+            <SelectItem value="strength">Strength</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label className="text-sm font-medium">Body Part</Label>
+        <Select value={bodyPart} onValueChange={setBodyPart}>
+          <SelectTrigger className="mt-1.5">
+            <SelectValue placeholder="All body parts" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All body parts</SelectItem>
+            <SelectItem value="arms">Arms</SelectItem>
+            <SelectItem value="legs">Legs</SelectItem>
+            <SelectItem value="core">Core</SelectItem>
+            <SelectItem value="back">Back</SelectItem>
+            <SelectItem value="chest">Chest</SelectItem>
+            <SelectItem value="shoulders">Shoulders</SelectItem>
+            <SelectItem value="full-body">Full Body</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  )
+
+  // Create content for ActionBar
+  const createContent = (
+    <div>
+      <Label htmlFor="quick-name" className="text-sm font-medium">
+        Exercise Name
+      </Label>
+      <Input
+        id="quick-name"
+        placeholder="Enter exercise name"
+        value={newExerciseName}
+        onChange={(e) => setNewExerciseName(e.target.value)}
+        className="mt-1.5"
+        autoFocus
       />
+    </div>
+  )
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="flex items-center justify-between p-4 border-b border-border md:hidden">
+        <h1 className="text-2xl font-bold">Exercises</h1>
+      </header>
 
       {/* Desktop Header */}
-      <div className="hidden md:block mb-6">
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full min-h-[44px] px-6 py-3 bg-blue-600 text-white text-base font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-        >
-          + Add Exercise
-        </button>
+      <div className="hidden md:block mb-6 p-4">
+        <h1 className="text-3xl font-bold">Exercises</h1>
+        <p className="text-muted-foreground">Manage your exercise library</p>
       </div>
 
-      <div className="space-y-4">
-
-        {/* Filter Toggle */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="w-full min-h-[44px] px-6 py-3 bg-gray-100 text-gray-700 text-base font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-        >
-          {showFilters ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
-        </button>
-
-        {/* Filter Panel */}
-        {showFilters && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Level
-              </label>
-              <select
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="w-full px-4 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Levels</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Categories</option>
-                <option value="yoga">Yoga</option>
-                <option value="calisthenics">Calisthenics</option>
-                <option value="cardio">Cardio</option>
-                <option value="flexibility">Flexibility</option>
-                <option value="strength">Strength</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Body Part
-              </label>
-              <select
-                value={bodyPart}
-                onChange={(e) => setBodyPart(e.target.value)}
-                className="w-full px-4 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Body Parts</option>
-                <option value="arms">Arms</option>
-                <option value="legs">Legs</option>
-                <option value="core">Core</option>
-                <option value="back">Back</option>
-                <option value="chest">Chest</option>
-                <option value="shoulders">Shoulders</option>
-                <option value="full-body">Full Body</option>
-              </select>
-            </div>
-
-            {(level || category || bodyPart) && (
-              <button
-                onClick={() => {
-                  setLevel("")
-                  setCategory("")
-                  setBodyPart("")
-                }}
-                className="w-full min-h-[44px] px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-lg hover:bg-gray-200"
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Main content - scrollable */}
+      <main className="flex-1 overflow-y-auto p-4 pb-32 md:pb-4">
 
       {exercises.length === 0 ? (
         level || category || bodyPart ? (
@@ -220,7 +233,14 @@ export function ExerciseList() {
           {exercises.map((exercise) => (
             <div
               key={exercise.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+              onClick={() => setSelectedItemId(
+                selectedItemId === String(exercise.id) ? undefined : String(exercise.id)
+              )}
+              className={`bg-white rounded-lg shadow-sm border p-4 cursor-pointer transition-colors ${
+                selectedItemId === String(exercise.id)
+                  ? 'border-primary ring-2 ring-primary/20'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
             >
               <div className="flex items-start gap-4">
                 {exercise.photoUrls && exercise.photoUrls.length > 0 && (
@@ -331,6 +351,31 @@ export function ExerciseList() {
           ))}
         </div>
       )}
+      </main>
+
+      {/* Action Bar - fixed at bottom on mobile */}
+      <div className="fixed bottom-14 left-0 right-0 z-40 md:static md:mt-4">
+        <ActionBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search exercises..."
+          filterCount={filterCount}
+          filterContent={filterContent}
+          onApplyFilters={() => {
+            // Filters are already reactive via state
+          }}
+          onClearFilters={() => {
+            setLevel("")
+            setCategory("")
+            setBodyPart("")
+          }}
+          createContent={createContent}
+          onSubmitCreate={handleQuickCreate}
+          selectedItemId={selectedItemId}
+          onCopy={handleCopyExercise}
+          copyDisabledMessage="Select an exercise to duplicate"
+        />
+      </div>
     </div>
   )
 }
