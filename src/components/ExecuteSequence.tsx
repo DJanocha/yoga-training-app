@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Star, Trophy } from 'lucide-react'
 import { useHaptic } from '@/hooks/useHaptic'
 import { useTRPC } from '@/lib/trpc'
+import { useMutation, useQuery,  useQueryClient } from '@tanstack/react-query';
 
 interface ExecuteSequenceProps {
   sequenceId: number;
@@ -9,21 +10,24 @@ interface ExecuteSequenceProps {
 }
 
 export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
-  const utils = useTRPC.useUtils()
-  const { data: sequence, isLoading: sequenceLoading } = useTRPC.sequences.byId.useQuery({ id: sequenceId })
-  const { data: exercises, isLoading: exercisesLoading } = useTRPC.exercises.list.useQuery()
-  const { data: settings, isLoading: settingsLoading } = useTRPC.settings.get.useQuery()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  
+  const { data: sequence, isLoading: sequenceLoading } = useQuery(trpc.sequences.byId.queryOptions({ id: sequenceId }))
+  const { data: exercises, isLoading: exercisesLoading } = useQuery(trpc.exercises.list.queryOptions())
+  const { data: settings, isLoading: settingsLoading } = useQuery(trpc.settings.get.queryOptions())
 
-  const startExecution = useTRPC.executions.start.useMutation()
-  const updateExecution = useTRPC.executions.updateExecution.useMutation({
+  const startExecution = useMutation(trpc.executions.start.mutationOptions())
+  const updateExecution = useMutation(trpc.executions.updateExecution.mutationOptions({
+
     onSuccess: () => {
-      utils.executions.getHistory.invalidate()
-      utils.executions.getUserStats.invalidate()
+      queryClient.invalidateQueries({ queryKey: trpc.executions.getHistory.queryKey() })
+      queryClient.invalidateQueries({ queryKey: trpc.executions.getUserStats.queryKey() })
     },
-  })
-  const submitRatingMutation = useTRPC.executions.submitRating.useMutation()
-  const calculateStreak = useTRPC.settings.calculateStreak.useMutation()
-  const checkBadges = useTRPC.settings.checkBadges.useMutation()
+  }))
+  const submitRatingMutation = useMutation(trpc.executions.submitRating.mutationOptions())
+  const calculateStreak = useMutation(trpc.settings.calculateStreak.mutationOptions())
+  const checkBadges = useMutation(trpc.settings.checkBadges.mutationOptions())
   const haptic = useHaptic();
 
 
@@ -305,10 +309,7 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
       ? { name: "Break", photoUrls: [], links: [] }
       : exercises.find((e) => e.id === currentExercise.exerciseId);
 
-  const { data: lastAttemptData } = useTRPC.executions.getLastAttempt.useQuery(
-    { exerciseId: currentExercise.exerciseId as number },
-    { enabled: currentExercise.exerciseId !== "break" }
-  );
+  const { data: lastAttemptData } = useQuery(trpc.executions.getLastAttempt.queryOptions({ exerciseId: currentExercise.exerciseId },{enabled: currentExercise.exerciseId !== "break"}))
 
   const { config } = currentExercise;
   const isStrictTime = config.goal === "strict" && config.measure === "time";

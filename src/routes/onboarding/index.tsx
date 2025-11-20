@@ -1,6 +1,7 @@
+import { useTRPC } from '@/lib/trpc'
+import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useTRPC } from '@/lib/trpc'
 
 export const Route = createFileRoute('/onboarding/')({
   component: Onboarding,
@@ -8,7 +9,8 @@ export const Route = createFileRoute('/onboarding/')({
 
 function Onboarding() {
   const navigate = useNavigate()
-  const updateSettings = useTRPC.settings.update.useMutation()
+  const trpc = useTRPC()
+  const updateSettings = useMutation(trpc.settings.update.mutationOptions())
   const [step, setStep] = useState(0)
   const [profile, setProfile] = useState({ name: '', level: 'beginner' })
   const [saving, setSaving] = useState(false)

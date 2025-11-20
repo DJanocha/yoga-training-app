@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from 'better-auth-ui'
+import { useQuery } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/sequences/')({
   component: Sequences,
@@ -23,7 +24,8 @@ function Sequences() {
 }
 
 function SequencesContent() {
-  const { data: sequences, isLoading } = useTRPC.sequences.list.useQuery()
+  const trpc = useTRPC()
+  const { data: sequences, isLoading } = useQuery(trpc.sequences.list.queryOptions())
 
   if (isLoading || !sequences) {
     return (

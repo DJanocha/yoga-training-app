@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
 import { useTRPC } from '@/lib/trpc'
+import { useQuery } from '@tanstack/react-query'
 
 export function useTheme() {
-  const { data: settings } = useTRPC.settings.get.useQuery()
+  const trpc = useTRPC()
+  const { data: settings } = useQuery(trpc.settings.get.queryOptions())
   const theme = settings?.theme || 'energy'
 
   useEffect(() => {

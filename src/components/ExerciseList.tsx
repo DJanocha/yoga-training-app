@@ -3,28 +3,30 @@ import { ExerciseForm } from './ExerciseForm'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 import type { Level, Category, BodyPart } from '@/db/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export function ExerciseList() {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const [level, setLevel] = useState<string>("")
   const [category, setCategory] = useState<string>("")
   const [bodyPart, setBodyPart] = useState<string>("")
   const [showFilters, setShowFilters] = useState(false)
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set())
 
-  const utils = useTRPC.useUtils()
 
-  const { data: exercises, isLoading } = useTRPC.exercises.filteredList.useQuery({
+  const { data: exercises, isLoading } = useQuery(trpc.exercises.filteredList.queryOptions({
     level: level ? (level as Level) : undefined,
     category: category ? (category as Category) : undefined,
     bodyPart: bodyPart ? (bodyPart as BodyPart) : undefined,
-  })
+  }))
 
-  const softDelete = useTRPC.exercises.delete.useMutation({
+  const softDelete = useMutation(trpc.exercises.delete.mutationOptions({
     onSuccess: () => {
-      utils.exercises.filteredList.invalidate()
-      utils.exercises.list.invalidate()
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.filteredList.queryKey() })
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.list.queryKey() })
     },
-  })
+  }))
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)

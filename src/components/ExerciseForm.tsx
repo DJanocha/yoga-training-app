@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useTRPC } from '@/lib/trpc'
 import type { Level, Category, BodyPart } from '@/db/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 interface ExerciseFormProps {
   exerciseId: number | null
@@ -10,27 +11,25 @@ interface ExerciseFormProps {
 }
 
 export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
-  const utils = useTRPC.useUtils()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const { data: exercise, isLoading } = useTRPC.exercises.byId.useQuery(
-    { id: exerciseId! },
-    { enabled: exerciseId !== null },
-  )
+  const { data: exercise, isLoading } = useQuery(trpc.exercises.byId.queryOptions({ id: exerciseId! },{enabled: exerciseId !== null}))
 
-  const create = useTRPC.exercises.create.useMutation({
+  const create = useMutation(trpc.exercises.create.mutationOptions({
     onSuccess: () => {
-      utils.exercises.list.invalidate()
-      utils.exercises.filteredList.invalidate()
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.list.queryKey() })
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.filteredList.queryKey() })
     },
-  })
+  }))
 
-  const update = useTRPC.exercises.update.useMutation({
+  const update = useMutation(trpc.exercises.update.mutationOptions({
     onSuccess: () => {
-      utils.exercises.list.invalidate()
-      utils.exercises.filteredList.invalidate()
-      utils.exercises.byId.invalidate()
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.list.queryKey() })
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.filteredList.queryKey() })
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.byId.queryKey() })
     },
-  })
+  }))
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')

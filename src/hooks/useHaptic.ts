@@ -1,7 +1,9 @@
 import { useTRPC } from '@/lib/trpc'
+import { useQuery } from '@tanstack/react-query'
 
 export function useHaptic() {
-  const { data: settings } = useTRPC.settings.get.useQuery()
+  const trpc = useTRPC()
+  const { data: settings } = useQuery(trpc.settings.get.queryOptions())
   const hapticEnabled = settings?.hapticEnabled ?? true
 
   const vibrate = (pattern: number | number[]) => {

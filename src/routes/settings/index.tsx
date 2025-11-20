@@ -5,6 +5,7 @@ import { signOut } from '@/lib/auth-client'
 import { Download, Check, LogOut } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from 'better-auth-ui'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/settings/')({
   component: Settings,
@@ -27,14 +28,15 @@ function Settings() {
 }
 
 function SettingsContent() {
+  const trpc = useTRPC()
   const navigate = useNavigate()
-  const utils = useTRPC.useUtils()
-  const { data: settings, isLoading } = useTRPC.settings.get.useQuery()
-  const updateSettings = useTRPC.settings.update.useMutation({
+  const queryClient = useQueryClient()
+  const { data: settings, isLoading } = useQuery(trpc.settings.get.queryOptions())
+  const updateSettings = useMutation(trpc.settings.update.mutationOptions({
     onSuccess: () => {
-      utils.settings.get.invalidate()
+      queryClient.invalidateQueries({ queryKey: trpc.settings.get.queryKey() })
     },
-  })
+  }))
   const { isInstallable, isInstalled, promptInstall } = usePWAInstall()
 
   const [name, setName] = useState(settings?.userName || '')
