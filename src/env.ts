@@ -1,4 +1,5 @@
 import { createEnv } from '@t3-oss/env-core'
+import { vercel,neonVercel } from '@t3-oss/env-core/presets-zod'
 import { z } from 'zod'
 
 const localEnv = import.meta.env??{}
@@ -11,6 +12,7 @@ const showOnly =({from,keys,}:{ from: Record<string, unknown>,keys: string[] })=
 console.log({local: showOnly({from: localEnv,keys: ['DATABASE_URL']}),production: showOnly({from: productionEnv,keys: ['DATABASE_URL']})})
 
 export const env = createEnv({
+  extends: [vercel(),neonVercel()],
   server: {
     SERVER_URL: z.url().optional(),
     DATABASE_URL: z.url().min(1),
@@ -52,3 +54,5 @@ export const env = createEnv({
    */
   emptyStringAsUndefined: true,
 })
+
+
