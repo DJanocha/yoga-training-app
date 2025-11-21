@@ -25,7 +25,9 @@ const config = defineConfig({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      target: 'vercel',
+    }),
     viteReact({
       babel: {
         plugins: ['babel-plugin-react-compiler'],
