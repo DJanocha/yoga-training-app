@@ -5,6 +5,7 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import neon from './neon-vite-plugin.ts'
+import { nitro } from 'nitro/vite'
 
 const config = defineConfig({
   resolve: {alias: [
@@ -25,9 +26,8 @@ const config = defineConfig({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
-    tanstackStart({
-      target: 'vercel',
-    }),
+    tanstackStart(),
+    nitro(),
     viteReact({
       babel: {
         plugins: ['babel-plugin-react-compiler'],
