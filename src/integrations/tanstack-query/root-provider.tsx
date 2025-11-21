@@ -10,7 +10,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { env } from '@/env'
 
 import { AuthQueryProvider } from '@daveyplate/better-auth-tanstack'
-import { AuthUIProviderTanstack } from 'better-auth-ui/tanstack'
+import { AuthUIProviderTanstack } from '@daveyplate/better-auth-ui/tanstack'
 import { authClient } from '@/lib/auth-client'
 import { Link as RouterLink } from '@tanstack/react-router'
 

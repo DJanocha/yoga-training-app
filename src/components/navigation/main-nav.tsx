@@ -1,7 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { WifiOff } from 'lucide-react'
-import { UserButton, SignedIn, SignedOut } from 'better-auth-ui'
+import { UserButton, SignedIn, SignedOut } from '@/components/auth'
 
 export function MainNav() {
   const location = useLocation()

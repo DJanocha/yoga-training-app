@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { Home, Dumbbell, ListOrdered, Settings, LogOut, WifiOff, User } from 'lucide-react'
-import { UserButton, SignedIn, SignedOut } from 'better-auth-ui'
+import { UserButton, SignedIn, SignedOut } from '@/components/auth'
 
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'

@@ -8,16 +8,6 @@ import neon from './neon-vite-plugin.ts'
 import { nitro } from 'nitro/vite'
 
 const config = defineConfig({
-  resolve: {alias: [
-    {
-      find: "use-sync-external-store/shim/index.js",
-      replacement: "react",
-    },
-    {
-      find: "better-auth-tanstack",
-      replacement: "@daveyplate/better-auth-tanstack",
-    },
-  ]},
   plugins: [
     devtools(),
     neon,

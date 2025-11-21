@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
-import { RedirectToSignIn, SignedIn, AuthLoading } from 'better-auth-ui'
+import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ListOrdered } from 'lucide-react'
 import { EmptyState } from '@/components/empty-state'

@@ -4,7 +4,7 @@ import { usePWAInstall } from '@/hooks/usePWAInstall'
 import { signOut } from '@/lib/auth-client'
 import { Download, Check, LogOut } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
-import { RedirectToSignIn, SignedIn, AuthLoading } from 'better-auth-ui'
+import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/settings/')({

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ExerciseList } from '@/components/ExerciseList'
-import { RedirectToSignIn, SignedIn, AuthLoading } from 'better-auth-ui'
+import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 
 export const Route = createFileRoute('/exercises/')({
   component: Exercises,

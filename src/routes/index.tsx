@@ -6,7 +6,7 @@ import { Flame, Trophy, Clock, Star } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 // import { sum } from 'lodash'
 import { useQuery } from '@tanstack/react-query'
-import { RedirectToSignIn, SignedIn, AuthLoading, } from 'better-auth-ui'
+import { RedirectToSignIn, SignedIn, AuthLoading, } from '@/components/auth'
 import { authClient } from '@/lib/auth-client'
 
 export const Route = createFileRoute('/')({

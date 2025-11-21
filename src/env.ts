@@ -4,6 +4,12 @@ import { z } from 'zod'
 const localEnv = import.meta.env??{}
 const productionEnv =process.env??{}
 const runtimeEnv = {...localEnv, ...productionEnv}
+
+const showOnly =({from,keys,}:{ from: Record<string, unknown>,keys: string[] })=>Object.fromEntries(keys.map(key => [key, from[key]]))
+
+
+console.log({local: showOnly({from: localEnv,keys: ['DATABASE_URL']}),production: showOnly({from: productionEnv,keys: ['DATABASE_URL']})})
+
 export const env = createEnv({
   server: {
     SERVER_URL: z.url().optional(),
