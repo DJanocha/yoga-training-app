@@ -79,6 +79,13 @@ export function Provider({
                 window.location.replace(path)
               }
             }}
+            onSessionChange={() => {
+              if (typeof window !== 'undefined') {
+                // Invalidate queries when session changes
+                queryClient.invalidateQueries()
+              }
+            }}
+            persistClient={false}
             Link={Link}
           >
             {children}
