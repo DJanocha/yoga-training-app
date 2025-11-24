@@ -160,12 +160,12 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 1: Core Workout Flow (MVP)
 
 #### 1.1 Sequence Builder
-- [ ] **Sequence Editor** - Full editor to add/remove/reorder exercises
-- [ ] **Exercise Picker** - Select exercises to add to sequence
-- [ ] **Exercise Configuration** - Set goal, measure, targetValue per exercise
-- [ ] **Break Configuration** - Add and configure breaks
-- [ ] **Drag & Drop Reordering** - Reorder exercises in sequence
-- [ ] **Sequence Preview** - Preview before saving
+- [x] **Sequence Editor** - Full editor to add/remove/reorder exercises
+- [x] **Exercise Picker** - Select exercises to add to sequence
+- [x] **Exercise Configuration** - Set goal, measure, targetValue per exercise
+- [x] **Break Configuration** - Add and configure breaks
+- [x] **Drag & Drop Reordering** - Reorder exercises in sequence
+- [x] **Sequence Preview** - Preview before saving
 
 #### 1.2 Workout Execution
 - [ ] **Sequence Execution UI** - Full workout player with timer, progress tracking

@@ -1,16 +1,21 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ListOrdered } from 'lucide-react'
+import { ListOrdered, Pencil } from 'lucide-react'
 import { EmptyState } from '@/components/empty-state'
 import { ActionBar } from '@/components/action-bar'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAppForm } from '@/hooks/form'
 import { sequenceLabelOverrides, sequenceRequiredDefaults, getFieldLabel } from '@/lib/form-utils'
-import { createSequenceInputValidator } from '@/validators/api/sequences'
+import { z } from 'zod'
+
+// Simple validator for quick create form (only name field)
+const quickCreateValidator = z.object({
+  name: z.string().min(1, 'Name is required'),
+})
 
 
 export const Route = createFileRoute('/sequences/')({
@@ -36,6 +41,7 @@ function Sequences() {
 function SequencesContent() {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { data: sequences, isLoading } = useQuery(trpc.sequences.list.queryOptions())
 
   // Filter state
@@ -48,8 +54,9 @@ function SequencesContent() {
   // Selected item for copy functionality
   const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined)
 
-  // UI state for editing (will be used when sequence editor is implemented)
-  const [_editingId, setEditingId] = useState<number | null>(null)
+  // Create form open state (for EmptyState to trigger)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+
 
   // Create sequence mutation
   const createSequence = useMutation(trpc.sequences.create.mutationOptions({
@@ -69,7 +76,7 @@ function SequencesContent() {
   const form = useAppForm({
     defaultValues: sequenceRequiredDefaults,
     validators: {
-      onSubmit: createSequenceInputValidator,
+      onSubmit: quickCreateValidator,
     },
   })
 
@@ -129,8 +136,8 @@ function SequencesContent() {
       })
       form.reset()
       if (newSequence) {
-        // Open sequence editor
-        setEditingId(newSequence.id)
+        // Navigate to sequence editor
+        navigate({ to: '/sequences/$id/edit', params: { id: newSequence.id.toString() } })
       }
     } catch (error) {
       console.error('Failed to create sequence:', error)
@@ -226,16 +233,29 @@ function SequencesContent() {
                       {(seq.exercises as unknown[]).length} exercises
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      // TODO: Start workout
-                    }}
-                    className="w-full inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                  >
-                    Start Workout
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate({ to: '/sequences/$id/edit', params: { id: String(seq.id) } })
+                      }}
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // TODO: Start workout
+                      }}
+                      className="flex-1 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      Start Workout
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -246,7 +266,7 @@ function SequencesContent() {
             title="No sequences yet"
             description="Create your first workout sequence to get started with your training."
             actionLabel="+ Create Sequence"
-            onAction={handleQuickCreate}
+            onAction={() => setIsCreateOpen(true)}
           />
         )}
       </main>
@@ -270,6 +290,8 @@ function SequencesContent() {
           onSubmitCreate={handleQuickCreate}
           onAddDetails={handleAddDetails}
           isSubmitting={createSequence.isPending}
+          isCreateOpen={isCreateOpen}
+          onCreateOpenChange={setIsCreateOpen}
           selectedItemId={selectedItemId}
           onCopy={handleCopySequence}
           copyDisabledMessage="Select a sequence to clone"

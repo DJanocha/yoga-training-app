@@ -30,6 +30,10 @@ type ActionBarProps = {
   createButtonLabel?: string
   addDetailsButtonLabel?: string
 
+  // External control for create state
+  isCreateOpen?: boolean
+  onCreateOpenChange?: (open: boolean) => void
+
   // Copy/Clone
   selectedItemId?: string
   onCopy: (itemId: string) => void
@@ -57,6 +61,10 @@ export function ActionBar({
   createButtonLabel = "Create",
   addDetailsButtonLabel = "Add details",
 
+  // External control
+  isCreateOpen,
+  onCreateOpenChange,
+
   // Copy
   selectedItemId,
   onCopy,
@@ -65,6 +73,21 @@ export function ActionBar({
   const [state, setState] = useState<ActionBarState>("base")
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Sync with external create state control
+  useEffect(() => {
+    if (isCreateOpen !== undefined) {
+      setState(isCreateOpen ? "create" : "base")
+    }
+  }, [isCreateOpen])
+
+  // Notify parent of create state changes
+  const handleStateChange = (newState: ActionBarState) => {
+    setState(newState)
+    if (onCreateOpenChange) {
+      onCreateOpenChange(newState === "create")
+    }
+  }
 
   // Sync local search query when prop changes
   useEffect(() => {
@@ -75,7 +98,7 @@ export function ActionBar({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setState("base")
+        handleStateChange("base")
       }
     }
 
@@ -86,11 +109,11 @@ export function ActionBar({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [state])
+  }, [state, handleStateChange])
 
   const handleSearchSave = () => {
     onSearchChange(localSearchQuery)
-    setState("base")
+    handleStateChange("base")
   }
 
   const handleSearchClear = () => {
@@ -106,23 +129,23 @@ export function ActionBar({
 
   const handleApplyFilters = () => {
     onApplyFilters()
-    setState("base")
+    handleStateChange("base")
   }
 
   const handleClearFilters = () => {
     onClearFilters()
-    setState("base")
+    handleStateChange("base")
   }
 
   const handleSubmitCreate = async () => {
     await onSubmitCreate()
-    setState("base")
+    handleStateChange("base")
   }
 
   const handleAddDetails = async () => {
     if (onAddDetails) {
       await onAddDetails()
-      setState("base")
+      handleStateChange("base")
     }
   }
 
@@ -158,7 +181,7 @@ export function ActionBar({
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSearchSave()
-                      if (e.key === "Escape") setState("base")
+                      if (e.key === "Escape") handleStateChange("base")
                     }}
                   />
                   <Button
@@ -228,7 +251,7 @@ export function ActionBar({
                     <Button
                       variant="ghost"
                       className={onAddDetails ? "flex-1" : "w-full"}
-                      onClick={() => setState("base")}
+                      onClick={() => handleStateChange("base")}
                       disabled={isSubmitting}
                     >
                       Cancel
@@ -246,7 +269,7 @@ export function ActionBar({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setState(state === "search" ? "base" : "search")}
+            onClick={() => handleStateChange(state === "search" ? "base" : "search")}
             className={cn(
               "relative h-10 w-10 rounded-full transition-colors duration-200",
               state === "search"
@@ -268,7 +291,7 @@ export function ActionBar({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setState(state === "filters" ? "base" : "filters")}
+            onClick={() => handleStateChange(state === "filters" ? "base" : "filters")}
             className={cn(
               "relative h-10 w-10 rounded-full transition-colors duration-200",
               state === "filters"
@@ -290,7 +313,7 @@ export function ActionBar({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setState(state === "create" ? "base" : "create")}
+            onClick={() => handleStateChange(state === "create" ? "base" : "create")}
             className={cn(
               "h-10 w-10 rounded-full transition-colors duration-200",
               state === "create"
