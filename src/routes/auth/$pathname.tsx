@@ -10,7 +10,7 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <AuthView pathname={pathname} />
+      <AuthView pathname={pathname} redirectTo="/" />
     </div>
   )
 }

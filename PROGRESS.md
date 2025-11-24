@@ -232,10 +232,11 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Auth Navigation Fix** - Use window.location for reliable post-auth redirects
 - [x] **Session Invalidation** - Invalidate all queries on session change
 - [x] **Vercel SPA Routing** - Created vercel.json with proper rewrites for client-side routes
+- [x] **AuthView redirectTo Prop** - Added redirectTo="/" to prevent sign-out redirect loop
 
 **Note:** better-auth-ui automatically displays authentication errors via sonner toasts when using `<AuthView />` component. No additional error handling code required.
 
-**Auth Navigation:** Using `window.location.href` and `window.location.replace()` for auth navigation instead of router hooks ensures reliable redirects after login/logout without requiring hard refresh. The `onSessionChange` callback invalidates all queries when auth state changes.
+**Auth Navigation:** Using `window.location.href` and `window.location.replace()` for auth navigation instead of router hooks ensures reliable redirects after login/logout without requiring hard refresh. The `onSessionChange` callback invalidates all queries when auth state changes. The `redirectTo` prop on `<AuthView>` specifies where users should be redirected after successful authentication.
 
 ---
 
