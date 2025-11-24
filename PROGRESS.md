@@ -234,12 +234,11 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Vercel SPA Routing** - Created vercel.json with proper rewrites for client-side routes
 - [x] **AuthView redirectTo Prop** - Added redirectTo="/" to prevent sign-out redirect loop
 - [x] **Auth Event Logging** - Added hooks to log sign-in, sign-up, sign-out events with timestamps and user info
+- [ ] **Safari Cookie Issue** - Login works on desktop browsers but Safari on mobile still has issues. Likely requires custom domain instead of *.vercel.app (public suffix domain). Tried sameSite: "lax" but issue persists.
 
 **Note:** better-auth-ui automatically displays authentication errors via sonner toasts when using `<AuthView />` component. No additional error handling code required.
 
 **Auth Navigation:** Using `window.location.href` and `window.location.replace()` for auth navigation instead of router hooks ensures reliable redirects after login/logout without requiring hard refresh. The `onSessionChange` callback invalidates all queries when auth state changes. The `redirectTo` prop on `<AuthView>` specifies where users should be redirected after successful authentication.
-
-**Safari Cookie Fix:** Changed `sameSite` from `"none"` to `"lax"` because Safari blocks cookies on public suffix domains (like `*.vercel.app`). Since frontend and backend are deployed on the same domain, same-site cookies work perfectly. Removed `partitioned: true` as it's only needed for cross-site cookies. For production with a custom domain, cross-site configuration can be restored.
 
 ---
 
