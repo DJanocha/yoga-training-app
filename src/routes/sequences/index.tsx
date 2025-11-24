@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ListOrdered, Pencil, Eye } from 'lucide-react'
+import { ListOrdered, Pencil, Eye, Play } from 'lucide-react'
 import { EmptyState } from '@/components/empty-state'
 import { ActionBar } from '@/components/action-bar'
 import { Label } from '@/components/ui/label'
@@ -238,9 +238,21 @@ function SequencesContent() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
+                        navigate({ to: '/sequences/$id/execute', params: { id: String(seq.id) } })
+                      }}
+                      disabled={(seq.exercises as unknown[]).length === 0}
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Play className="h-4 w-4" />
+                      Start
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
                         navigate({ to: '/sequences/$id', params: { id: String(seq.id) } })
                       }}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
                     >
                       <Eye className="h-4 w-4" />
                       View

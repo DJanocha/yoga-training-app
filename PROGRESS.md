@@ -168,11 +168,11 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Sequence Preview** - Preview before saving
 
 #### 1.2 Workout Execution
-- [ ] **Sequence Execution UI** - Full workout player with timer, progress tracking
-- [ ] **Exercise Player** - Display exercise during workout (photos, videos, timer)
-- [ ] **Pause/Resume** - Handle workout interruptions
-- [ ] **Exercise Skip** - Skip exercises during workout
-- [ ] **Workout Complete Screen** - Summary and rating form
+- [x] **Sequence Execution UI** - Full workout player with timer, progress tracking
+- [x] **Exercise Player** - Display exercise during workout (photos, videos, timer)
+- [x] **Pause/Resume** - Handle workout interruptions
+- [x] **Exercise Skip** - Skip exercises during workout
+- [x] **Workout Complete Screen** - Summary and rating form
 - [ ] **Audio/Haptic Feedback** - Beep countdown, haptic on complete
 
 ---

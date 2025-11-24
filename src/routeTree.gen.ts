@@ -18,6 +18,7 @@ import { Route as ExercisesIndexRouteImport } from './routes/exercises/index'
 import { Route as AuthPathnameRouteImport } from './routes/auth/$pathname'
 import { Route as SequencesIdIndexRouteImport } from './routes/sequences/$id/index'
 import { Route as ExercisesIdIndexRouteImport } from './routes/exercises/$id/index'
+import { Route as SequencesIdExecuteRouteImport } from './routes/sequences/$id/execute'
 import { Route as SequencesIdEditRouteImport } from './routes/sequences/$id/edit'
 import { Route as ExercisesIdEditRouteImport } from './routes/exercises/$id/edit'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc.$'
@@ -68,6 +69,11 @@ const ExercisesIdIndexRoute = ExercisesIdIndexRouteImport.update({
   path: '/exercises/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SequencesIdExecuteRoute = SequencesIdExecuteRouteImport.update({
+  id: '/sequences/$id/execute',
+  path: '/sequences/$id/execute',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SequencesIdEditRoute = SequencesIdEditRouteImport.update({
   id: '/sequences/$id/edit',
   path: '/sequences/$id/edit',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
+  '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id': typeof ExercisesIdIndexRoute
   '/sequences/$id': typeof SequencesIdIndexRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
+  '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id': typeof ExercisesIdIndexRoute
   '/sequences/$id': typeof SequencesIdIndexRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
+  '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id/': typeof ExercisesIdIndexRoute
   '/sequences/$id/': typeof SequencesIdIndexRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
+    | '/sequences/$id/execute'
     | '/exercises/$id'
     | '/sequences/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
+    | '/sequences/$id/execute'
     | '/exercises/$id'
     | '/sequences/$id'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
+    | '/sequences/$id/execute'
     | '/exercises/$id/'
     | '/sequences/$id/'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
   ExercisesIdEditRoute: typeof ExercisesIdEditRoute
   SequencesIdEditRoute: typeof SequencesIdEditRoute
+  SequencesIdExecuteRoute: typeof SequencesIdExecuteRoute
   ExercisesIdIndexRoute: typeof ExercisesIdIndexRoute
   SequencesIdIndexRoute: typeof SequencesIdIndexRoute
 }
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExercisesIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sequences/$id/execute': {
+      id: '/sequences/$id/execute'
+      path: '/sequences/$id/execute'
+      fullPath: '/sequences/$id/execute'
+      preLoaderRoute: typeof SequencesIdExecuteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sequences/$id/edit': {
       id: '/sequences/$id/edit'
       path: '/sequences/$id/edit'
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
   ExercisesIdEditRoute: ExercisesIdEditRoute,
   SequencesIdEditRoute: SequencesIdEditRoute,
+  SequencesIdExecuteRoute: SequencesIdExecuteRoute,
   ExercisesIdIndexRoute: ExercisesIdIndexRoute,
   SequencesIdIndexRoute: SequencesIdIndexRoute,
 }

@@ -281,10 +281,12 @@ function SequenceDetailContent({ sequenceId }: { sequenceId: number }) {
         </Card>
 
         {/* Start Workout Button */}
-        <Button className="w-full" size="lg">
-          <Play className="h-5 w-5 mr-2" />
-          Start Workout
-        </Button>
+        <Link to="/sequences/$id/execute" params={{ id: String(sequenceId) }}>
+          <Button className="w-full" size="lg" disabled={exercises.length === 0}>
+            <Play className="h-5 w-5 mr-2" />
+            Start Workout
+          </Button>
+        </Link>
       </main>
     </div>
   )
