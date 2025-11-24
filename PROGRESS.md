@@ -202,8 +202,8 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 3: Progress & History
 
 #### 3.1 History Views
-- [ ] **Workout History Page** - List of past workouts
-- [ ] **Workout Detail View** - Details of a past workout
+- [x] **Workout History Page** - List of past workouts
+- [x] **Workout Detail View** - Details of a past workout
 - [ ] **Personal Records Page** - View all PRs
 
 #### 3.2 Data Visualization

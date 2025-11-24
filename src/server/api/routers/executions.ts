@@ -8,6 +8,7 @@ import {
   getExecutionHistoryInputValidator,
   getLastAttemptInputValidator,
   submitRatingInputValidator,
+  getByIdInputValidator,
 } from '../../../validators/api/executions'
 import { protectedProcedure } from '../trpc'
 
@@ -154,6 +155,58 @@ export const executionsRouter = {
       }
 
       return result
+    }),
+
+  /**
+   * Get execution by ID with full details
+   */
+  byId: protectedProcedure
+    .input(getByIdInputValidator)
+    .query(async ({ ctx, input }) => {
+      // Fetch execution with ownership check
+      const [execution] = await db
+        .select()
+        .from(sequenceExecutions)
+        .where(and(eq(sequenceExecutions.id, input.id), eq(sequenceExecutions.userId, ctx.userId)))
+        .limit(1)
+
+      if (!execution) {
+        return null
+      }
+
+      // Fetch sequence name
+      const [sequence] = await db
+        .select()
+        .from(sequences)
+        .where(eq(sequences.id, execution.sequenceId))
+        .limit(1)
+
+      // Calculate completed count from exercises array
+      const exercisesList = execution.exercises as Array<{
+        exerciseId: number | 'break'
+        skipped?: boolean
+      }>
+
+      const completedCount = exercisesList.filter((e) => !e.skipped).length
+
+      // Extract personal records count
+      const personalRecords = execution.personalRecords
+        ? (execution.personalRecords as Array<unknown>).length
+        : 0
+
+      return {
+        executionId: execution.id,
+        sequenceId: execution.sequenceId,
+        sequenceName: sequence?.name || 'Unknown Sequence',
+        startedAt: execution.startedAt,
+        completedAt: execution.completedAt,
+        rating: execution.rating,
+        feedback: execution.feedback,
+        exercises: exercisesList,
+        completedCount,
+        personalRecords,
+        totalPauseDuration: execution.totalPauseDuration,
+      }
     }),
 
   /**

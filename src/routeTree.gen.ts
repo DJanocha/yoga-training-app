@@ -14,9 +14,11 @@ import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SequencesIndexRouteImport } from './routes/sequences/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
+import { Route as HistoryIndexRouteImport } from './routes/history/index'
 import { Route as ExercisesIndexRouteImport } from './routes/exercises/index'
 import { Route as AuthPathnameRouteImport } from './routes/auth/$pathname'
 import { Route as SequencesIdIndexRouteImport } from './routes/sequences/$id/index'
+import { Route as HistoryIdIndexRouteImport } from './routes/history/$id/index'
 import { Route as ExercisesIdIndexRouteImport } from './routes/exercises/$id/index'
 import { Route as SequencesIdExecuteRouteImport } from './routes/sequences/$id/execute'
 import { Route as SequencesIdEditRouteImport } from './routes/sequences/$id/edit'
@@ -49,6 +51,11 @@ const LoginIndexRoute = LoginIndexRouteImport.update({
   path: '/login/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistoryIndexRoute = HistoryIndexRouteImport.update({
+  id: '/history/',
+  path: '/history/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExercisesIndexRoute = ExercisesIndexRouteImport.update({
   id: '/exercises/',
   path: '/exercises/',
@@ -62,6 +69,11 @@ const AuthPathnameRoute = AuthPathnameRouteImport.update({
 const SequencesIdIndexRoute = SequencesIdIndexRouteImport.update({
   id: '/sequences/$id/',
   path: '/sequences/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryIdIndexRoute = HistoryIdIndexRouteImport.update({
+  id: '/history/$id/',
+  path: '/history/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExercisesIdIndexRoute = ExercisesIdIndexRouteImport.update({
@@ -99,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth/$pathname': typeof AuthPathnameRoute
   '/exercises': typeof ExercisesIndexRoute
+  '/history': typeof HistoryIndexRoute
   '/login': typeof LoginIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/sequences': typeof SequencesIndexRoute
@@ -109,12 +122,14 @@ export interface FileRoutesByFullPath {
   '/sequences/$id/edit': typeof SequencesIdEditRoute
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id': typeof ExercisesIdIndexRoute
+  '/history/$id': typeof HistoryIdIndexRoute
   '/sequences/$id': typeof SequencesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth/$pathname': typeof AuthPathnameRoute
   '/exercises': typeof ExercisesIndexRoute
+  '/history': typeof HistoryIndexRoute
   '/login': typeof LoginIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/sequences': typeof SequencesIndexRoute
@@ -125,6 +140,7 @@ export interface FileRoutesByTo {
   '/sequences/$id/edit': typeof SequencesIdEditRoute
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id': typeof ExercisesIdIndexRoute
+  '/history/$id': typeof HistoryIdIndexRoute
   '/sequences/$id': typeof SequencesIdIndexRoute
 }
 export interface FileRoutesById {
@@ -132,6 +148,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth/$pathname': typeof AuthPathnameRoute
   '/exercises/': typeof ExercisesIndexRoute
+  '/history/': typeof HistoryIndexRoute
   '/login/': typeof LoginIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/sequences/': typeof SequencesIndexRoute
@@ -142,6 +159,7 @@ export interface FileRoutesById {
   '/sequences/$id/edit': typeof SequencesIdEditRoute
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id/': typeof ExercisesIdIndexRoute
+  '/history/$id/': typeof HistoryIdIndexRoute
   '/sequences/$id/': typeof SequencesIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +168,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth/$pathname'
     | '/exercises'
+    | '/history'
     | '/login'
     | '/onboarding'
     | '/sequences'
@@ -160,12 +179,14 @@ export interface FileRouteTypes {
     | '/sequences/$id/edit'
     | '/sequences/$id/execute'
     | '/exercises/$id'
+    | '/history/$id'
     | '/sequences/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth/$pathname'
     | '/exercises'
+    | '/history'
     | '/login'
     | '/onboarding'
     | '/sequences'
@@ -176,12 +197,14 @@ export interface FileRouteTypes {
     | '/sequences/$id/edit'
     | '/sequences/$id/execute'
     | '/exercises/$id'
+    | '/history/$id'
     | '/sequences/$id'
   id:
     | '__root__'
     | '/'
     | '/auth/$pathname'
     | '/exercises/'
+    | '/history/'
     | '/login/'
     | '/onboarding/'
     | '/sequences/'
@@ -192,6 +215,7 @@ export interface FileRouteTypes {
     | '/sequences/$id/edit'
     | '/sequences/$id/execute'
     | '/exercises/$id/'
+    | '/history/$id/'
     | '/sequences/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -199,6 +223,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthPathnameRoute: typeof AuthPathnameRoute
   ExercisesIndexRoute: typeof ExercisesIndexRoute
+  HistoryIndexRoute: typeof HistoryIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
   SequencesIndexRoute: typeof SequencesIndexRoute
@@ -209,6 +234,7 @@ export interface RootRouteChildren {
   SequencesIdEditRoute: typeof SequencesIdEditRoute
   SequencesIdExecuteRoute: typeof SequencesIdExecuteRoute
   ExercisesIdIndexRoute: typeof ExercisesIdIndexRoute
+  HistoryIdIndexRoute: typeof HistoryIdIndexRoute
   SequencesIdIndexRoute: typeof SequencesIdIndexRoute
 }
 
@@ -249,6 +275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/history/': {
+      id: '/history/'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exercises/': {
       id: '/exercises/'
       path: '/exercises'
@@ -268,6 +301,13 @@ declare module '@tanstack/react-router' {
       path: '/sequences/$id'
       fullPath: '/sequences/$id'
       preLoaderRoute: typeof SequencesIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history/$id/': {
+      id: '/history/$id/'
+      path: '/history/$id'
+      fullPath: '/history/$id'
+      preLoaderRoute: typeof HistoryIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exercises/$id/': {
@@ -319,6 +359,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthPathnameRoute: AuthPathnameRoute,
   ExercisesIndexRoute: ExercisesIndexRoute,
+  HistoryIndexRoute: HistoryIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,
   SequencesIndexRoute: SequencesIndexRoute,
@@ -329,6 +370,7 @@ const rootRouteChildren: RootRouteChildren = {
   SequencesIdEditRoute: SequencesIdEditRoute,
   SequencesIdExecuteRoute: SequencesIdExecuteRoute,
   ExercisesIdIndexRoute: ExercisesIdIndexRoute,
+  HistoryIdIndexRoute: HistoryIdIndexRoute,
   SequencesIdIndexRoute: SequencesIdIndexRoute,
 }
 export const routeTree = rootRouteImport

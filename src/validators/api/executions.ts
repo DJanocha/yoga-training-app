@@ -51,6 +51,15 @@ export const getLastAttemptInputValidator = z.object({
 export type GetLastAttemptInput = z.infer<typeof getLastAttemptInputValidator>
 
 /**
+ * Validator for getting execution by ID
+ */
+export const getByIdInputValidator = z.object({
+  id: z.number(),
+})
+
+export type GetByIdInput = z.infer<typeof getByIdInputValidator>
+
+/**
  * Validator for submitting execution rating and detecting personal records
  */
 export const submitRatingInputValidator = z.object({
