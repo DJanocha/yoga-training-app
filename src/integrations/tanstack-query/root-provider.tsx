@@ -80,7 +80,6 @@ export function Provider({
               // Invalidate all queries when auth state changes
               queryClient.invalidateQueries()
             }}
-            persistClient={false}
             Link={Link}
           >
             {children}

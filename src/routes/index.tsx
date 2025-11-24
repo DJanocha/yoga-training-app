@@ -19,6 +19,13 @@ const sum = (arr: number[]) => {
 }
 
 function Home() {
+  const { data: session, isPending } = authClient.useSession()
+
+  // Debug logging
+  if (typeof window !== 'undefined') {
+    console.log('[HOME] Session state:', { session, isPending })
+  }
+
   return (
     <>
       <AuthLoading>
