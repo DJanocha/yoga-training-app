@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ListOrdered, Pencil } from 'lucide-react'
+import { ListOrdered, Pencil, Eye } from 'lucide-react'
 import { EmptyState } from '@/components/empty-state'
 import { ActionBar } from '@/components/action-bar'
 import { Label } from '@/components/ui/label'
@@ -238,22 +238,23 @@ function SequencesContent() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
+                        navigate({ to: '/sequences/$id', params: { id: String(seq.id) } })
+                      }}
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
                         navigate({ to: '/sequences/$id/edit', params: { id: String(seq.id) } })
                       }}
                       className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
                     >
                       <Pencil className="h-4 w-4" />
                       Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // TODO: Start workout
-                      }}
-                      className="flex-1 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                    >
-                      Start Workout
                     </button>
                   </div>
                 </div>

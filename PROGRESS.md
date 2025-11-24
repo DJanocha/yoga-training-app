@@ -180,9 +180,9 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 2: Exercise Management
 
 #### 2.1 Exercise CRUD
-- [ ] **Exercise Detail View** - Full exercise details page
-- [ ] **Exercise Edit** - Edit existing exercises
-- [ ] **Exercise Delete Confirmation** - Confirm before delete
+- [x] **Exercise Detail View** - Full exercise details page
+- [x] **Exercise Edit** - Edit existing exercises
+- [x] **Exercise Delete Confirmation** - Confirm before delete
 
 #### 2.2 Exercise Enhancements
 - [ ] **Media Preview** - Display photos/videos in forms
@@ -190,9 +190,9 @@ This document tracks what has been implemented and what still needs to be done.
 - [ ] **Pre-built Exercises** - Seed default exercises
 
 #### 2.3 Sequence CRUD
-- [ ] **Sequence Detail View** - Full sequence details page
-- [ ] **Sequence Edit** - Edit existing sequences
-- [ ] **Sequence Delete Confirmation** - Confirm before delete
+- [x] **Sequence Detail View** - Full sequence details page
+- [x] **Sequence Edit** - Edit existing sequences
+- [x] **Sequence Delete Confirmation** - Confirm before delete
 - [ ] **Pre-built Sequences** - Seed default sequences
 
 ---

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { z } from 'zod'
+import { useNavigate } from '@tanstack/react-router'
 import { ExerciseForm } from './ExerciseForm'
-import { Dumbbell } from 'lucide-react'
+import { Dumbbell, Eye } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 import type { Level, Category, BodyPart } from '@/db/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -20,6 +21,7 @@ const exerciseRequiredSchema = z.object({
 export function ExerciseList() {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   // Filter state
   const [level, setLevel] = useState<string>("")
@@ -56,13 +58,6 @@ export function ExerciseList() {
     level: level ? (level as Level) : undefined,
     category: category ? (category as Category) : undefined,
     bodyPart: bodyPart ? (bodyPart as BodyPart) : undefined,
-  }))
-
-  const softDelete = useMutation(trpc.exercises.delete.mutationOptions({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: trpc.exercises.filteredList.queryKey() })
-      queryClient.invalidateQueries({ queryKey: trpc.exercises.list.queryKey() })
-    },
   }))
 
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -378,20 +373,25 @@ export function ExerciseList() {
               </div>
               <div className="flex gap-2 mt-4">
                 <button
-                  onClick={() => setEditingId(exercise.id)}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate({ to: '/exercises/$id', params: { id: String(exercise.id) } })
+                  }}
+                  className="flex-1 min-h-[44px] px-4 py-2 bg-primary text-primary-foreground text-base font-medium rounded-lg hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  View
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate({ to: '/exercises/$id/edit', params: { id: String(exercise.id) } })
+                  }}
                   className="flex-1 min-h-[44px] px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Edit
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('Delete this exercise?')) {
-                      softDelete.mutate({ id: exercise.id })
-                    }
-                  }}
-                  className="flex-1 min-h-[44px] px-4 py-2 bg-red-50 text-red-600 text-base font-medium rounded-lg hover:bg-red-100 transition-colors"
-                >
-                  Delete
                 </button>
               </div>
             </div>

@@ -16,6 +16,8 @@ import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as ExercisesIndexRouteImport } from './routes/exercises/index'
 import { Route as AuthPathnameRouteImport } from './routes/auth/$pathname'
+import { Route as SequencesIdIndexRouteImport } from './routes/sequences/$id/index'
+import { Route as ExercisesIdIndexRouteImport } from './routes/exercises/$id/index'
 import { Route as SequencesIdEditRouteImport } from './routes/sequences/$id/edit'
 import { Route as ExercisesIdEditRouteImport } from './routes/exercises/$id/edit'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc.$'
@@ -56,6 +58,16 @@ const AuthPathnameRoute = AuthPathnameRouteImport.update({
   path: '/auth/$pathname',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SequencesIdIndexRoute = SequencesIdIndexRouteImport.update({
+  id: '/sequences/$id/',
+  path: '/sequences/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExercisesIdIndexRoute = ExercisesIdIndexRouteImport.update({
+  id: '/exercises/$id/',
+  path: '/exercises/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SequencesIdEditRoute = SequencesIdEditRouteImport.update({
   id: '/sequences/$id/edit',
   path: '/sequences/$id/edit',
@@ -89,6 +101,8 @@ export interface FileRoutesByFullPath {
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
+  '/exercises/$id': typeof ExercisesIdIndexRoute
+  '/sequences/$id': typeof SequencesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +116,8 @@ export interface FileRoutesByTo {
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
+  '/exercises/$id': typeof ExercisesIdIndexRoute
+  '/sequences/$id': typeof SequencesIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +132,8 @@ export interface FileRoutesById {
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
+  '/exercises/$id/': typeof ExercisesIdIndexRoute
+  '/sequences/$id/': typeof SequencesIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +149,8 @@ export interface FileRouteTypes {
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
+    | '/exercises/$id'
+    | '/sequences/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +164,8 @@ export interface FileRouteTypes {
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
+    | '/exercises/$id'
+    | '/sequences/$id'
   id:
     | '__root__'
     | '/'
@@ -157,6 +179,8 @@ export interface FileRouteTypes {
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
+    | '/exercises/$id/'
+    | '/sequences/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +195,8 @@ export interface RootRouteChildren {
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
   ExercisesIdEditRoute: typeof ExercisesIdEditRoute
   SequencesIdEditRoute: typeof SequencesIdEditRoute
+  ExercisesIdIndexRoute: typeof ExercisesIdIndexRoute
+  SequencesIdIndexRoute: typeof SequencesIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -224,6 +250,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPathnameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sequences/$id/': {
+      id: '/sequences/$id/'
+      path: '/sequences/$id'
+      fullPath: '/sequences/$id'
+      preLoaderRoute: typeof SequencesIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exercises/$id/': {
+      id: '/exercises/$id/'
+      path: '/exercises/$id'
+      fullPath: '/exercises/$id'
+      preLoaderRoute: typeof ExercisesIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sequences/$id/edit': {
       id: '/sequences/$id/edit'
       path: '/sequences/$id/edit'
@@ -267,6 +307,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
   ExercisesIdEditRoute: ExercisesIdEditRoute,
   SequencesIdEditRoute: SequencesIdEditRoute,
+  ExercisesIdIndexRoute: ExercisesIdIndexRoute,
+  SequencesIdIndexRoute: SequencesIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
