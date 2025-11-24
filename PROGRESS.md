@@ -283,6 +283,22 @@ This document tracks what has been implemented and what still needs to be done.
 
 ---
 
+### Phase 9: Public Exercise Library (Future)
+
+#### 9.1 Public Exercises System
+- [ ] **Public/Private Toggle** - Make exercises shareable
+- [ ] **Explore Tab** - Browse public exercises
+- [ ] **Save System** - Save public exercises to personal library (ExerciseSaves table)
+- [ ] **Save Counter** - Show popularity (hearts/saves count)
+- [ ] **Creator Attribution** - Show who created exercise
+
+#### 9.2 Exercise Versioning (Optional)
+- [ ] **Version Management** - Track exercise updates
+- [ ] **Migration Prompts** - Notify users of updated versions
+- [ ] **Version History** - See exercise evolution
+
+---
+
 ## Notes
 
 - All user data is scoped by `userId` for privacy
