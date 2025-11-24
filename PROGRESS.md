@@ -157,7 +157,17 @@ This document tracks what has been implemented and what still needs to be done.
 
 ## Todo - Not Yet Implemented
 
-### Core Workout Flow
+### Phase 1: Core Workout Flow (MVP)
+
+#### 1.1 Sequence Builder
+- [ ] **Sequence Editor** - Full editor to add/remove/reorder exercises
+- [ ] **Exercise Picker** - Select exercises to add to sequence
+- [ ] **Exercise Configuration** - Set goal, measure, targetValue per exercise
+- [ ] **Break Configuration** - Add and configure breaks
+- [ ] **Drag & Drop Reordering** - Reorder exercises in sequence
+- [ ] **Sequence Preview** - Preview before saving
+
+#### 1.2 Workout Execution
 - [ ] **Sequence Execution UI** - Full workout player with timer, progress tracking
 - [ ] **Exercise Player** - Display exercise during workout (photos, videos, timer)
 - [ ] **Pause/Resume** - Handle workout interruptions
@@ -165,99 +175,109 @@ This document tracks what has been implemented and what still needs to be done.
 - [ ] **Workout Complete Screen** - Summary and rating form
 - [ ] **Audio/Haptic Feedback** - Beep countdown, haptic on complete
 
-### Exercise Management
+---
+
+### Phase 2: Exercise Management
+
+#### 2.1 Exercise CRUD
 - [ ] **Exercise Detail View** - Full exercise details page
 - [ ] **Exercise Edit** - Edit existing exercises
 - [ ] **Exercise Delete Confirmation** - Confirm before delete
+
+#### 2.2 Exercise Enhancements
 - [ ] **Media Preview** - Display photos/videos in forms
 - [ ] **Body Part Selector** - Multi-select for body parts
 - [ ] **Pre-built Exercises** - Seed default exercises
 
-### Sequence Builder
-- [ ] **Sequence Editor** - Full editor to add/remove/reorder exercises
-- [ ] **Exercise Picker** - Select exercises to add to sequence
-- [ ] **Exercise Configuration** - Set goal, measure, targetValue per exercise
-- [ ] **Break Configuration** - Add and configure breaks
-- [ ] **Drag & Drop Reordering** - Reorder exercises in sequence
-- [ ] **Sequence Preview** - Preview before saving
+#### 2.3 Sequence CRUD
 - [ ] **Sequence Detail View** - Full sequence details page
 - [ ] **Sequence Edit** - Edit existing sequences
 - [ ] **Sequence Delete Confirmation** - Confirm before delete
 - [ ] **Pre-built Sequences** - Seed default sequences
 
-### Progress & History
+---
+
+### Phase 3: Progress & History
+
+#### 3.1 History Views
 - [ ] **Workout History Page** - List of past workouts
 - [ ] **Workout Detail View** - Details of a past workout
-- [ ] **Progress Charts** - Visualize progress over time
 - [ ] **Personal Records Page** - View all PRs
+
+#### 3.2 Data Visualization
+- [ ] **Progress Charts** - Visualize progress over time
 - [ ] **Calendar View** - See workouts on calendar
 - [ ] **Export Data** - UI for data export
 
-### Achievements & Gamification
+---
+
+### Phase 4: Gamification & Achievements
+
+#### 4.1 Achievement System
 - [ ] **Achievements Page** - Display unlocked achievements
 - [ ] **Badge Display** - Show badges on profile/home
 - [ ] **Achievement Notifications** - Toast when badge unlocked
+
+#### 4.2 Engagement Features
 - [ ] **Streak Notifications** - Celebrate streak milestones
 - [ ] **Level Up System** - Progress through levels
 
-### Settings & Profile
+---
+
+### Phase 5: Settings & Profile
+
+#### 5.1 User Profile
 - [ ] **Profile Page** - User profile with stats
 - [ ] **Theme Switcher** - Energy vs Zen theme implementation
+
+#### 5.2 Preferences
 - [ ] **Notification Preferences** - Push notification settings
 - [ ] **Data Management** - Delete account, export data
 - [ ] **Accessibility Settings** - High contrast, font size
 
-### Mobile & PWA
+---
+
+### Phase 6: Mobile & PWA
+
+#### 6.1 Installation
 - [ ] **Install Prompt** - Prompt user to install PWA
+
+#### 6.2 Offline Capabilities
 - [ ] **Offline Support** - Cache critical data for offline use
-- [ ] **Push Notifications** - Workout reminders
 - [ ] **Background Sync** - Sync data when back online
+
+#### 6.3 Native Features
+- [ ] **Push Notifications** - Workout reminders
 - [ ] **Share Target** - Accept shared content
-
-### Quality & Polish
-- [ ] **Error Boundaries** - Graceful error handling
-- [ ] **Loading Skeletons** - Better loading states
-- [ ] **Animations** - Page transitions, micro-interactions
-- [ ] **Dark Mode** - Full dark mode support
-- [ ] **Responsive Design** - Tablet optimizations
-- [ ] **Performance Optimization** - Code splitting, lazy loading
-
-### Testing & Documentation
-- [ ] **Unit Tests** - Test utilities and hooks
-- [ ] **Integration Tests** - Test API endpoints
-- [ ] **E2E Tests** - Test user flows
-- [ ] **Storybook** - Component documentation
-- [ ] **API Documentation** - Document tRPC endpoints
 
 ---
 
-## Priority Order (Suggested)
+### Phase 7: Quality & Polish
 
-### Phase 1 - Core Workout Flow (MVP)
-1. Sequence Editor - ability to add exercises
-2. Sequence Execution UI - actually do workouts
-3. Workout Complete Screen - finish and rate
+#### 7.1 User Experience
+- [ ] **Error Boundaries** - Graceful error handling
+- [ ] **Loading Skeletons** - Better loading states
+- [ ] **Animations** - Page transitions, micro-interactions
 
-### Phase 2 - Exercise Management
-1. Exercise Detail/Edit
-2. Media Preview
-3. Pre-built Exercises
+#### 7.2 Visual Design
+- [ ] **Dark Mode** - Full dark mode support
+- [ ] **Responsive Design** - Tablet optimizations
 
-### Phase 3 - Progress Tracking
-1. Workout History Page
-2. Progress Charts
-3. Calendar View
+#### 7.3 Performance
+- [ ] **Performance Optimization** - Code splitting, lazy loading
 
-### Phase 4 - Gamification
-1. Achievements Page
-2. Badge Display
-3. Notifications
+---
 
-### Phase 5 - Polish & Quality
-1. Animations and transitions
-2. Loading states
-3. Error handling
-4. Testing
+### Phase 8: Testing & Documentation
+
+#### 8.1 Automated Testing
+- [ ] **Unit Tests** - Test utilities and hooks
+- [ ] **Integration Tests** - Test API endpoints
+- [ ] **E2E Tests** - Test user flows
+
+#### 8.2 Documentation
+- [ ] **Storybook** - Component documentation
+- [ ] **API Documentation** - Document tRPC endpoints
 
 ---
 
