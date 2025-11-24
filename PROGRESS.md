@@ -187,15 +187,15 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Exercise Delete Confirmation** - Confirm before delete
 
 #### 2.2 Exercise Enhancements
-- [ ] **Media Preview** - Display photos/videos in forms
-- [ ] **Body Part Selector** - Multi-select for body parts
-- [ ] **Pre-built Exercises** - Seed default exercises
+- [x] **Media Preview** - Display photos/videos in forms
+- [x] **Body Part Selector** - Multi-select for body parts
+- [x] **Pre-built Exercises** - Seed default exercises
 
 #### 2.3 Sequence CRUD
 - [x] **Sequence Detail View** - Full sequence details page
 - [x] **Sequence Edit** - Edit existing sequences
 - [x] **Sequence Delete Confirmation** - Confirm before delete
-- [ ] **Pre-built Sequences** - Seed default sequences
+- [x] **Pre-built Sequences** - Seed default sequences
 
 ---
 

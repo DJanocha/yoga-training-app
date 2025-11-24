@@ -43,6 +43,8 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
   const [linkInput, setLinkInput] = useState('')
   const [photoUrls, setPhotoUrls] = useState<string[]>([])
   const [photoUrlInput, setPhotoUrlInput] = useState('')
+  const [videoUrls, setVideoUrls] = useState<string[]>([])
+  const [videoUrlInput, setVideoUrlInput] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
       setBodyParts((exercise.bodyParts as BodyPart[]) || [])
       setLinks(exercise.links)
       setPhotoUrls(exercise.photoUrls || [])
+      setVideoUrls(exercise.videoUrls || [])
     }
   }, [exercise])
 
@@ -78,6 +81,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
         bodyParts: bodyParts.length > 0 ? bodyParts : undefined,
         links,
         photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
+        videoUrls: videoUrls.length > 0 ? videoUrls : undefined,
       }
 
       if (exerciseId) {
@@ -292,22 +296,34 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
             </label>
             <div className="space-y-2">
               {photoUrls.map((url, i) => (
-                <div key={i} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={url}
-                    readOnly
-                    className="flex-1 px-4 py-2 text-base border border-gray-300 rounded-lg bg-gray-50"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setPhotoUrls(photoUrls.filter((_, idx) => idx !== i))
-                    }
-                    className="min-h-[44px] min-w-[44px] px-4 bg-red-50 text-red-600 text-base font-medium rounded-lg hover:bg-red-100"
-                  >
-                    ✕
-                  </button>
+                <div key={i} className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={url}
+                      readOnly
+                      className="flex-1 px-4 py-2 text-base border border-gray-300 rounded-lg bg-gray-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPhotoUrls(photoUrls.filter((_, idx) => idx !== i))
+                      }
+                      className="min-h-[44px] min-w-[44px] px-4 bg-red-50 text-red-600 text-base font-medium rounded-lg hover:bg-red-100"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {url && (
+                    <img
+                      src={url}
+                      alt={`Preview ${i + 1}`}
+                      className="w-full h-48 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  )}
                 </div>
               ))}
               <div className="flex gap-2">
@@ -324,6 +340,70 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                     if (photoUrlInput.trim()) {
                       setPhotoUrls([...photoUrls, photoUrlInput.trim()])
                       setPhotoUrlInput('')
+                    }
+                  }}
+                  className="min-h-[44px] px-6 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-base font-medium text-gray-700 mb-2">
+              Video URLs (YouTube, Vimeo)
+            </label>
+            <div className="space-y-2">
+              {videoUrls.map((url, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={url}
+                      readOnly
+                      className="flex-1 px-4 py-2 text-base border border-gray-300 rounded-lg bg-gray-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setVideoUrls(videoUrls.filter((_, idx) => idx !== i))
+                      }
+                      className="min-h-[44px] min-w-[44px] px-4 bg-red-50 text-red-600 text-base font-medium rounded-lg hover:bg-red-100"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {url && (
+                    <div className="w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                      <iframe
+                        src={url.includes('youtube.com') || url.includes('youtu.be')
+                          ? `https://www.youtube.com/embed/${url.includes('youtu.be') ? url.split('/').pop()?.split('?')[0] : new URLSearchParams(url.split('?')[1]).get('v')}`
+                          : url.includes('vimeo.com')
+                          ? `https://player.vimeo.com/video/${url.split('/').pop()?.split('?')[0]}`
+                          : url}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={videoUrlInput}
+                  onChange={(e) => setVideoUrlInput(e.target.value)}
+                  className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://youtube.com/... or https://vimeo.com/..."
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (videoUrlInput.trim()) {
+                      setVideoUrls([...videoUrls, videoUrlInput.trim()])
+                      setVideoUrlInput('')
                     }
                   }}
                   className="min-h-[44px] px-6 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700"
