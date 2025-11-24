@@ -11,6 +11,15 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  advanced:{
+    defaultCookieAttributes: {
+      // Use "lax" for same-origin deployments (frontend + backend on same domain)
+      // Safari blocks "none" on public suffix domains like *.vercel.app
+      sameSite: "lax",
+      secure: true,
+      httpOnly: true,
+    }
+  },
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   hooks: {

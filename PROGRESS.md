@@ -239,6 +239,8 @@ This document tracks what has been implemented and what still needs to be done.
 
 **Auth Navigation:** Using `window.location.href` and `window.location.replace()` for auth navigation instead of router hooks ensures reliable redirects after login/logout without requiring hard refresh. The `onSessionChange` callback invalidates all queries when auth state changes. The `redirectTo` prop on `<AuthView>` specifies where users should be redirected after successful authentication.
 
+**Safari Cookie Fix:** Changed `sameSite` from `"none"` to `"lax"` because Safari blocks cookies on public suffix domains (like `*.vercel.app`). Since frontend and backend are deployed on the same domain, same-site cookies work perfectly. Removed `partitioned: true` as it's only needed for cross-site cookies. For production with a custom domain, cross-site configuration can be restored.
+
 ---
 
 ### Phase 5: Settings & Profile
