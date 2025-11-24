@@ -7,8 +7,8 @@ import {
   sequenceExecutions,
   userSettings,
   achievements,
-} from './schema'
-import { refinedExerciseSchema, refinedSequenceSchema, refinedUserSettingsSchema } from './types'
+} from '@/db/schema'
+import { refinedExerciseSchema, refinedSequenceSchema, refinedUserSettingsSchema } from '@/db/types'
 
 // ============================================================================
 // USER SCHEMAS (from better-auth)

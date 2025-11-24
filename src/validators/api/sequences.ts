@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { insertSequenceSchema, updateSequenceSchema } from '../../db/schemas'
+import { insertSequenceSchema, updateSequenceSchema } from '../entities'
 
 /**
  * Validator for getting a sequence by ID

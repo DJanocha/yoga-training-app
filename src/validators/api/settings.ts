@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { insertUserSettingsSchema } from '../../db/schemas'
+import { insertUserSettingsSchema } from '../entities'
 
 /**
  * Validator for updating user settings
