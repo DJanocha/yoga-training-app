@@ -233,6 +233,7 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Session Invalidation** - Invalidate all queries on session change
 - [x] **Vercel SPA Routing** - Created vercel.json with proper rewrites for client-side routes
 - [x] **AuthView redirectTo Prop** - Added redirectTo="/" to prevent sign-out redirect loop
+- [x] **Auth Event Logging** - Added hooks to log sign-in, sign-up, sign-out events with timestamps and user info
 
 **Note:** better-auth-ui automatically displays authentication errors via sonner toasts when using `<AuthView />` component. No additional error handling code required.
 
