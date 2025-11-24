@@ -69,21 +69,16 @@ export function Provider({
         <AuthQueryProvider>
           <AuthUIProviderTanstack
             authClient={authClient}
-            navigate={(path: string) => {
-              if (typeof window !== 'undefined') {
-                window.location.href = path
-              }
+            navigate={(href: string) => {
+              // Use window.location for auth navigation to ensure clean redirects
+              window.location.href = href
             }}
-            replace={(path: string) => {
-              if (typeof window !== 'undefined') {
-                window.location.replace(path)
-              }
+            replace={(href: string) => {
+              window.location.replace(href)
             }}
             onSessionChange={() => {
-              if (typeof window !== 'undefined') {
-                // Invalidate queries when session changes
-                queryClient.invalidateQueries()
-              }
+              // Invalidate all queries when auth state changes
+              queryClient.invalidateQueries()
             }}
             persistClient={false}
             Link={Link}

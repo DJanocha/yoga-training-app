@@ -224,13 +224,18 @@ This document tracks what has been implemented and what still needs to be done.
 - [ ] **Streak Notifications** - Celebrate streak milestones
 - [ ] **Level Up System** - Progress through levels
 
-#### 4.3 Auth Error Handling
+#### 4.3 Auth Error Handling & Navigation
 - [x] **Better-auth-ui Integration** - Using @daveyplate/better-auth-ui v3 with built-in error toasts
 - [x] **Sonner Toast Setup** - Toaster component configured in root layout
 - [x] **AuthUIProvider Configuration** - Added onSessionChange and persistClient props
 - [x] **CSS Import** - Better-auth-ui styles imported via @source directive
+- [x] **Auth Navigation Fix** - Use window.location for reliable post-auth redirects
+- [x] **Session Invalidation** - Invalidate all queries on session change
+- [x] **Vercel SPA Routing** - Created vercel.json with proper rewrites for client-side routes
 
 **Note:** better-auth-ui automatically displays authentication errors via sonner toasts when using `<AuthView />` component. No additional error handling code required.
+
+**Auth Navigation:** Using `window.location.href` and `window.location.replace()` for auth navigation instead of router hooks ensures reliable redirects after login/logout without requiring hard refresh. The `onSessionChange` callback invalidates all queries when auth state changes.
 
 ---
 
