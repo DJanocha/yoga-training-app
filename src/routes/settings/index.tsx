@@ -128,6 +128,37 @@ function SettingsContent() {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
               </div>
+
+              {/* Data Management */}
+              <div className="space-y-2 pt-4 border-t">
+                <h3 className="text-sm font-medium">Data Management</h3>
+                <p className="text-sm text-muted-foreground">
+                  Export your workout data as JSON for backup or analysis.
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const data = await queryClient.fetchQuery(trpc.executions.exportData.queryOptions())
+                      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `yogaflow-data-${new Date().toISOString().split('T')[0]}.json`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                    } catch (error) {
+                      console.error('Export failed:', error)
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Download className="h-4 w-4" />
+                  Export Workout Data
+                </button>
+              </div>
             </section>
           )}
 

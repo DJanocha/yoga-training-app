@@ -80,14 +80,22 @@ function HistoryContent() {
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b border-border md:hidden">
         <h1 className="text-2xl font-bold">Workout History</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate({ to: '/history/records' })}
-        >
-          <TrendingUp className="h-4 w-4 mr-2" />
-          Records
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate({ to: '/history/calendar' })}
+          >
+            <Calendar className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate({ to: '/history/records' })}
+          >
+            <TrendingUp className="h-4 w-4" />
+          </Button>
+        </div>
       </header>
 
       {/* Desktop Header */}
@@ -97,13 +105,22 @@ function HistoryContent() {
             <h1 className="text-3xl font-bold">Workout History</h1>
             <p className="text-muted-foreground">Track your progress over time</p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => navigate({ to: '/history/records' })}
-          >
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Personal Records
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate({ to: '/history/calendar' })}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Calendar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate({ to: '/history/records' })}
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Personal Records
+            </Button>
+          </div>
         </div>
       </div>
 

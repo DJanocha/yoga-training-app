@@ -8,6 +8,7 @@ import { useTRPC } from '@/lib/trpc'
 import { useQuery } from '@tanstack/react-query'
 import { RedirectToSignIn, SignedIn, AuthLoading, } from '@/components/auth'
 import { authClient } from '@/lib/auth-client'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -133,6 +134,49 @@ function HomeContent() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Weekly Activity Chart */}
+        {weekData && weekData.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">
+                7-Day Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={weekData.map(day => ({
+                  day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
+                  workouts: day.workouts
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 12 }}
+                    stroke="#6b7280"
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    stroke="#6b7280"
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar
+                    dataKey="workouts"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Weekly Goal Progress */}
         {weeklyGoal > 0 && (

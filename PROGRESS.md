@@ -207,9 +207,9 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Personal Records Page** - View all PRs
 
 #### 3.2 Data Visualization
-- [ ] **Progress Charts** - Visualize progress over time
-- [ ] **Calendar View** - See workouts on calendar
-- [ ] **Export Data** - UI for data export
+- [x] **Progress Charts** - Visualize progress over time
+- [x] **Calendar View** - See workouts on calendar
+- [x] **Export Data** - UI for data export
 
 ---
 
