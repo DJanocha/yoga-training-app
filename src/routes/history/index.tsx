@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
 import { useQuery } from '@tanstack/react-query'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -79,12 +80,31 @@ function HistoryContent() {
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b border-border md:hidden">
         <h1 className="text-2xl font-bold">Workout History</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate({ to: '/history/records' })}
+        >
+          <TrendingUp className="h-4 w-4 mr-2" />
+          Records
+        </Button>
       </header>
 
       {/* Desktop Header */}
       <div className="hidden md:block mb-6 p-4">
-        <h1 className="text-3xl font-bold">Workout History</h1>
-        <p className="text-muted-foreground">Track your progress over time</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Workout History</h1>
+            <p className="text-muted-foreground">Track your progress over time</p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate({ to: '/history/records' })}
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Personal Records
+          </Button>
+        </div>
       </div>
 
       {/* Main content */}

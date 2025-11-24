@@ -443,6 +443,95 @@ export const executionsRouter = {
   }),
 
   /**
+   * Get all personal records grouped by exercise
+   */
+  getPersonalRecords: protectedProcedure.query(async ({ ctx }) => {
+    // Fetch all completed executions with personal records
+    const executions = await db
+      .select()
+      .from(sequenceExecutions)
+      .where(
+        and(
+          eq(sequenceExecutions.userId, ctx.userId),
+          isNotNull(sequenceExecutions.completedAt),
+          isNotNull(sequenceExecutions.personalRecords),
+        ),
+      )
+      .orderBy(desc(sequenceExecutions.completedAt))
+
+    // Aggregate personal records by exercise
+    const recordsMap = new Map<
+      number,
+      {
+        exerciseId: number
+        exerciseName: string
+        currentBest: number
+        measure: 'repetitions' | 'time'
+        history: Array<{
+          value: number
+          previousBest: number | undefined
+          achievedAt: Date
+          sequenceName: string
+        }>
+      }
+    >()
+
+    for (const execution of executions) {
+      const prs = execution.personalRecords as Array<{
+        exerciseId: number
+        type: 'repetitions' | 'time'
+        previousBest: number | undefined
+        newBest: number
+      }>
+
+      if (!prs || prs.length === 0) continue
+
+      // Fetch sequence name
+      const [sequence] = await db
+        .select()
+        .from(sequences)
+        .where(eq(sequences.id, execution.sequenceId))
+        .limit(1)
+
+      for (const pr of prs) {
+        // Fetch exercise name
+        const [exercise] = await db
+          .select()
+          .from(exercisesTable)
+          .where(eq(exercisesTable.id, pr.exerciseId))
+          .limit(1)
+
+        if (!exercise) continue
+
+        if (!recordsMap.has(pr.exerciseId)) {
+          recordsMap.set(pr.exerciseId, {
+            exerciseId: pr.exerciseId,
+            exerciseName: exercise.name,
+            currentBest: pr.newBest,
+            measure: pr.type,
+            history: [],
+          })
+        }
+
+        const record = recordsMap.get(pr.exerciseId)!
+        record.history.push({
+          value: pr.newBest,
+          previousBest: pr.previousBest,
+          achievedAt: execution.completedAt!,
+          sequenceName: sequence?.name || 'Unknown',
+        })
+
+        // Update current best if this is newer
+        if (pr.newBest > record.currentBest) {
+          record.currentBest = pr.newBest
+        }
+      }
+    }
+
+    return Array.from(recordsMap.values())
+  }),
+
+  /**
    * Get weekly progress (last 7 days workout counts)
    */
   getWeeklyProgress: protectedProcedure.query(async ({ ctx }) => {

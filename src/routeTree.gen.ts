@@ -18,6 +18,7 @@ import { Route as HistoryIndexRouteImport } from './routes/history/index'
 import { Route as ExercisesIndexRouteImport } from './routes/exercises/index'
 import { Route as AuthPathnameRouteImport } from './routes/auth/$pathname'
 import { Route as SequencesIdIndexRouteImport } from './routes/sequences/$id/index'
+import { Route as HistoryRecordsIndexRouteImport } from './routes/history/records/index'
 import { Route as HistoryIdIndexRouteImport } from './routes/history/$id/index'
 import { Route as ExercisesIdIndexRouteImport } from './routes/exercises/$id/index'
 import { Route as SequencesIdExecuteRouteImport } from './routes/sequences/$id/execute'
@@ -69,6 +70,11 @@ const AuthPathnameRoute = AuthPathnameRouteImport.update({
 const SequencesIdIndexRoute = SequencesIdIndexRouteImport.update({
   id: '/sequences/$id/',
   path: '/sequences/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRecordsIndexRoute = HistoryRecordsIndexRouteImport.update({
+  id: '/history/records/',
+  path: '/history/records/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryIdIndexRoute = HistoryIdIndexRouteImport.update({
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id': typeof ExercisesIdIndexRoute
   '/history/$id': typeof HistoryIdIndexRoute
+  '/history/records': typeof HistoryRecordsIndexRoute
   '/sequences/$id': typeof SequencesIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id': typeof ExercisesIdIndexRoute
   '/history/$id': typeof HistoryIdIndexRoute
+  '/history/records': typeof HistoryRecordsIndexRoute
   '/sequences/$id': typeof SequencesIdIndexRoute
 }
 export interface FileRoutesById {
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
   '/exercises/$id/': typeof ExercisesIdIndexRoute
   '/history/$id/': typeof HistoryIdIndexRoute
+  '/history/records/': typeof HistoryRecordsIndexRoute
   '/sequences/$id/': typeof SequencesIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/sequences/$id/execute'
     | '/exercises/$id'
     | '/history/$id'
+    | '/history/records'
     | '/sequences/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/sequences/$id/execute'
     | '/exercises/$id'
     | '/history/$id'
+    | '/history/records'
     | '/sequences/$id'
   id:
     | '__root__'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/sequences/$id/execute'
     | '/exercises/$id/'
     | '/history/$id/'
+    | '/history/records/'
     | '/sequences/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -235,6 +247,7 @@ export interface RootRouteChildren {
   SequencesIdExecuteRoute: typeof SequencesIdExecuteRoute
   ExercisesIdIndexRoute: typeof ExercisesIdIndexRoute
   HistoryIdIndexRoute: typeof HistoryIdIndexRoute
+  HistoryRecordsIndexRoute: typeof HistoryRecordsIndexRoute
   SequencesIdIndexRoute: typeof SequencesIdIndexRoute
 }
 
@@ -301,6 +314,13 @@ declare module '@tanstack/react-router' {
       path: '/sequences/$id'
       fullPath: '/sequences/$id'
       preLoaderRoute: typeof SequencesIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history/records/': {
+      id: '/history/records/'
+      path: '/history/records'
+      fullPath: '/history/records'
+      preLoaderRoute: typeof HistoryRecordsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history/$id/': {
@@ -371,6 +391,7 @@ const rootRouteChildren: RootRouteChildren = {
   SequencesIdExecuteRoute: SequencesIdExecuteRoute,
   ExercisesIdIndexRoute: ExercisesIdIndexRoute,
   HistoryIdIndexRoute: HistoryIdIndexRoute,
+  HistoryRecordsIndexRoute: HistoryRecordsIndexRoute,
   SequencesIdIndexRoute: SequencesIdIndexRoute,
 }
 export const routeTree = rootRouteImport

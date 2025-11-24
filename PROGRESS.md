@@ -204,7 +204,7 @@ This document tracks what has been implemented and what still needs to be done.
 #### 3.1 History Views
 - [x] **Workout History Page** - List of past workouts
 - [x] **Workout Detail View** - Details of a past workout
-- [ ] **Personal Records Page** - View all PRs
+- [x] **Personal Records Page** - View all PRs
 
 #### 3.2 Data Visualization
 - [ ] **Progress Charts** - Visualize progress over time
