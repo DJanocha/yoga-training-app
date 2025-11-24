@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { z } from 'zod'
 import { ExerciseForm } from './ExerciseForm'
 import { Dumbbell } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
@@ -8,7 +9,13 @@ import { EmptyState } from '@/components/empty-state'
 import { ActionBar } from '@/components/action-bar'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
+import { useAppForm } from '@/hooks/form'
+import { exerciseLabelOverrides, exerciseRequiredDefaults, getFieldLabel } from '@/lib/form-utils'
+
+// Required fields schema for quick create
+const exerciseRequiredSchema = z.object({
+  name: z.string().min(1, 'Exercise name is required'),
+})
 
 export function ExerciseList() {
   const trpc = useTRPC()
@@ -25,11 +32,24 @@ export function ExerciseList() {
   // Selected item for copy functionality
   const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined)
 
-  // Create form state
-  const [newExerciseName, setNewExerciseName] = useState("")
-
   // UI state
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set())
+
+  // Create exercise mutation
+  const createExercise = useMutation(trpc.exercises.create.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.filteredList.queryKey() })
+      queryClient.invalidateQueries({ queryKey: trpc.exercises.list.queryKey() })
+    },
+  }))
+
+  // Quick create form using TanStack Form
+  const form = useAppForm({
+    defaultValues: exerciseRequiredDefaults,
+    validators: {
+      onSubmit: exerciseRequiredSchema,
+    },
+  })
 
 
   const { data: exercises, isLoading } = useQuery(trpc.exercises.filteredList.queryOptions({
@@ -117,13 +137,43 @@ export function ExerciseList() {
     console.log('Copy exercise:', itemId)
   }
 
-  // Handle create exercise from quick form
-  const handleQuickCreate = () => {
-    if (newExerciseName.trim()) {
-      // For now, open the full form
-      // TODO: Implement quick create mutation
-      setShowForm(true)
-      setNewExerciseName("")
+  // Handle quick create - creates exercise with just name
+  const handleQuickCreate = async () => {
+    // Validate the form first
+    await form.validate('submit')
+    if (!form.state.isValid) return
+
+    const name = form.state.values.name
+    if (!name.trim()) return
+
+    await createExercise.mutateAsync({
+      name,
+      photoUrls: [],
+      videoUrls: [],
+      links: [],
+    })
+    form.reset()
+  }
+
+  // Handle add details - creates exercise then navigates to edit page
+  const handleAddDetails = async () => {
+    // Validate the form first
+    await form.validate('submit')
+    if (!form.state.isValid) return
+
+    const name = form.state.values.name
+    if (!name.trim()) return
+
+    const newExercise = await createExercise.mutateAsync({
+      name,
+      photoUrls: [],
+      videoUrls: [],
+      links: [],
+    })
+    form.reset()
+    if (newExercise) {
+      // Navigate to edit page - for now, use the existing full form
+      setEditingId(newExercise.id)
     }
   }
 
@@ -181,21 +231,18 @@ export function ExerciseList() {
     </div>
   )
 
-  // Create content for ActionBar
+  // Create content for ActionBar using TanStack Form
   const createContent = (
-    <div>
-      <Label htmlFor="quick-name" className="text-sm font-medium">
-        Exercise Name
-      </Label>
-      <Input
-        id="quick-name"
-        placeholder="Enter exercise name"
-        value={newExerciseName}
-        onChange={(e) => setNewExerciseName(e.target.value)}
-        className="mt-1.5"
-        autoFocus
-      />
-    </div>
+    <form.AppForm>
+      <form.AppField name="name">
+        {(field) => (
+          <field.TextField
+            label={getFieldLabel('name', exerciseLabelOverrides)}
+            placeholder="Enter exercise name"
+          />
+        )}
+      </form.AppField>
+    </form.AppForm>
   )
 
   return (
@@ -371,6 +418,8 @@ export function ExerciseList() {
           }}
           createContent={createContent}
           onSubmitCreate={handleQuickCreate}
+          onAddDetails={handleAddDetails}
+          isSubmitting={createExercise.isPending}
           selectedItemId={selectedItemId}
           onCopy={handleCopyExercise}
           copyDisabledMessage="Select an exercise to duplicate"

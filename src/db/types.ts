@@ -107,7 +107,7 @@ export const refinedSequenceSchema = z.object({
   description: z.string().optional(),
   level: Level.optional(),
   category: Category.optional(),
-  exercises: z.array(SequenceExercise).min(1, 'At least one exercise is required'),
+  exercises: z.array(SequenceExercise), // Allow empty during creation, validate when starting workout
   isFavorite: z.boolean().default(false).optional(),
   isPreBuilt: z.boolean().default(false).optional(),
 })

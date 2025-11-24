@@ -8,7 +8,10 @@ import { EmptyState } from '@/components/empty-state'
 import { ActionBar } from '@/components/action-bar'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
+import { useAppForm } from '@/hooks/form'
+import { sequenceLabelOverrides, sequenceRequiredDefaults, getFieldLabel } from '@/lib/form-utils'
+import { createSequenceInputValidator } from '@/validators/api/sequences'
+
 
 export const Route = createFileRoute('/sequences/')({
   component: Sequences,
@@ -45,8 +48,15 @@ function SequencesContent() {
   // Selected item for copy functionality
   const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined)
 
-  // Create form state
-  const [newSequenceName, setNewSequenceName] = useState("")
+  // UI state for editing (will be used when sequence editor is implemented)
+  const [_editingId, setEditingId] = useState<number | null>(null)
+
+  // Create sequence mutation
+  const createSequence = useMutation(trpc.sequences.create.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: trpc.sequences.list.queryKey() })
+    },
+  }))
 
   // Duplicate sequence mutation
   const duplicateSequence = useMutation(trpc.sequences.duplicate.mutationOptions({
@@ -54,6 +64,14 @@ function SequencesContent() {
       queryClient.invalidateQueries({ queryKey: trpc.sequences.list.queryKey() })
     },
   }))
+
+  // Quick create form using TanStack Form
+  const form = useAppForm({
+    defaultValues: sequenceRequiredDefaults,
+    validators: {
+      onSubmit: createSequenceInputValidator,
+    },
+  })
 
   if (isLoading || !sequences) {
     return (
@@ -71,12 +89,51 @@ function SequencesContent() {
     duplicateSequence.mutate({ id: parseInt(itemId) })
   }
 
-  // Handle create sequence
-  const handleQuickCreate = () => {
-    if (newSequenceName.trim()) {
-      // TODO: Implement quick create mutation
-      console.log('Create sequence:', newSequenceName)
-      setNewSequenceName("")
+  // Handle quick create - creates sequence with just name
+  // Note: Sequences require exercises, so this will create with empty array
+  // which may fail - user should use "Add details" for full creation
+  const handleQuickCreate = async () => {
+    // Validate the form first
+    await form.validate('submit')
+    if (!form.state.isValid) return
+
+    const name = form.state.values.name
+    if (!name.trim()) return
+
+    try {
+      await createSequence.mutateAsync({
+        name,
+        exercises: [], // Empty - API may reject this
+      })
+      form.reset()
+    } catch (error) {
+      // If creation fails due to empty exercises, the error will be shown
+      console.error('Failed to create sequence:', error)
+    }
+  }
+
+  // Handle add details - for sequences, this is the preferred flow
+  // since sequences require exercises
+  const handleAddDetails = async () => {
+    // Validate the form first
+    await form.validate('submit')
+    if (!form.state.isValid) return
+
+    const name = form.state.values.name
+    if (!name.trim()) return
+
+    try {
+      const newSequence = await createSequence.mutateAsync({
+        name,
+        exercises: [], // Empty initially
+      })
+      form.reset()
+      if (newSequence) {
+        // Open sequence editor
+        setEditingId(newSequence.id)
+      }
+    } catch (error) {
+      console.error('Failed to create sequence:', error)
     }
   }
 
@@ -115,21 +172,18 @@ function SequencesContent() {
     </div>
   )
 
-  // Create content for ActionBar
+  // Create content for ActionBar using TanStack Form
   const createContent = (
-    <div>
-      <Label htmlFor="quick-name" className="text-sm font-medium">
-        Sequence Name
-      </Label>
-      <Input
-        id="quick-name"
-        placeholder="Enter sequence name"
-        value={newSequenceName}
-        onChange={(e) => setNewSequenceName(e.target.value)}
-        className="mt-1.5"
-        autoFocus
-      />
-    </div>
+    <form.AppForm>
+      <form.AppField name="name">
+        {(field) => (
+          <field.TextField
+            label={getFieldLabel('name', sequenceLabelOverrides)}
+            placeholder="Enter sequence name"
+          />
+        )}
+      </form.AppField>
+    </form.AppForm>
   )
 
   return (
@@ -214,6 +268,8 @@ function SequencesContent() {
           }}
           createContent={createContent}
           onSubmitCreate={handleQuickCreate}
+          onAddDetails={handleAddDetails}
+          isSubmitting={createSequence.isPending}
           selectedItemId={selectedItemId}
           onCopy={handleCopySequence}
           copyDisabledMessage="Select a sequence to clone"

@@ -25,7 +25,10 @@ type ActionBarProps = {
   createTitle?: string
   createContent: ReactNode
   onSubmitCreate: () => void | Promise<void>
+  onAddDetails?: () => void | Promise<void>
   isSubmitting?: boolean
+  createButtonLabel?: string
+  addDetailsButtonLabel?: string
 
   // Copy/Clone
   selectedItemId?: string
@@ -49,7 +52,10 @@ export function ActionBar({
   createTitle: _createTitle = "Create New",
   createContent,
   onSubmitCreate,
+  onAddDetails,
   isSubmitting = false,
+  createButtonLabel = "Create",
+  addDetailsButtonLabel = "Add details",
 
   // Copy
   selectedItemId,
@@ -111,6 +117,13 @@ export function ActionBar({
   const handleSubmitCreate = async () => {
     await onSubmitCreate()
     setState("base")
+  }
+
+  const handleAddDetails = async () => {
+    if (onAddDetails) {
+      await onAddDetails()
+      setState("base")
+    }
   }
 
   return (
@@ -191,22 +204,36 @@ export function ActionBar({
             {state === "create" && (
               <div className="space-y-4">
                 {createContent}
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-col gap-2 pt-2">
+                  {/* Primary action */}
                   <Button
-                    className="flex-1"
+                    className="w-full"
                     onClick={handleSubmitCreate}
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Creating..." : "Create"}
+                    {isSubmitting ? "Creating..." : createButtonLabel}
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 bg-transparent"
-                    onClick={() => setState("base")}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
+                  {/* Secondary actions */}
+                  <div className="flex gap-2">
+                    {onAddDetails && (
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={handleAddDetails}
+                        disabled={isSubmitting}
+                      >
+                        {addDetailsButtonLabel}
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      className={onAddDetails ? "flex-1" : "w-full"}
+                      onClick={() => setState("base")}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
