@@ -99,26 +99,59 @@ This document tracks what has been implemented and what still needs to be done.
 
 ### UI Components
 
-- [x] `ActionBar` - Search, filter, create actions
+- [x] `ActionBar` - Search, filter, create actions with three-button layout (Cancel, Add details, Create)
 - [x] `EmptyState` - Empty list placeholder
-- [x] `ExerciseList` - Exercise display
+- [x] `ExerciseList` - Exercise display with TanStack Form quick create
 - [x] `ExerciseForm` - Exercise creation/editing
 - [x] `ExecuteSequence` - Workout execution (exists but needs review)
 - [x] `MobilePageHeader` - Mobile header
 - [x] `FilterChips` - Filter display
 - [x] `AppSidebar` - Navigation sidebar
-- [x] Form field components
 - [x] Full Shadcn UI component library
+
+### Form System (TanStack Form Composition)
+
+- [x] Form context and hooks (`src/hooks/form-context.ts`, `src/hooks/form.ts`)
+- [x] Form field components (`src/components/form-fields.tsx`):
+  - [x] `TextField` - Text input
+  - [x] `TextArea` - Multi-line text
+  - [x] `Select` - Dropdown select
+  - [x] `Slider` - Numeric slider
+  - [x] `Switch` - Boolean toggle
+  - [x] `NumberInput` - Numeric input
+  - [x] `CheckboxGroup` - Multiple checkbox selection
+  - [x] `StringArrayInput` - Dynamic array of strings (URLs, etc.)
+  - [x] `SubscribeButton` - Form submit button
+- [x] Form utilities (`src/lib/form-utils.ts`):
+  - [x] `keyToLabel` - Derive labels from field names
+  - [x] `getFieldLabel` - Get label with overrides
+  - [x] `enumToSelectOptions` - Convert enums to select options
+  - [x] Pre-built options for Level, Category, BodyPart, Theme
+  - [x] Label overrides per entity (exercises, sequences, settings)
+  - [x] Required field definitions and default values
+- [x] Progressive disclosure pattern in ActionBar (quick create with required fields only)
 
 ---
 
 ## In Progress / Needs Work
 
-### Schema Refactoring
-- [ ] Audit all `validators/api/*.ts` files for duplication
-- [ ] Replace inline `z.object()` definitions with references to `db/types.ts`
-- [ ] Ensure consistent naming convention
-- [ ] Document the pattern for future additions
+### Schema Refactoring (See `.serena/memories/schema_duplication_refactoring.md`)
+- [x] Move `db/schemas.ts` → `validators/entities.ts` (all entity Zod schemas in one place)
+- [x] Update all imports in `validators/api/*.ts` to use `../entities`
+- [x] Audit all `validators/api/*.ts` files for duplication (structure is acceptable)
+- [x] Replace inline `z.object()` definitions with references to `db/types.ts` (exercises.ts uses Level, Category, BodyPart)
+- [x] Ensure consistent naming convention (all use `*InputValidator` pattern)
+- [x] Document the pattern for future additions (see `.serena/memories/schema_organization_pattern.md`)
+
+**Target structure:**
+- `db/` - Drizzle tables, types, connection only
+- `validators/entities.ts` - Entity Zod schemas (insert/select/update)
+- `validators/api/` - tRPC procedure input validators (derived from entities.ts)
+
+### Exercise Edit Page
+- [ ] Create `/exercises/$id/edit` route with full form
+- [ ] Pre-populate form with existing exercise data
+- [ ] Connect to update mutation
 
 ---
 
