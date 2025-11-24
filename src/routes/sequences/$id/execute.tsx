@@ -78,6 +78,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   // Fetch all exercises for names
   const { data: allExercises } = useQuery(trpc.exercises.list.queryOptions())
 
+  // Fetch user settings for beep/haptic preferences
+  const { data: userSettings } = useQuery(trpc.settings.get.queryOptions())
+
   // Mutations
   const startExecution = useMutation(trpc.executions.start.mutationOptions())
   const updateExecution = useMutation(trpc.executions.updateExecution.mutationOptions())
@@ -116,6 +119,44 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     if (exerciseId === 'break') return 'Break'
     return allExercises?.find((ex) => ex.id === exerciseId)?.name || `Exercise #${exerciseId}`
   }, [allExercises])
+
+  // Audio beep function
+  const playBeep = useCallback((frequency: number = 800, duration: number = 200) => {
+    if (!userSettings?.beepEnabled) return
+
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      oscillator.frequency.value = frequency
+      oscillator.type = 'sine'
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000)
+
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + duration / 1000)
+    } catch (error) {
+      console.error('Audio beep failed:', error)
+    }
+  }, [userSettings?.beepEnabled])
+
+  // Haptic feedback function
+  const triggerHaptic = useCallback((pattern: number | number[] = 200) => {
+    if (!userSettings?.hapticEnabled) return
+
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate(pattern)
+      }
+    } catch (error) {
+      console.error('Haptic feedback failed:', error)
+    }
+  }, [userSettings?.hapticEnabled])
 
   // Start execution on mount
   useEffect(() => {
@@ -158,6 +199,28 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
   }, [isPaused, isCompleted, exercises, currentIndex])
 
+  // Beep countdown effect for time-based exercises
+  useEffect(() => {
+    if (!exercises || currentIndex >= exercises.length) return
+
+    const currentExercise = exercises[currentIndex]
+    if (currentExercise.config.measure !== 'time' || !currentExercise.config.targetValue) return
+
+    const beepStartSeconds = userSettings?.beepStartSeconds || 3
+    const targetValue = currentExercise.config.targetValue
+    const secondsRemaining = targetValue - timeElapsed
+
+    // Beep during countdown (3, 2, 1)
+    if (secondsRemaining > 0 && secondsRemaining <= beepStartSeconds) {
+      playBeep(600 + secondsRemaining * 100, 150) // Higher pitch for earlier beeps
+    }
+
+    // Final beep on completion (0)
+    if (secondsRemaining === 0) {
+      playBeep(1000, 300) // Higher pitch, longer duration for completion
+    }
+  }, [timeElapsed, exercises, currentIndex, userSettings?.beepStartSeconds, playBeep])
+
   // Check if current exercise is complete (for time-based with auto-advance)
   useEffect(() => {
     if (!exercises || currentIndex >= exercises.length) return
@@ -179,6 +242,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     if (!exercises) return
 
     const currentExercise = exercises[currentIndex]
+
+    // Trigger haptic feedback on completion
+    triggerHaptic([100, 50, 100]) // Double vibration pattern
 
     // Record completed exercise with actual value
     const completed: CompletedExercise = {
@@ -211,7 +277,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       setTimeElapsed(0)
       exerciseStartRef.current = new Date()
     }
-  }, [exercises, currentIndex, timeElapsed, actualValue, executionId, completedExercises, updateExecution])
+  }, [exercises, currentIndex, timeElapsed, actualValue, executionId, completedExercises, updateExecution, triggerHaptic])
 
   // Handle skip
   const handleSkip = useCallback(() => {

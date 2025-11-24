@@ -175,7 +175,7 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Workout Complete Screen** - Summary and rating form
 - [x] **Auto-Advance Toggle** - Per-session toggle to enable/disable auto-advancing between exercises
 - [x] **Actual Performance Tracking** - Adjust reps/time during workout, track actual vs target performance (rep +/- buttons, overtime timer for time-based)
-- [ ] **Audio/Haptic Feedback** - Beep countdown, haptic on complete
+- [x] **Audio/Haptic Feedback** - Beep countdown, haptic on complete
 
 ---
 
