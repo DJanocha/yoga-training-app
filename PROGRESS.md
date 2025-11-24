@@ -149,9 +149,9 @@ This document tracks what has been implemented and what still needs to be done.
 - `validators/api/` - tRPC procedure input validators (derived from entities.ts)
 
 ### Exercise Edit Page
-- [ ] Create `/exercises/$id/edit` route with full form
-- [ ] Pre-populate form with existing exercise data
-- [ ] Connect to update mutation
+- [x] Create `/exercises/$id/edit` route with full form
+- [x] Pre-populate form with existing exercise data
+- [x] Connect to update mutation
 
 ---
 
