@@ -216,8 +216,8 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 4: Gamification & Achievements
 
 #### 4.1 Achievement System
-- [ ] **Achievements Page** - Display unlocked achievements
-- [ ] **Badge Display** - Show badges on profile/home
+- [x] **Achievements Page** - Display unlocked achievements
+- [x] **Badge Display** - Show badges on profile/home
 - [ ] **Achievement Notifications** - Toast when badge unlocked
 
 #### 4.2 Engagement Features

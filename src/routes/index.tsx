@@ -40,6 +40,7 @@ function HomeContent() {
   const { data: settings, isLoading: settingsLoading } = useQuery(trpc.settings.get.queryOptions())
   const { data: stats, isLoading: statsLoading } = useQuery(trpc.executions.getDetailedStats.queryOptions())
   const { data: weekData, isLoading: weekLoading } = useQuery(trpc.executions.getWeeklyProgress.queryOptions())
+  const { data: achievements } = useQuery(trpc.achievements.list.queryOptions())
 
   const currentStreak = settings?.currentStreak || 0
   const weeklyGoal = settings?.weeklyGoal || 3
@@ -217,6 +218,43 @@ function HomeContent() {
                 You've set {stats.personalRecords} personal{' '}
                 {stats.personalRecords === 1 ? 'record' : 'records'}!
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Recent Achievements */}
+        {achievements && achievements.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-yellow-500" />
+                  Recent Achievements
+                </CardTitle>
+                <Link to="/achievements" className="text-sm text-primary hover:underline">
+                  View All
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {achievements.slice(0, 3).map((achievement: any) => (
+                  <div
+                    key={achievement.id}
+                    className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg"
+                  >
+                    <Trophy className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate capitalize">
+                        {achievement.badgeId.replace('pr_', '').replace(/_/g, ' ')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(achievement.unlockedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}

@@ -16,6 +16,7 @@ import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as HistoryIndexRouteImport } from './routes/history/index'
 import { Route as ExercisesIndexRouteImport } from './routes/exercises/index'
+import { Route as AchievementsIndexRouteImport } from './routes/achievements/index'
 import { Route as AuthPathnameRouteImport } from './routes/auth/$pathname'
 import { Route as SequencesIdIndexRouteImport } from './routes/sequences/$id/index'
 import { Route as HistoryRecordsIndexRouteImport } from './routes/history/records/index'
@@ -61,6 +62,11 @@ const HistoryIndexRoute = HistoryIndexRouteImport.update({
 const ExercisesIndexRoute = ExercisesIndexRouteImport.update({
   id: '/exercises/',
   path: '/exercises/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AchievementsIndexRoute = AchievementsIndexRouteImport.update({
+  id: '/achievements/',
+  path: '/achievements/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthPathnameRoute = AuthPathnameRouteImport.update({
@@ -122,6 +128,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth/$pathname': typeof AuthPathnameRoute
+  '/achievements': typeof AchievementsIndexRoute
   '/exercises': typeof ExercisesIndexRoute
   '/history': typeof HistoryIndexRoute
   '/login': typeof LoginIndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth/$pathname': typeof AuthPathnameRoute
+  '/achievements': typeof AchievementsIndexRoute
   '/exercises': typeof ExercisesIndexRoute
   '/history': typeof HistoryIndexRoute
   '/login': typeof LoginIndexRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth/$pathname': typeof AuthPathnameRoute
+  '/achievements/': typeof AchievementsIndexRoute
   '/exercises/': typeof ExercisesIndexRoute
   '/history/': typeof HistoryIndexRoute
   '/login/': typeof LoginIndexRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth/$pathname'
+    | '/achievements'
     | '/exercises'
     | '/history'
     | '/login'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth/$pathname'
+    | '/achievements'
     | '/exercises'
     | '/history'
     | '/login'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth/$pathname'
+    | '/achievements/'
     | '/exercises/'
     | '/history/'
     | '/login/'
@@ -246,6 +258,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthPathnameRoute: typeof AuthPathnameRoute
+  AchievementsIndexRoute: typeof AchievementsIndexRoute
   ExercisesIndexRoute: typeof ExercisesIndexRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/exercises'
       fullPath: '/exercises'
       preLoaderRoute: typeof ExercisesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/achievements/': {
+      id: '/achievements/'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/$pathname': {
@@ -398,6 +418,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthPathnameRoute: AuthPathnameRoute,
+  AchievementsIndexRoute: AchievementsIndexRoute,
   ExercisesIndexRoute: ExercisesIndexRoute,
   HistoryIndexRoute: HistoryIndexRoute,
   LoginIndexRoute: LoginIndexRoute,

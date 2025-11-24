@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { Home, Dumbbell, ListOrdered, Settings, LogOut, WifiOff, User, Calendar } from 'lucide-react'
+import { Home, Dumbbell, ListOrdered, Settings, LogOut, WifiOff, User, Calendar, Trophy } from 'lucide-react'
 import { UserButton, SignedIn, SignedOut } from '@/components/auth'
 
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -26,6 +26,7 @@ const navItems = [
   { to: '/exercises', label: 'Exercises', icon: Dumbbell },
   { to: '/sequences', label: 'Sequences', icon: ListOrdered },
   { to: '/history', label: 'History', icon: Calendar },
+  { to: '/achievements', label: 'Achievements', icon: Trophy },
   { to: '/settings', label: 'Settings', icon: Settings },
 ] as const
 
