@@ -173,8 +173,8 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Pause/Resume** - Handle workout interruptions
 - [x] **Exercise Skip** - Skip exercises during workout
 - [x] **Workout Complete Screen** - Summary and rating form
-- [ ] **Auto-Advance Toggle** - Per-session toggle to enable/disable auto-advancing between exercises
-- [ ] **Actual Performance Tracking** - Adjust reps/time during workout, track actual vs target performance (rep +/- buttons, overtime timer for time-based)
+- [x] **Auto-Advance Toggle** - Per-session toggle to enable/disable auto-advancing between exercises
+- [x] **Actual Performance Tracking** - Adjust reps/time during workout, track actual vs target performance (rep +/- buttons, overtime timer for time-based)
 - [ ] **Audio/Haptic Feedback** - Beep countdown, haptic on complete
 
 ---

@@ -10,6 +10,7 @@ import {
   CardContent,
 } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import {
   ArrowLeft,
   Play,
@@ -20,6 +21,9 @@ import {
   Clock,
   Repeat,
   Star,
+  Plus,
+  Minus,
+  Check,
 } from 'lucide-react'
 import type { SequenceExercise, CompletedExercise } from '@/db/types'
 
@@ -92,6 +96,8 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [completedExercises, setCompletedExercises] = useState<CompletedExercise[]>([])
+  const [autoAdvance, setAutoAdvance] = useState(true)
+  const [actualValue, setActualValue] = useState<number>(0)
 
   // Rating state
   const [rating, setRating] = useState(0)
@@ -129,6 +135,14 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
   }, [sequence, executionId, sequenceId])
 
+  // Initialize actualValue when exercise changes
+  useEffect(() => {
+    if (exercises && currentIndex < exercises.length) {
+      const currentExercise = exercises[currentIndex]
+      setActualValue(currentExercise.config.targetValue || 0)
+    }
+  }, [currentIndex, exercises])
+
   // Timer effect
   useEffect(() => {
     if (!isPaused && !isCompleted && exercises && currentIndex < exercises.length) {
@@ -144,12 +158,13 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
   }, [isPaused, isCompleted, exercises, currentIndex])
 
-  // Check if current exercise is complete (for time-based)
+  // Check if current exercise is complete (for time-based with auto-advance)
   useEffect(() => {
     if (!exercises || currentIndex >= exercises.length) return
 
     const currentExercise = exercises[currentIndex]
     if (
+      autoAdvance &&
       currentExercise.config.measure === 'time' &&
       currentExercise.config.targetValue &&
       timeElapsed >= currentExercise.config.targetValue
@@ -157,7 +172,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       // Auto-advance for time-based exercises
       handleNextExercise()
     }
-  }, [timeElapsed, exercises, currentIndex])
+  }, [timeElapsed, exercises, currentIndex, autoAdvance])
 
   // Handle next exercise
   const handleNextExercise = useCallback(() => {
@@ -165,14 +180,14 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
     const currentExercise = exercises[currentIndex]
 
-    // Record completed exercise
+    // Record completed exercise with actual value
     const completed: CompletedExercise = {
       exerciseId: currentExercise.exerciseId,
       startedAt: exerciseStartRef.current,
       completedAt: new Date(),
       value: currentExercise.config.measure === 'time'
         ? timeElapsed
-        : currentExercise.config.targetValue,
+        : actualValue,
       skipped: false,
     }
 
@@ -196,7 +211,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       setTimeElapsed(0)
       exerciseStartRef.current = new Date()
     }
-  }, [exercises, currentIndex, timeElapsed, executionId, completedExercises, updateExecution])
+  }, [exercises, currentIndex, timeElapsed, actualValue, executionId, completedExercises, updateExecution])
 
   // Handle skip
   const handleSkip = useCallback(() => {
@@ -386,6 +401,17 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             Exercise {currentIndex + 1} of {exercises.length}
           </p>
         </div>
+        <Badge
+          onClick={() => setAutoAdvance(!autoAdvance)}
+          className={`cursor-pointer px-3 py-1 gap-1 ${
+            autoAdvance
+              ? 'bg-green-500 hover:bg-green-600 text-white'
+              : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+          }`}
+        >
+          {autoAdvance && <Check className="h-3 w-3" />}
+          Auto-advance
+        </Badge>
       </header>
 
       {/* Progress bar */}
@@ -413,18 +439,74 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         </h2>
 
         {/* Timer/Counter */}
-        <div className="text-6xl font-mono font-bold mb-4">
-          {isTimeBased ? (
-            // Countdown for time-based
-            Math.max(0, targetValue - timeElapsed)
-          ) : (
-            // Target for rep-based
-            targetValue
-          )}
-        </div>
+        {isTimeBased ? (
+          // Time-based display
+          <div className="flex flex-col items-center mb-4">
+            <div
+              className={`text-6xl font-mono font-bold ${
+                timeElapsed > targetValue
+                  ? 'text-green-500'
+                  : ''
+              }`}
+            >
+              {timeElapsed <= targetValue
+                ? Math.max(0, targetValue - timeElapsed)
+                : `+${timeElapsed - targetValue}`}
+            </div>
+            {timeElapsed > targetValue && targetValue > 0 && (
+              <div className="text-2xl text-muted-foreground">
+                /{targetValue}
+              </div>
+            )}
+          </div>
+        ) : (
+          // Rep-based display with +/- buttons
+          <div className="flex flex-col items-center mb-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setActualValue(Math.max(0, actualValue - 1))}
+                className="h-12 w-12"
+              >
+                <Minus className="h-6 w-6" />
+              </Button>
+              <div className="flex flex-col items-center">
+                <div
+                  className={`text-6xl font-mono font-bold ${
+                    actualValue > targetValue
+                      ? 'text-green-500'
+                      : actualValue < targetValue
+                      ? 'text-red-500'
+                      : ''
+                  }`}
+                >
+                  {actualValue}
+                </div>
+                {actualValue !== targetValue && targetValue > 0 && (
+                  <div className="text-2xl text-muted-foreground">
+                    /{targetValue}
+                  </div>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setActualValue(actualValue + 1)}
+                className="h-12 w-12"
+              >
+                <Plus className="h-6 w-6" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         <p className="text-muted-foreground mb-8">
-          {isTimeBased ? 'seconds remaining' : 'repetitions'}
+          {isTimeBased
+            ? timeElapsed > targetValue
+              ? 'seconds over target'
+              : 'seconds remaining'
+            : 'repetitions'}
         </p>
 
         {/* Progress for time-based */}
@@ -454,24 +536,35 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           </Button>
 
           {isTimeBased ? (
-            <Button
-              variant={isPaused ? 'default' : 'secondary'}
-              size="lg"
-              className="flex-1"
-              onClick={togglePause}
-            >
-              {isPaused ? (
-                <>
-                  <Play className="h-5 w-5 mr-2" />
-                  Resume
-                </>
-              ) : (
-                <>
-                  <Pause className="h-5 w-5 mr-2" />
-                  Pause
-                </>
-              )}
-            </Button>
+            autoAdvance ? (
+              <Button
+                variant={isPaused ? 'default' : 'secondary'}
+                size="lg"
+                className="flex-1"
+                onClick={togglePause}
+              >
+                {isPaused ? (
+                  <>
+                    <Play className="h-5 w-5 mr-2" />
+                    Resume
+                  </>
+                ) : (
+                  <>
+                    <Pause className="h-5 w-5 mr-2" />
+                    Pause
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                className="flex-1"
+                onClick={handleNextExercise}
+              >
+                <CheckCircle className="h-5 w-5 mr-2" />
+                Done
+              </Button>
+            )
           ) : (
             <Button
               size="lg"
