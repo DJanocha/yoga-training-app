@@ -58,7 +58,7 @@ export type ExerciseConfig = z.infer<typeof ExerciseConfig>
 // Modifier assignment for an exercise in a sequence
 export const ExerciseModifierAssignment = z.object({
   modifierId: z.number(),
-  effect: ModifierEffect,
+  effect: ModifierEffect.default('neutral'),
 })
 export type ExerciseModifierAssignment = z.infer<typeof ExerciseModifierAssignment>
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -60,9 +60,9 @@ import {
   Package2,
   ChevronDown,
   ChevronUp,
+  MoreHorizontal,
 } from 'lucide-react'
-import { Checkbox } from '@/components/ui/checkbox'
-import type { SequenceExercise, GoalType, MeasureType, ModifierEffect, ExerciseModifierAssignment } from '@/db/types'
+import type { SequenceExercise, GoalType, MeasureType, ExerciseModifierAssignment } from '@/db/types'
 import type { Modifier } from '@/validators/entities'
 
 type SequenceBuilderProps = {
@@ -150,16 +150,13 @@ function SortableExerciseItem({
               {item.modifiers.map((assignment) => {
                 const modifier = modifiers.find((m) => m.id === assignment.modifierId)
                 if (!modifier) return null
-                const effectColor = assignment.effect === 'easier' ? 'bg-green-100 text-green-800' :
-                                   assignment.effect === 'harder' ? 'bg-red-100 text-red-800' :
-                                   'bg-blue-100 text-blue-800'
                 const displayText = [
                   modifier.name,
                   modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
                   modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
                 ].filter(Boolean).join(' ')
                 return (
-                  <Badge key={assignment.modifierId} className={`text-xs ${effectColor}`}>
+                  <Badge key={assignment.modifierId} className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                     {displayText}
                   </Badge>
                 )
@@ -231,6 +228,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [configureItem, setConfigureItem] = useState<SequenceItemWithId | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isModifiersExpanded, setIsModifiersExpanded] = useState(false)
+  const [isModifierPickerOpen, setIsModifierPickerOpen] = useState(false)
 
   // Initialize form when sequence loads
   if (sequence && !isInitialized) {
@@ -363,6 +361,16 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     },
     []
   )
+
+  // Sync configureItem when exercises state changes
+  useEffect(() => {
+    if (configureItem) {
+      const updatedItem = exercises.find((ex) => ex.id === configureItem.id)
+      if (updatedItem) {
+        setConfigureItem(updatedItem)
+      }
+    }
+  }, [exercises, configureItem?.id])
 
   // Get modifier by ID
   const getModifierById = useCallback((modifierId: number): Modifier | undefined => {
@@ -685,90 +693,122 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 />
               </div>
 
-              {/* Modifier assignment (only for non-break exercises and if sequence has modifiers) */}
-              {configureItem.exerciseId !== 'break' && availableModifiers.length > 0 && (
+              {/* Modifier assignment (always visible for non-break exercises) */}
+              {configureItem.exerciseId !== 'break' && (
                 <div className="border-t pt-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Package2 className="h-4 w-4 text-muted-foreground" />
-                    <Label>Assign Modifiers</Label>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Package2 className="h-4 w-4 text-muted-foreground" />
+                      <Label>Assign Modifiers</Label>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsModifierPickerOpen(true)}
+                      className="h-7 px-2"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="ml-1 text-xs">Find more</span>
+                    </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Add equipment/modifiers and specify their effect
-                  </p>
-                  <div className="space-y-3">
-                    {availableModifiers.map((modifierId) => {
-                      const modifier = getModifierById(modifierId)
-                      if (!modifier) return null
+                  {availableModifiers.length > 0 ? (
+                    <>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Tap each modifier to cycle: Off → Neutral (○) → Easier (↓) → Harder (↑) → Off
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {availableModifiers.map((modifierId) => {
+                          const modifier = getModifierById(modifierId)
+                          if (!modifier) return null
 
-                      const currentAssignment = configureItem.modifiers?.find(
-                        (m) => m.modifierId === modifierId
-                      )
-                      const isAssigned = !!currentAssignment
-                      const displayText = [
-                        modifier.name,
-                        modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
-                        modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
-                      ].filter(Boolean).join(' ')
+                          const assignment = configureItem.modifiers?.find(
+                            (m) => m.modifierId === modifierId
+                          )
+                          const isAssigned = !!assignment
+                          const displayText = [
+                            modifier.name,
+                            modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                            modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                          ].filter(Boolean).join(' ')
 
-                      return (
-                        <div key={modifierId} className="flex items-center gap-3 p-2 border rounded-lg">
-                          <Checkbox
-                            id={`assign-${modifierId}`}
-                            checked={isAssigned}
-                            onCheckedChange={(checked) => {
-                              const currentModifiers = configureItem.modifiers || []
-                              if (checked) {
-                                // Add modifier with default effect
-                                updateItemModifiers(configureItem.id, [
-                                  ...currentModifiers,
-                                  { modifierId, effect: 'neutral' as ModifierEffect },
-                                ])
-                              } else {
-                                // Remove modifier
-                                updateItemModifiers(
-                                  configureItem.id,
-                                  currentModifiers.filter((m) => m.modifierId !== modifierId)
+                          // Cycle effect: off → neutral → easier → harder → off
+                          const cycleEffect = () => {
+                            const currentModifiers = configureItem.modifiers || []
+                            if (!isAssigned) {
+                              // Off → Neutral
+                              updateItemModifiers(configureItem.id, [
+                                ...currentModifiers,
+                                { modifierId, effect: 'neutral' },
+                              ])
+                            } else if (assignment.effect === 'neutral') {
+                              // Neutral → Easier
+                              updateItemModifiers(
+                                configureItem.id,
+                                currentModifiers.map((m) =>
+                                  m.modifierId === modifierId ? { ...m, effect: 'easier' } : m
                                 )
-                              }
-                            }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <label
-                              htmlFor={`assign-${modifierId}`}
-                              className="text-sm font-medium cursor-pointer"
-                            >
-                              {displayText}
-                            </label>
-                          </div>
-                          {isAssigned && (
-                            <Select
-                              value={currentAssignment.effect}
-                              onValueChange={(value: ModifierEffect) => {
-                                const currentModifiers = configureItem.modifiers || []
-                                updateItemModifiers(
-                                  configureItem.id,
-                                  currentModifiers.map((m) =>
-                                    m.modifierId === modifierId
-                                      ? { ...m, effect: value }
-                                      : m
-                                  )
+                              )
+                            } else if (assignment.effect === 'easier') {
+                              // Easier → Harder
+                              updateItemModifiers(
+                                configureItem.id,
+                                currentModifiers.map((m) =>
+                                  m.modifierId === modifierId ? { ...m, effect: 'harder' } : m
                                 )
-                              }}
+                              )
+                            } else {
+                              // Harder → Off
+                              updateItemModifiers(
+                                configureItem.id,
+                                currentModifiers.filter((m) => m.modifierId !== modifierId)
+                              )
+                            }
+                          }
+
+                          // Get badge styles based on state (ring-based design)
+                          const getBadgeStyles = () => {
+                            if (!isAssigned) {
+                              // Off state - gray ring
+                              return 'ring-2 ring-gray-300 text-gray-600 bg-gray-50 hover:bg-gray-100'
+                            } else if (assignment.effect === 'neutral') {
+                              // Neutral - blue ring
+                              return 'ring-2 ring-blue-500 text-blue-700 bg-blue-50 hover:bg-blue-100'
+                            } else if (assignment.effect === 'easier') {
+                              // Easier - green ring
+                              return 'ring-2 ring-green-500 text-green-700 bg-green-50 hover:bg-green-100'
+                            } else {
+                              // Harder - red ring
+                              return 'ring-2 ring-red-500 text-red-700 bg-red-50 hover:bg-red-100'
+                            }
+                          }
+
+                          // Get icon based on state
+                          const getIcon = () => {
+                            if (!isAssigned) return ''
+                            if (assignment.effect === 'neutral') return ' ○'
+                            if (assignment.effect === 'easier') return ' ↓'
+                            return ' ↑'
+                          }
+
+                          return (
+                            <button
+                              key={modifierId}
+                              type="button"
+                              onClick={cycleEffect}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${getBadgeStyles()}`}
                             >
-                              <SelectTrigger className="w-[100px] h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="easier">Easier</SelectItem>
-                                <SelectItem value="neutral">Neutral</SelectItem>
-                                <SelectItem value="harder">Harder</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
+                              {displayText}{getIcon()}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No modifiers available. Click "Find more" to add modifiers to this sequence.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -830,6 +870,69 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 </div>
               ))}
             </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Modifier picker sheet - add modifiers to sequence and exercise */}
+      <Sheet open={isModifierPickerOpen} onOpenChange={setIsModifierPickerOpen}>
+        <SheetContent side="bottom" className="h-[80vh]">
+          <SheetHeader>
+            <SheetTitle>Add Modifier</SheetTitle>
+            <SheetDescription>
+              Select a modifier to add to both this sequence and exercise
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-4 overflow-y-auto h-[calc(80vh-8rem)]">
+            {allModifiers && allModifiers.length > 0 ? (
+              <div className="grid gap-2">
+                {allModifiers
+                  .filter((m) => !availableModifiers.includes(m.id))
+                  .map((modifier) => {
+                    const displayText = [
+                      modifier.name,
+                      modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                      modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                    ].filter(Boolean).join(' ')
+
+                    return (
+                      <button
+                        key={modifier.id}
+                        type="button"
+                        onClick={() => {
+                          // Add to sequence's available modifiers
+                          setAvailableModifiers([...availableModifiers, modifier.id])
+                          // Add to current exercise's modifiers with default neutral effect
+                          if (configureItem) {
+                            const currentModifiers = configureItem.modifiers || []
+                            updateItemModifiers(configureItem.id, [
+                              ...currentModifiers,
+                              { modifierId: modifier.id, effect: 'neutral' },
+                            ])
+                          }
+                          setIsModifierPickerOpen(false)
+                        }}
+                        className="flex items-center gap-3 p-3 text-left border rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <Package2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">{displayText}</p>
+                          {modifier.description && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {modifier.description}
+                            </p>
+                          )}
+                        </div>
+                        <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </button>
+                    )
+                  })}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No modifiers available. Create some modifiers first in the Modifiers page.
+              </p>
+            )}
           </div>
         </SheetContent>
       </Sheet>

@@ -74,9 +74,9 @@ export const modifierUnitOptions = enumToSelectOptions(ModifierUnit.options, {
 })
 
 export const modifierEffectOptions = enumToSelectOptions(ModifierEffect.options, {
+  neutral: 'Neutral (no effect)',
   easier: 'Makes easier',
   harder: 'Makes harder',
-  neutral: 'Neutral',
 })
 
 // ============================================================================

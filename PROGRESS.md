@@ -317,9 +317,8 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Sequence Schema Update** - Add `availableModifiers` JSONB field to sequences table
 
 #### 9.3 Exercise-Level Modifier Assignment
-- [ ] **Modifier Assignment UI** - Assign modifiers to exercises within sequence builder
-- [ ] **Effect Direction** - Each modifier marked as "easier", "harder", or "neutral" per exercise
-- [ ] **Toggleable Badges** - Quick toggle modifiers on/off during workout execution
+- [x] **Modifier Assignment UI** - Assign modifiers to exercises within sequence builder (toggle buttons in exercise config sheet)
+- [x] **Toggleable Badges** - Quick toggle modifiers on/off during workout execution with counter display
 
 #### 9.4 Modifier-Aware PR Tracking
 - [ ] **Modifier Signature** - PRs tracked separately per modifier combination
@@ -362,6 +361,30 @@ This document tracks what has been implemented and what still needs to be done.
 #### 11.3 Display Fixes
 - [ ] **Image Display** - Show exercise photos during workout execution
 - [ ] **Goal Behavior** - Read strict/elastic from sequence level
+
+---
+
+### Phase 11.5: Schema & Type System Cleanup
+
+#### 11.5.1 Convert Text Enums to Drizzle Enums
+- [ ] **Convert Level enum** - Change `category: text('category')` to `category: text('category', {enum: ['beginner', 'intermediate', 'advanced']})`
+- [ ] **Convert Category enum** - Change to `{enum: ['yoga', 'calisthenics', 'cardio', 'flexibility', 'strength']}`
+- [ ] **Convert other enums** - GoalType, MeasureType, Theme, ModifierUnit, BodyPart (for array type, document pattern)
+- [ ] **Update schema** - Regenerate migrations with `pnpm drizzle-kit generate`
+- [ ] **Push to database** - Apply changes with `pnpm drizzle-kit push`
+
+**Goal**: Use Drizzle's native enum support instead of text columns with TypeScript-only type hints.
+
+#### 11.5.2 Consolidate Zod Schemas
+- [ ] **Audit db/types.ts** - Review all schemas and determine which can be removed
+- [ ] **Move refined schemas** - Move `refinedExerciseSchema`, `refinedSequenceSchema`, `refinedUserSettingsSchema`, `refinedModifierSchema` to appropriate validator files
+- [ ] **Remove duplication** - Delete redundant schemas from `db/types.ts`, keep only:
+  - Enums (Level, Category, BodyPart, GoalType, MeasureType, Theme, ModifierUnit, ModifierEffect, AchievementCategory)
+  - Complex JSONB types (ExerciseConfig, SequenceExercise, ExerciseModifierAssignment, ActiveModifier, CompletedExercise, PersonalRecord, AchievementMetadata)
+- [ ] **Update imports** - Fix all imports across the codebase to use correct schema locations
+- [ ] **Document pattern** - Update schema_organization_pattern.md memory with final structure
+
+**Goal**: Use drizzle-zod's `createInsertSchema`/`createSelectSchema` as the source of truth for table schemas, only keep custom Zod schemas in `db/types.ts` for JSONB field validation and complex nested types.
 
 ---
 

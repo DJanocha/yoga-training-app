@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
-import { Star, Trophy } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { Star, Trophy, Package2 } from 'lucide-react'
 import { useHaptic } from '@/hooks/useHaptic'
 import { useTRPC } from '@/lib/trpc'
-import { useMutation, useQuery,  useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery,  useQueryClient } from '@tanstack/react-query'
+import type { ExerciseModifierAssignment, ActiveModifier } from '@/db/types'
 
 interface ExecuteSequenceProps {
   sequenceId: number;
@@ -16,6 +17,7 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
   const { data: sequence, isLoading: sequenceLoading } = useQuery(trpc.sequences.byId.queryOptions({ id: sequenceId }))
   const { data: exercises, isLoading: exercisesLoading } = useQuery(trpc.exercises.list.queryOptions())
   const { data: settings, isLoading: settingsLoading } = useQuery(trpc.settings.get.queryOptions())
+  const { data: allModifiers } = useQuery(trpc.modifiers.list.queryOptions())
 
   const startExecution = useMutation(trpc.executions.start.mutationOptions())
   const updateExecution = useMutation(trpc.executions.updateExecution.mutationOptions({
@@ -44,7 +46,10 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
     completedAt?: number;
     value?: number;
     skipped?: boolean;
+    activeModifiers?: ActiveModifier[];
   }>>([]);
+  // Track which modifiers are currently active for the current exercise
+  const [currentActiveModifiers, setCurrentActiveModifiers] = useState<Set<number>>(new Set());
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [showSummary, setShowSummary] = useState(false);
@@ -144,13 +149,24 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
   const handleComplete = (value?: number) => {
     if (!sequence || !executionId) return;
 
-    const exercises = sequence.exercises as Array<{ exerciseId: number | "break"; config: any }>;
+    const exercises = sequence.exercises as Array<{ exerciseId: number | "break"; config: any; modifiers?: ExerciseModifierAssignment[] }>;
     const currentExercise = exercises[currentIndex];
+
+    // Convert active modifier IDs to ActiveModifier objects
+    const activeModifiers: ActiveModifier[] = Array.from(currentActiveModifiers).map(modifierId => {
+      const modifier = allModifiers?.find(m => m.id === modifierId);
+      return {
+        modifierId,
+        value: modifier ? [modifier.name, modifier.value, modifier.unit !== 'none' ? modifier.unit : null].filter(Boolean).join(' ') : undefined,
+      };
+    });
+
     const completed = {
       exerciseId: currentExercise.exerciseId,
       startedAt: exerciseStartTime,
       completedAt: Date.now(),
       value,
+      activeModifiers: activeModifiers.length > 0 ? activeModifiers : undefined,
     };
 
     const newCompleted = [...completedExercises, completed];
@@ -163,6 +179,8 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
       setExerciseStartTime(Date.now());
       setElapsedTime(0);
       setTotalPauseDuration(0);
+      // Reset active modifiers for next exercise (they can toggle again)
+      setCurrentActiveModifiers(new Set());
     } else {
       // Completing entire sequence
       haptic.success();
@@ -192,6 +210,8 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
       setExerciseStartTime(Date.now());
       setElapsedTime(0);
       setTotalPauseDuration(0);
+      // Reset active modifiers for next exercise
+      setCurrentActiveModifiers(new Set());
     } else {
       // Completing entire sequence (even with skip)
       haptic.success();
@@ -205,6 +225,8 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
       setCurrentIndex(currentIndex - 1);
       setExerciseStartTime(Date.now());
       setElapsedTime(0);
+      // Reset active modifiers when going back
+      setCurrentActiveModifiers(new Set());
       setTotalPauseDuration(0);
     }
   };
@@ -302,12 +324,40 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
     );
   }
 
-  const sequenceExercises = sequence.exercises as Array<{ exerciseId: number | "break"; config: any }>;
+  const sequenceExercises = sequence.exercises as Array<{ exerciseId: number | "break"; config: any; modifiers?: ExerciseModifierAssignment[] }>;
+  const sequenceAvailableModifiers = (sequence.availableModifiers as number[]) || [];
   const currentExercise = sequenceExercises[currentIndex];
   const currentExerciseData =
     currentExercise.exerciseId === "break"
       ? { name: "Break", photoUrls: [], links: [] }
       : exercises.find((e) => e.id === currentExercise.exerciseId);
+
+  // Get modifiers that are both available for the sequence AND assigned to this specific exercise
+  const exerciseModifiers = useMemo(() => {
+    if (currentExercise.exerciseId === "break" || !currentExercise.modifiers) return [];
+    // Only show modifiers that were assigned to this exercise in the sequence builder
+    return currentExercise.modifiers
+      .filter(m => sequenceAvailableModifiers.includes(m.modifierId))
+      .map(assignment => {
+        const modifier = allModifiers?.find(m => m.id === assignment.modifierId);
+        return modifier ? { ...modifier, effect: assignment.effect } : null;
+      })
+      .filter(Boolean) as Array<NonNullable<typeof allModifiers>[number] & { effect: 'easier' | 'harder' | 'neutral' }>;
+  }, [currentExercise, sequenceAvailableModifiers, allModifiers]);
+
+  // Toggle modifier for current exercise
+  const toggleModifier = (modifierId: number) => {
+    setCurrentActiveModifiers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(modifierId)) {
+        newSet.delete(modifierId);
+      } else {
+        newSet.add(modifierId);
+      }
+      return newSet;
+    });
+    haptic.light();
+  };
 
   const { data: lastAttemptData } = useQuery(trpc.executions.getLastAttempt.queryOptions({ exerciseId: currentExercise.exerciseId },{enabled: currentExercise.exerciseId !== "break"}))
 
@@ -381,6 +431,66 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
               Last: {lastAttemptData.value}{" "}
               {config.measure === "time" ? "seconds" : "reps"}
             </p>
+          )}
+
+          {/* Toggleable Modifier Badges */}
+          {exerciseModifiers.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Package2 className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Equipment</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {exerciseModifiers.map((modifier) => {
+                  const isActive = currentActiveModifiers.has(modifier.id);
+                  const displayText = [
+                    modifier.name,
+                    modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                    modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                  ].filter(Boolean).join(' ');
+
+                  // Color based on effect
+                  const effectColors = modifier.effect === 'easier'
+                    ? isActive
+                      ? 'bg-green-600 text-white border-green-600 ring-2 ring-offset-1 ring-green-600'
+                      : 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200'
+                    : modifier.effect === 'harder'
+                    ? isActive
+                      ? 'bg-red-600 text-white border-red-600 ring-2 ring-offset-1 ring-red-600'
+                      : 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200'
+                    : isActive
+                      ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-offset-1 ring-blue-600'
+                      : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200';
+
+                  return (
+                    <button
+                      key={modifier.id}
+                      type="button"
+                      onClick={() => toggleModifier(modifier.id)}
+                      aria-label={`Toggle ${displayText} modifier (${modifier.effect})`}
+                      aria-pressed={isActive}
+                      className={`
+                        px-3 py-1.5 rounded-full text-sm font-medium border transition-all
+                        min-h-[36px] touch-manipulation
+                        ${effectColors}
+                      `}
+                    >
+                      {displayText}
+                      {modifier.effect !== 'neutral' && (
+                        <span className="ml-1 text-xs opacity-75">
+                          ({modifier.effect === 'easier' ? '↓' : '↑'})
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {currentActiveModifiers.size > 0 && (
+                <p className="text-xs text-gray-500 mt-2">
+                  {currentActiveModifiers.size} modifier{currentActiveModifiers.size > 1 ? 's' : ''} active
+                </p>
+              )}
+            </div>
           )}
 
           <div className="text-center py-8">

@@ -625,11 +625,12 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                 if (!modifier) return null
 
                 const isActive = activeModifiers.some((am) => am.modifierId === assignment.modifierId)
-                const effectColor = assignment.effect === 'easier'
-                  ? 'border-green-500 bg-green-50 text-green-700'
-                  : assignment.effect === 'harder'
-                  ? 'border-red-500 bg-red-50 text-red-700'
-                  : 'border-blue-500 bg-blue-50 text-blue-700'
+                const effect = assignment.effect || 'neutral'
+                const effectColor = effect === 'easier'
+                  ? 'border-green-600 bg-green-50 text-green-700'
+                  : effect === 'harder'
+                  ? 'border-red-600 bg-red-50 text-red-700'
+                  : 'border-blue-600 bg-blue-50 text-blue-700'
 
                 return (
                   <button
