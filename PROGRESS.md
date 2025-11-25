@@ -341,8 +341,8 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Improved Break Insertion** - Show insertion points between exercises (not just append)
 
 #### 10.3 Sequence-Level Settings
-- [ ] **Available Modifiers UI** - Multi-select modifiers for sequence
-- [ ] **Per-Exercise Modifier Assignment** - Assign from available list with effect direction
+- [x] **Available Modifiers UI** - Multi-select modifiers for sequence (implemented in Phase 9.3)
+- [x] **Per-Exercise Modifier Assignment** - Assign from available list with effect direction (implemented in Phase 9.3)
 
 ---
 
