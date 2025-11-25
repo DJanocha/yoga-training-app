@@ -4,6 +4,7 @@ import { sequencesRouter } from './routers/sequences'
 import { executionsRouter } from './routers/executions'
 import { settingsRouter } from './routers/settings'
 import { achievementsRouter } from './routers/achievements'
+import { modifiersRouter } from './routers/modifiers'
 
 /**
  * This is the primary router for your server.
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   executions: executionsRouter,
   settings: settingsRouter,
   achievements: achievementsRouter,
+  modifiers: modifiersRouter,
 })
 
 // export type definition of API

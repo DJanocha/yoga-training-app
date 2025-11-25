@@ -7,8 +7,9 @@ import {
   sequenceExecutions,
   userSettings,
   achievements,
+  modifiers,
 } from '@/db/schema'
-import { refinedExerciseSchema, refinedSequenceSchema, refinedUserSettingsSchema } from '@/db/types'
+import { refinedExerciseSchema, refinedSequenceSchema, refinedUserSettingsSchema, refinedModifierSchema } from '@/db/types'
 
 // ============================================================================
 // USER SCHEMAS (from better-auth)
@@ -67,6 +68,17 @@ export const insertAchievementSchema = createInsertSchema(achievements)
 export const selectAchievementSchema = createSelectSchema(achievements)
 
 // ============================================================================
+// MODIFIERS SCHEMAS
+// ============================================================================
+export const baseInsertModifierSchema = createInsertSchema(modifiers)
+export const selectModifierSchema = createSelectSchema(modifiers)
+
+// Refined insert schema with validation
+export const insertModifierSchema = baseInsertModifierSchema.merge(refinedModifierSchema)
+
+export const updateModifierSchema = insertModifierSchema.partial().required({ id: true })
+
+// ============================================================================
 // TYPESCRIPT TYPES
 // ============================================================================
 export type User = z.infer<typeof selectUserSchema>
@@ -90,3 +102,7 @@ export type UpdateUserSettings = z.infer<typeof updateUserSettingsSchema>
 
 export type Achievement = z.infer<typeof selectAchievementSchema>
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>
+
+export type Modifier = z.infer<typeof selectModifierSchema>
+export type InsertModifier = z.infer<typeof insertModifierSchema>
+export type UpdateModifier = z.infer<typeof updateModifierSchema>

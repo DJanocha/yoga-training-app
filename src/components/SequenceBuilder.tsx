@@ -57,8 +57,13 @@ import {
   Eye,
   Clock,
   Repeat,
+  Package2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
-import type { SequenceExercise, GoalType, MeasureType } from '@/db/types'
+import { Checkbox } from '@/components/ui/checkbox'
+import type { SequenceExercise, GoalType, MeasureType, ModifierEffect, ExerciseModifierAssignment } from '@/db/types'
+import type { Modifier } from '@/validators/entities'
 
 type SequenceBuilderProps = {
   sequenceId: number
@@ -70,11 +75,13 @@ type SequenceItemWithId = SequenceExercise & { id: string }
 function SortableExerciseItem({
   item,
   exerciseName,
+  modifiers,
   onConfigure,
   onRemove,
 }: {
   item: SequenceItemWithId
   exerciseName: string
+  modifiers?: Modifier[]
   onConfigure: () => void
   onRemove: () => void
 }) {
@@ -122,7 +129,7 @@ function SortableExerciseItem({
             <span className="font-medium truncate">{exerciseName}</span>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
           {item.config.measure === 'time' ? (
             <>
               <Clock className="h-3 w-3" />
@@ -137,6 +144,28 @@ function SortableExerciseItem({
           <Badge variant="outline" className="text-xs">
             {item.config.goal}
           </Badge>
+          {/* Show assigned modifiers */}
+          {modifiers && modifiers.length > 0 && item.modifiers && item.modifiers.length > 0 && (
+            <>
+              {item.modifiers.map((assignment) => {
+                const modifier = modifiers.find((m) => m.id === assignment.modifierId)
+                if (!modifier) return null
+                const effectColor = assignment.effect === 'easier' ? 'bg-green-100 text-green-800' :
+                                   assignment.effect === 'harder' ? 'bg-red-100 text-red-800' :
+                                   'bg-blue-100 text-blue-800'
+                const displayText = [
+                  modifier.name,
+                  modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                  modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                ].filter(Boolean).join(' ')
+                return (
+                  <Badge key={assignment.modifierId} className={`text-xs ${effectColor}`}>
+                    {displayText}
+                  </Badge>
+                )
+              })}
+            </>
+          )}
         </div>
       </div>
 
@@ -177,6 +206,9 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   // Fetch all exercises for picker
   const { data: allExercises } = useQuery(trpc.exercises.list.queryOptions())
 
+  // Fetch all modifiers
+  const { data: allModifiers } = useQuery(trpc.modifiers.list.queryOptions())
+
   // Update mutation
   const updateSequence = useMutation(
     trpc.sequences.update.mutationOptions({
@@ -191,12 +223,14 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [exercises, setExercises] = useState<SequenceItemWithId[]>([])
+  const [availableModifiers, setAvailableModifiers] = useState<number[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
 
   // UI state
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [configureItem, setConfigureItem] = useState<SequenceItemWithId | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isModifiersExpanded, setIsModifiersExpanded] = useState(false)
 
   // Initialize form when sequence loads
   if (sequence && !isInitialized) {
@@ -210,6 +244,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       })
     )
     setExercises(exercisesWithIds)
+    // Load available modifiers for this sequence
+    setAvailableModifiers((sequence.availableModifiers as number[]) || [])
     setIsInitialized(true)
   }
 
@@ -299,10 +335,39 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       name,
       description: description || undefined,
       exercises: exercisesToSave,
+      availableModifiers,
     })
 
     navigate({ to: '/sequences' })
   }
+
+  // Toggle modifier availability for the sequence
+  const toggleModifier = useCallback((modifierId: number) => {
+    setAvailableModifiers((prev) =>
+      prev.includes(modifierId)
+        ? prev.filter((id) => id !== modifierId)
+        : [...prev, modifierId]
+    )
+  }, [])
+
+  // Update item modifiers (per exercise)
+  const updateItemModifiers = useCallback(
+    (id: string, modifiers: ExerciseModifierAssignment[]) => {
+      setExercises((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, modifiers }
+            : item
+        )
+      )
+    },
+    []
+  )
+
+  // Get modifier by ID
+  const getModifierById = useCallback((modifierId: number): Modifier | undefined => {
+    return allModifiers?.find((m) => m.id === modifierId)
+  }, [allModifiers])
 
   // Get exercise name by ID
   const getExerciseName = (exerciseId: number | 'break'): string => {
@@ -397,6 +462,62 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 rows={2}
               />
             </div>
+
+            {/* Available Modifiers */}
+            {allModifiers && allModifiers.length > 0 && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  className="flex items-center justify-between w-full text-left"
+                  onClick={() => setIsModifiersExpanded(!isModifiersExpanded)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Package2 className="h-4 w-4 text-muted-foreground" />
+                    <Label className="cursor-pointer">Available Modifiers</Label>
+                    {availableModifiers.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {availableModifiers.length}
+                      </Badge>
+                    )}
+                  </div>
+                  {isModifiersExpanded ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+
+                {isModifiersExpanded && (
+                  <div className="mt-3 space-y-2 pl-6">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Select equipment that can be used during this sequence
+                    </p>
+                    {allModifiers.map((modifier) => {
+                      const displayText = [
+                        modifier.name,
+                        modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                        modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                      ].filter(Boolean).join(' ')
+                      return (
+                        <div key={modifier.id} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`modifier-${modifier.id}`}
+                            checked={availableModifiers.includes(modifier.id)}
+                            onCheckedChange={() => toggleModifier(modifier.id)}
+                          />
+                          <label
+                            htmlFor={`modifier-${modifier.id}`}
+                            className="text-sm cursor-pointer flex-1"
+                          >
+                            {displayText}
+                          </label>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -477,6 +598,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                       key={item.id}
                       item={item}
                       exerciseName={getExerciseName(item.exerciseId)}
+                      modifiers={allModifiers}
                       onConfigure={() => setConfigureItem(item)}
                       onRemove={() => removeItem(item.id)}
                     />
@@ -558,6 +680,93 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                   className="mt-1.5"
                 />
               </div>
+
+              {/* Modifier assignment (only for non-break exercises and if sequence has modifiers) */}
+              {configureItem.exerciseId !== 'break' && availableModifiers.length > 0 && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Package2 className="h-4 w-4 text-muted-foreground" />
+                    <Label>Assign Modifiers</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Add equipment/modifiers and specify their effect
+                  </p>
+                  <div className="space-y-3">
+                    {availableModifiers.map((modifierId) => {
+                      const modifier = getModifierById(modifierId)
+                      if (!modifier) return null
+
+                      const currentAssignment = configureItem.modifiers?.find(
+                        (m) => m.modifierId === modifierId
+                      )
+                      const isAssigned = !!currentAssignment
+                      const displayText = [
+                        modifier.name,
+                        modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                        modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                      ].filter(Boolean).join(' ')
+
+                      return (
+                        <div key={modifierId} className="flex items-center gap-3 p-2 border rounded-lg">
+                          <Checkbox
+                            id={`assign-${modifierId}`}
+                            checked={isAssigned}
+                            onCheckedChange={(checked) => {
+                              const currentModifiers = configureItem.modifiers || []
+                              if (checked) {
+                                // Add modifier with default effect
+                                updateItemModifiers(configureItem.id, [
+                                  ...currentModifiers,
+                                  { modifierId, effect: 'neutral' as ModifierEffect },
+                                ])
+                              } else {
+                                // Remove modifier
+                                updateItemModifiers(
+                                  configureItem.id,
+                                  currentModifiers.filter((m) => m.modifierId !== modifierId)
+                                )
+                              }
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <label
+                              htmlFor={`assign-${modifierId}`}
+                              className="text-sm font-medium cursor-pointer"
+                            >
+                              {displayText}
+                            </label>
+                          </div>
+                          {isAssigned && (
+                            <Select
+                              value={currentAssignment.effect}
+                              onValueChange={(value: ModifierEffect) => {
+                                const currentModifiers = configureItem.modifiers || []
+                                updateItemModifiers(
+                                  configureItem.id,
+                                  currentModifiers.map((m) =>
+                                    m.modifierId === modifierId
+                                      ? { ...m, effect: value }
+                                      : m
+                                  )
+                                )
+                              }}
+                            >
+                              <SelectTrigger className="w-[100px] h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="easier">Easier</SelectItem>
+                                <SelectItem value="neutral">Neutral</SelectItem>
+                                <SelectItem value="harder">Harder</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               <Button
                 className="w-full"

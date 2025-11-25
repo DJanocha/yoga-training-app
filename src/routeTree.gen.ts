@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SequencesIndexRouteImport } from './routes/sequences/index'
 import { Route as PreferencesIndexRouteImport } from './routes/preferences/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
+import { Route as ModifiersIndexRouteImport } from './routes/modifiers/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as HistoryIndexRouteImport } from './routes/history/index'
 import { Route as ExercisesIndexRouteImport } from './routes/exercises/index'
@@ -48,6 +49,11 @@ const PreferencesIndexRoute = PreferencesIndexRouteImport.update({
 const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   id: '/onboarding/',
   path: '/onboarding/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModifiersIndexRoute = ModifiersIndexRouteImport.update({
+  id: '/modifiers/',
+  path: '/modifiers/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/exercises': typeof ExercisesIndexRoute
   '/history': typeof HistoryIndexRoute
   '/login': typeof LoginIndexRoute
+  '/modifiers': typeof ModifiersIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/preferences': typeof PreferencesIndexRoute
   '/sequences': typeof SequencesIndexRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/exercises': typeof ExercisesIndexRoute
   '/history': typeof HistoryIndexRoute
   '/login': typeof LoginIndexRoute
+  '/modifiers': typeof ModifiersIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/preferences': typeof PreferencesIndexRoute
   '/sequences': typeof SequencesIndexRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/exercises/': typeof ExercisesIndexRoute
   '/history/': typeof HistoryIndexRoute
   '/login/': typeof LoginIndexRoute
+  '/modifiers/': typeof ModifiersIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/preferences/': typeof PreferencesIndexRoute
   '/sequences/': typeof SequencesIndexRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/exercises'
     | '/history'
     | '/login'
+    | '/modifiers'
     | '/onboarding'
     | '/preferences'
     | '/sequences'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/exercises'
     | '/history'
     | '/login'
+    | '/modifiers'
     | '/onboarding'
     | '/preferences'
     | '/sequences'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/exercises/'
     | '/history/'
     | '/login/'
+    | '/modifiers/'
     | '/onboarding/'
     | '/preferences/'
     | '/sequences/'
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   ExercisesIndexRoute: typeof ExercisesIndexRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
+  ModifiersIndexRoute: typeof ModifiersIndexRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
   PreferencesIndexRoute: typeof PreferencesIndexRoute
   SequencesIndexRoute: typeof SequencesIndexRoute
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/modifiers/': {
+      id: '/modifiers/'
+      path: '/modifiers'
+      fullPath: '/modifiers'
+      preLoaderRoute: typeof ModifiersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/': {
@@ -442,6 +462,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExercisesIndexRoute: ExercisesIndexRoute,
   HistoryIndexRoute: HistoryIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
+  ModifiersIndexRoute: ModifiersIndexRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,
   PreferencesIndexRoute: PreferencesIndexRoute,
   SequencesIndexRoute: SequencesIndexRoute,

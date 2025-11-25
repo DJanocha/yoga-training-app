@@ -1,4 +1,4 @@
-import { Level, Category, BodyPart, Theme, GoalType, MeasureType } from '@/db/types'
+import { Level, Category, BodyPart, Theme, GoalType, MeasureType, ModifierUnit, ModifierEffect } from '@/db/types'
 
 // ============================================================================
 // LABEL UTILITIES
@@ -63,6 +63,22 @@ export const bodyPartOptions = enumToSelectOptions(BodyPart.options, {
   'full-body': 'Full Body',
 })
 
+// Modifier-related options
+export const modifierUnitOptions = enumToSelectOptions(ModifierUnit.options, {
+  kg: 'Kilograms (kg)',
+  lbs: 'Pounds (lbs)',
+  cm: 'Centimeters (cm)',
+  inches: 'Inches',
+  level: 'Level (light/medium/heavy)',
+  none: 'No unit',
+})
+
+export const modifierEffectOptions = enumToSelectOptions(ModifierEffect.options, {
+  easier: 'Makes easier',
+  harder: 'Makes harder',
+  neutral: 'Neutral',
+})
+
 // ============================================================================
 // LABEL OVERRIDES BY ENTITY
 // ============================================================================
@@ -89,6 +105,11 @@ export const settingsLabelOverrides: Record<string, string> = {
   focusArea: 'Focus Area',
 }
 
+export const modifierLabelOverrides: Record<string, string> = {
+  value: 'Value',
+  iconName: 'Icon Name',
+}
+
 // ============================================================================
 // REQUIRED FIELDS BY ENTITY
 // ============================================================================
@@ -99,6 +120,7 @@ export const settingsLabelOverrides: Record<string, string> = {
 export const exerciseRequiredFields = ['name'] as const
 export const sequenceRequiredFields = ['name'] as const
 export const settingsRequiredFields = ['userName'] as const
+export const modifierRequiredFields = ['name'] as const
 
 // ============================================================================
 // DEFAULT VALUES
@@ -135,4 +157,18 @@ export const exerciseRequiredDefaults = {
 
 export const sequenceRequiredDefaults = {
   name: '',
+}
+
+export const modifierRequiredDefaults = {
+  name: '',
+  unit: undefined as string | undefined,
+  value: undefined as number | undefined,
+}
+
+export const modifierDefaultValues = {
+  name: '',
+  description: '',
+  unit: undefined as string | undefined,
+  value: undefined as number | undefined,
+  iconName: '',
 }

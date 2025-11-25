@@ -8,6 +8,20 @@
       "when": 1763575395069,
       "tag": "0000_small_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764082985278,
+      "tag": "0001_cynical_ultimates",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764086391036,
+      "tag": "0002_pale_harrier",
+      "breakpoints": true
     }
   ]
 }

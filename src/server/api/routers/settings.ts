@@ -55,9 +55,11 @@ export const settingsRouter = {
           .returning()
         return updated
       } else {
+        // For new records, ensure userName has a default value
         const [created] = await db
           .insert(userSettings)
           .values({
+            userName: 'User', // Default userName for new records
             ...input,
             userId: ctx.userId,
           })

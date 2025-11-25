@@ -24,8 +24,9 @@ import {
   Plus,
   Minus,
   Check,
+  Package2,
 } from 'lucide-react'
-import type { SequenceExercise, CompletedExercise } from '@/db/types'
+import type { SequenceExercise, CompletedExercise, ActiveModifier } from '@/db/types'
 
 export const Route = createFileRoute('/sequences/$id/execute')({
   component: ExecuteSequence,
@@ -81,6 +82,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   // Fetch user settings for beep/haptic preferences
   const { data: userSettings } = useQuery(trpc.settings.get.queryOptions())
 
+  // Fetch modifiers
+  const { data: allModifiers } = useQuery(trpc.modifiers.list.queryOptions())
+
   // Mutations
   const startExecution = useMutation(trpc.executions.start.mutationOptions())
   const updateExecution = useMutation(trpc.executions.updateExecution.mutationOptions())
@@ -105,6 +109,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   // Rating state
   const [rating, setRating] = useState(0)
   const [feedback, setFeedback] = useState('')
+
+  // Active modifiers state (per-exercise during execution)
+  const [activeModifiers, setActiveModifiers] = useState<ActiveModifier[]>([])
 
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -176,13 +183,30 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
   }, [sequence, executionId, sequenceId])
 
-  // Initialize actualValue when exercise changes
+  // Initialize actualValue and active modifiers when exercise changes
   useEffect(() => {
     if (exercises && currentIndex < exercises.length) {
       const currentExercise = exercises[currentIndex]
       setActualValue(currentExercise.config.targetValue || 0)
+
+      // Initialize active modifiers from the exercise's assigned modifiers
+      // Pre-select all assigned modifiers with their values
+      if (currentExercise.modifiers && currentExercise.modifiers.length > 0) {
+        const initialActiveModifiers: ActiveModifier[] = currentExercise.modifiers.map((m) => {
+          const modifier = allModifiers?.find((mod) => mod.id === m.modifierId)
+          return {
+            modifierId: m.modifierId,
+            value: modifier?.value !== null && modifier?.value !== undefined
+              ? `${modifier.value}${modifier.unit && modifier.unit !== 'none' && modifier.unit !== 'level' ? modifier.unit : ''}`
+              : undefined,
+          }
+        })
+        setActiveModifiers(initialActiveModifiers)
+      } else {
+        setActiveModifiers([])
+      }
     }
-  }, [currentIndex, exercises])
+  }, [currentIndex, exercises, allModifiers])
 
   // Timer effect
   useEffect(() => {
@@ -246,7 +270,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     // Trigger haptic feedback on completion
     triggerHaptic([100, 50, 100]) // Double vibration pattern
 
-    // Record completed exercise with actual value
+    // Record completed exercise with actual value and active modifiers
     const completed: CompletedExercise = {
       exerciseId: currentExercise.exerciseId,
       startedAt: exerciseStartRef.current,
@@ -255,6 +279,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         ? timeElapsed
         : actualValue,
       skipped: false,
+      activeModifiers: activeModifiers.length > 0 ? activeModifiers : undefined,
     }
 
     setCompletedExercises((prev) => [...prev, completed])
@@ -277,7 +302,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       setTimeElapsed(0)
       exerciseStartRef.current = new Date()
     }
-  }, [exercises, currentIndex, timeElapsed, actualValue, executionId, completedExercises, updateExecution, triggerHaptic])
+  }, [exercises, currentIndex, timeElapsed, actualValue, executionId, completedExercises, updateExecution, triggerHaptic, activeModifiers])
 
   // Handle skip
   const handleSkip = useCallback(() => {
@@ -583,9 +608,72 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         )}
 
         {/* Goal type indicator */}
-        <p className="text-sm md:text-base text-muted-foreground capitalize">
+        <p className="text-sm md:text-base text-muted-foreground capitalize mb-4">
           {currentExercise.config.goal} goal
         </p>
+
+        {/* Active modifiers (only show if exercise has assigned modifiers) */}
+        {!isBreak && currentExercise.modifiers && currentExercise.modifiers.length > 0 && (
+          <div className="w-full max-w-sm md:max-w-md">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Package2 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Active Equipment</span>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {currentExercise.modifiers.map((assignment) => {
+                const modifier = allModifiers?.find((m) => m.id === assignment.modifierId)
+                if (!modifier) return null
+
+                const isActive = activeModifiers.some((am) => am.modifierId === assignment.modifierId)
+                const effectColor = assignment.effect === 'easier'
+                  ? 'border-green-500 bg-green-50 text-green-700'
+                  : assignment.effect === 'harder'
+                  ? 'border-red-500 bg-red-50 text-red-700'
+                  : 'border-blue-500 bg-blue-50 text-blue-700'
+
+                return (
+                  <button
+                    key={assignment.modifierId}
+                    type="button"
+                    onClick={() => {
+                      if (isActive) {
+                        // Remove modifier
+                        setActiveModifiers((prev) =>
+                          prev.filter((am) => am.modifierId !== assignment.modifierId)
+                        )
+                      } else {
+                        // Add modifier with its value
+                        const val = modifier.value !== null && modifier.value !== undefined
+                          ? `${modifier.value}${modifier.unit && modifier.unit !== 'none' && modifier.unit !== 'level' ? modifier.unit : ''}`
+                          : undefined
+                        setActiveModifiers((prev) => [
+                          ...prev,
+                          { modifierId: assignment.modifierId, value: val },
+                        ])
+                      }
+                    }}
+                    className={`
+                      flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 transition-all
+                      ${isActive
+                        ? effectColor
+                        : 'border-transparent bg-muted text-muted-foreground opacity-50'
+                      }
+                    `}
+                  >
+                    {isActive && <Check className="h-3 w-3" />}
+                    <span className="text-sm font-medium">
+                      {[
+                        modifier.name,
+                        modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                        modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                      ].filter(Boolean).join(' ')}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Controls */}

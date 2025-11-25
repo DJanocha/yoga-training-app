@@ -292,7 +292,18 @@ export const executionsRouter = {
         exerciseId: number | 'break'
         value?: number
         skipped?: boolean
+        activeModifiers?: Array<{ modifierId: number; value?: string }>
       }>
+
+      // Helper function to generate modifier signature
+      const generateModifierSignature = (
+        activeModifiers?: Array<{ modifierId: number; value?: string }>
+      ): string | undefined => {
+        if (!activeModifiers || activeModifiers.length === 0) return undefined
+        // Sort by modifierId for consistent signature
+        const sorted = [...activeModifiers].sort((a, b) => a.modifierId - b.modifierId)
+        return sorted.map((m) => `${m.modifierId}:${m.value || 'on'}`).join(',')
+      }
 
       for (const exercise of exercisesList) {
         if (
@@ -303,7 +314,10 @@ export const executionsRouter = {
           continue
         }
 
-        // Find previous best
+        // Generate modifier signature for this exercise
+        const currentModifierSignature = generateModifierSignature(exercise.activeModifiers)
+
+        // Find previous best with the same modifier signature
         const allExecutions = await db
           .select()
           .from(sequenceExecutions)
@@ -322,11 +336,15 @@ export const executionsRouter = {
             exerciseId: number | 'break'
             value?: number
             skipped?: boolean
+            activeModifiers?: Array<{ modifierId: number; value?: string }>
           }>
 
-          const prevExercise = execExercises.find(
-            (e) => e.exerciseId === exercise.exerciseId && !e.skipped,
-          )
+          // Find matching exercises with same modifier signature
+          const prevExercise = execExercises.find((e) => {
+            if (e.exerciseId !== exercise.exerciseId || e.skipped) return false
+            const prevSignature = generateModifierSignature(e.activeModifiers)
+            return prevSignature === currentModifierSignature
+          })
 
           if (prevExercise?.value && (!previousBest || prevExercise.value > previousBest)) {
             previousBest = prevExercise.value
@@ -360,18 +378,25 @@ export const executionsRouter = {
             type: sequenceExercise?.config.measure || 'repetitions',
             previousBest,
             newBest: exercise.value,
+            modifierSignature: currentModifierSignature,
           })
 
-          // Create achievement for PR
+          // Create achievement for PR (include modifier signature in badge ID for unique PRs per modifier combo)
           if (exerciseDoc) {
+            const baseBadgeId = `pr_${exerciseDoc.name.toLowerCase().replace(/\s+/g, '_')}`
+            const badgeId = currentModifierSignature
+              ? `${baseBadgeId}_mod_${currentModifierSignature.replace(/[,:]/g, '_')}`
+              : baseBadgeId
+
             await db.insert(achievements).values({
               userId: ctx.userId,
-              badgeId: `pr_${exerciseDoc.name.toLowerCase().replace(/\s+/g, '_')}`,
+              badgeId,
               unlockedAt: new Date(),
               category: 'personal-record',
               metadata: {
                 value: exercise.value,
                 exerciseName: exerciseDoc.name,
+                modifierSignature: currentModifierSignature,
               },
             })
           }

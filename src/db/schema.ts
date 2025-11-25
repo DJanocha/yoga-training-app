@@ -63,8 +63,10 @@ export const sequences = pgTable(
     description: text('description'),
     level: text('level'), // 'beginner' | 'intermediate' | 'advanced'
     category: text('category'), // 'yoga' | 'calisthenics' | 'cardio' | 'flexibility' | 'strength'
-    // JSON structure: Array<{ exerciseId: number | 'break', config: { goal: 'strict' | 'elastic', measure: 'repetitions' | 'time', targetValue?: number } }>
+    // JSON structure: Array<{ exerciseId: number | 'break', config: { goal: 'strict' | 'elastic', measure: 'repetitions' | 'time', targetValue?: number }, modifiers?: Array<{ modifierId: number, effect: 'easier' | 'harder' | 'neutral' }> }>
     exercises: jsonb('exercises').notNull(),
+    // JSON structure: Array<number> - modifier IDs that are available for this sequence
+    availableModifiers: jsonb('available_modifiers').default([]),
     isFavorite: boolean('is_favorite').default(false),
     isPreBuilt: boolean('is_pre_built').default(false),
     deletedAt: timestamp('deleted_at'),
@@ -96,13 +98,13 @@ export const sequenceExecutions = pgTable(
       .references(() => sequences.id, { onDelete: 'cascade' }),
     startedAt: timestamp('started_at').notNull(),
     completedAt: timestamp('completed_at'),
-    // JSON structure: Array<{ exerciseId: number | 'break', startedAt: timestamp, completedAt?: timestamp, value?: number, skipped?: boolean }>
+    // JSON structure: Array<{ exerciseId: number | 'break', startedAt: timestamp, completedAt?: timestamp, value?: number, skipped?: boolean, activeModifiers?: Array<{ modifierId: number, value?: string }> }>
     exercises: jsonb('exercises').notNull(),
     pausedAt: timestamp('paused_at'),
     totalPauseDuration: integer('total_pause_duration').default(0).notNull(),
     rating: integer('rating'), // 1-5 scale
     feedback: text('feedback'),
-    // JSON structure: Array<{ exerciseId: number, type: 'repetitions' | 'time', previousBest?: number, newBest: number }>
+    // JSON structure: Array<{ exerciseId: number, type: 'repetitions' | 'time', previousBest?: number, newBest: number, modifierSignature?: string }>
     personalRecords: jsonb('personal_records'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
@@ -143,6 +145,31 @@ export const userSettings = pgTable(
   (table) => [
     {
       userIdIdx: index('settings_user_id_idx').on(table.userId),
+    },
+  ],
+)
+
+// ============================================================================
+// MODIFIERS TABLE (Equipment like bands, blocks, weights)
+// ============================================================================
+export const modifiers = pgTable(
+  'modifiers',
+  {
+    id: serial('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    description: text('description'),
+    unit: text('unit'), // 'kg' | 'lbs' | 'cm' | 'inches' | 'level' | 'none'
+    value: integer('value'), // numeric value (e.g., 5, 10, 15)
+    iconName: text('icon_name'), // e.g., "dumbbell", "band", "block"
+    deletedAt: timestamp('deleted_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    {
+      userIdIdx: index('modifiers_user_id_idx').on(table.userId),
     },
   ],
 )

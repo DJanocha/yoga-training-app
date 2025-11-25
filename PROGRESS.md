@@ -307,14 +307,14 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 9: Modifiers System (Equipment Tracking)
 
 #### 9.1 Global Modifier Library
-- [ ] **Modifiers Table** - New database table for equipment (bands, blocks, weights)
-- [ ] **Modifier CRUD** - Create, read, update, delete modifiers
-- [ ] **Modifier Properties** - Name, unit (kg/cm/lbs/inches/level/none), value, description
-- [ ] **Modifiers Page** - `/modifiers` route for library management
+- [x] **Modifiers Table** - New database table for equipment (bands, blocks, weights)
+- [x] **Modifier CRUD** - Create, read, update, delete modifiers
+- [x] **Modifier Properties** - Name, unit (kg/cm/lbs/inches/level/none), value, description
+- [x] **Modifiers Page** - `/modifiers` route for library management
 
 #### 9.2 Sequence-Level Modifier Assignment
 - [ ] **Available Modifiers** - Select which modifiers are relevant for each sequence
-- [ ] **Sequence Schema Update** - Add `availableModifiers` JSONB field to sequences table
+- [x] **Sequence Schema Update** - Add `availableModifiers` JSONB field to sequences table
 
 #### 9.3 Exercise-Level Modifier Assignment
 - [ ] **Modifier Assignment UI** - Assign modifiers to exercises within sequence builder

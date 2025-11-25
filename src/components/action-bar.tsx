@@ -15,11 +15,11 @@ type ActionBarProps = {
   onSearchChange: (query: string) => void
   searchPlaceholder?: string
 
-  // Filters
-  filterCount: number
-  filterContent: ReactNode
-  onApplyFilters: () => void
-  onClearFilters: () => void
+  // Filters (optional - hide filter button if not provided)
+  filterCount?: number
+  filterContent?: ReactNode
+  onApplyFilters?: () => void
+  onClearFilters?: () => void
 
   // Create
   createTitle?: string
@@ -34,9 +34,9 @@ type ActionBarProps = {
   isCreateOpen?: boolean
   onCreateOpenChange?: (open: boolean) => void
 
-  // Copy/Clone
+  // Copy/Clone (optional - hide copy button if not provided)
   selectedItemId?: string
-  onCopy: (itemId: string) => void
+  onCopy?: (itemId: string) => void
   copyDisabledMessage?: string
 }
 
@@ -47,7 +47,7 @@ export function ActionBar({
   searchPlaceholder = "Type to search...",
 
   // Filters
-  filterCount,
+  filterCount = 0,
   filterContent,
   onApplyFilters,
   onClearFilters,
@@ -97,9 +97,26 @@ export function ActionBar({
   // Close when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        handleStateChange("base")
+      const target = event.target as Node
+
+      // Don't collapse if clicking inside the container
+      if (containerRef.current && containerRef.current.contains(target)) {
+        return
       }
+
+      // Don't collapse if clicking inside a Radix portal (Select dropdown, Dialog, etc.)
+      // Radix portals are rendered with data-radix-popper-content-wrapper or inside [data-radix-portal]
+      const isInsideRadixPortal =
+        (target as Element).closest?.('[data-radix-popper-content-wrapper]') ||
+        (target as Element).closest?.('[data-radix-portal]') ||
+        (target as Element).closest?.('[role="listbox"]') ||
+        (target as Element).closest?.('[role="dialog"]')
+
+      if (isInsideRadixPortal) {
+        return
+      }
+
+      handleStateChange("base")
     }
 
     if (state !== "base") {
@@ -122,20 +139,23 @@ export function ActionBar({
   }
 
   const handleCopy = () => {
-    if (selectedItemId) {
+    if (selectedItemId && onCopy) {
       onCopy(selectedItemId)
     }
   }
 
   const handleApplyFilters = () => {
-    onApplyFilters()
+    if (onApplyFilters) onApplyFilters()
     handleStateChange("base")
   }
 
   const handleClearFilters = () => {
-    onClearFilters()
+    if (onClearFilters) onClearFilters()
     handleStateChange("base")
   }
+
+  const hasFilters = filterContent && onApplyFilters && onClearFilters
+  const hasCopy = onCopy !== undefined
 
   const handleSubmitCreate = async () => {
     await onSubmitCreate()
@@ -205,7 +225,7 @@ export function ActionBar({
             )}
 
             {/* Filters State */}
-            {state === "filters" && (
+            {state === "filters" && hasFilters && (
               <div className="space-y-4">
                 {filterContent}
                 <div className="flex gap-2 pt-2">
@@ -287,27 +307,29 @@ export function ActionBar({
             )}
           </Button>
 
-          {/* Filter Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleStateChange(state === "filters" ? "base" : "filters")}
-            className={cn(
-              "relative h-10 w-10 rounded-full transition-colors duration-200",
-              state === "filters"
-                ? "text-foreground hover:bg-muted"
-                : state !== "base"
-                  ? "text-muted-foreground hover:bg-muted"
-                  : "text-foreground hover:bg-muted",
-            )}
-          >
-            <Filter className="h-5 w-5" />
-            {filterCount > 0 && state === "base" && (
-              <Badge className="absolute -top-0.5 -right-0.5 h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full">
-                {filterCount}
-              </Badge>
-            )}
-          </Button>
+          {/* Filter Icon - only show if filters are configured */}
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleStateChange(state === "filters" ? "base" : "filters")}
+              className={cn(
+                "relative h-10 w-10 rounded-full transition-colors duration-200",
+                state === "filters"
+                  ? "text-foreground hover:bg-muted"
+                  : state !== "base"
+                    ? "text-muted-foreground hover:bg-muted"
+                    : "text-foreground hover:bg-muted",
+              )}
+            >
+              <Filter className="h-5 w-5" />
+              {filterCount > 0 && state === "base" && (
+                <Badge className="absolute -top-0.5 -right-0.5 h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full">
+                  {filterCount}
+                </Badge>
+              )}
+            </Button>
+          )}
 
           {/* Plus/Create Icon */}
           <Button
@@ -326,24 +348,26 @@ export function ActionBar({
             <Plus className="h-5 w-5" />
           </Button>
 
-          {/* Copy/Clone Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCopy}
-            disabled={!selectedItemId}
-            title={!selectedItemId ? copyDisabledMessage : "Clone item"}
-            className={cn(
-              "h-10 w-10 rounded-full transition-colors duration-200",
-              !selectedItemId
-                ? "text-muted-foreground/50 cursor-not-allowed"
-                : state !== "base"
-                  ? "text-muted-foreground hover:bg-muted"
-                  : "text-foreground hover:bg-muted",
-            )}
-          >
-            <Copy className="h-5 w-5" />
-          </Button>
+          {/* Copy/Clone Icon - only show if copy is configured */}
+          {hasCopy && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCopy}
+              disabled={!selectedItemId}
+              title={!selectedItemId ? copyDisabledMessage : "Clone item"}
+              className={cn(
+                "h-10 w-10 rounded-full transition-colors duration-200",
+                !selectedItemId
+                  ? "text-muted-foreground/50 cursor-not-allowed"
+                  : state !== "base"
+                    ? "text-muted-foreground hover:bg-muted"
+                    : "text-foreground hover:bg-muted",
+              )}
+            >
+              <Copy className="h-5 w-5" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

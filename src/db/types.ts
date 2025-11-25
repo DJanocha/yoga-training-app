@@ -29,6 +29,12 @@ export type MeasureType = z.infer<typeof MeasureType>
 export const Theme = z.enum(['energy', 'zen'])
 export type Theme = z.infer<typeof Theme>
 
+export const ModifierUnit = z.enum(['kg', 'lbs', 'cm', 'inches', 'level', 'none'])
+export type ModifierUnit = z.infer<typeof ModifierUnit>
+
+export const ModifierEffect = z.enum(['easier', 'harder', 'neutral'])
+export type ModifierEffect = z.infer<typeof ModifierEffect>
+
 export const AchievementCategory = z.enum([
   'milestone',
   'streak',
@@ -49,12 +55,27 @@ export const ExerciseConfig = z.object({
 })
 export type ExerciseConfig = z.infer<typeof ExerciseConfig>
 
+// Modifier assignment for an exercise in a sequence
+export const ExerciseModifierAssignment = z.object({
+  modifierId: z.number(),
+  effect: ModifierEffect,
+})
+export type ExerciseModifierAssignment = z.infer<typeof ExerciseModifierAssignment>
+
 // Exercise reference within a sequence (can be an exercise ID or 'break')
 export const SequenceExercise = z.object({
   exerciseId: z.union([z.number(), z.literal('break')]),
   config: ExerciseConfig,
+  modifiers: z.array(ExerciseModifierAssignment).optional(),
 })
 export type SequenceExercise = z.infer<typeof SequenceExercise>
+
+// Active modifier during exercise execution
+export const ActiveModifier = z.object({
+  modifierId: z.number(),
+  value: z.string().optional(), // The actual value used (e.g., "5kg", "heavy")
+})
+export type ActiveModifier = z.infer<typeof ActiveModifier>
 
 // Completed exercise within an execution
 export const CompletedExercise = z.object({
@@ -63,6 +84,7 @@ export const CompletedExercise = z.object({
   completedAt: z.date().optional(),
   value: z.number().optional(),
   skipped: z.boolean().optional(),
+  activeModifiers: z.array(ActiveModifier).optional(),
 })
 export type CompletedExercise = z.infer<typeof CompletedExercise>
 
@@ -72,6 +94,7 @@ export const PersonalRecord = z.object({
   type: MeasureType,
   previousBest: z.number().optional(),
   newBest: z.number(),
+  modifierSignature: z.string().optional(), // e.g., "band:heavy,block:10cm" - PRs are tracked per modifier combo
 })
 export type PersonalRecord = z.infer<typeof PersonalRecord>
 
@@ -133,4 +156,13 @@ export const refinedUserSettingsSchema = z.object({
 export const executionRatingSchema = z.object({
   rating: z.number().int().min(1).max(5),
   feedback: z.string().optional(),
+})
+
+// Modifier validation
+export const refinedModifierSchema = z.object({
+  name: z.string().min(1, 'Modifier name is required'),
+  description: z.string().optional(),
+  unit: ModifierUnit.optional(),
+  value: z.number().int().min(0).optional(),
+  iconName: z.string().optional(),
 })
