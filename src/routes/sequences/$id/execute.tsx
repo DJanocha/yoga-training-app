@@ -455,27 +455,27 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <header className="flex items-center gap-4 p-4 border-b">
-        <Button variant="ghost" size="icon" onClick={handleQuit}>
-          <ArrowLeft className="h-5 w-5" />
+      <header className="flex items-center gap-4 p-4 md:px-8 border-b">
+        <Button variant="ghost" size="icon" onClick={handleQuit} className="h-12 w-12 md:h-14 md:w-14">
+          <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-sm font-medium text-muted-foreground">
+          <h1 className="text-sm md:text-base font-medium text-muted-foreground">
             {sequence.name}
           </h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Exercise {currentIndex + 1} of {exercises.length}
           </p>
         </div>
         <Badge
           onClick={() => setAutoAdvance(!autoAdvance)}
-          className={`cursor-pointer px-3 py-1 gap-1 ${
+          className={`cursor-pointer px-3 py-1.5 md:px-4 md:py-2 gap-1 text-xs md:text-sm ${
             autoAdvance
               ? 'bg-green-500 hover:bg-green-600 text-white'
               : 'bg-muted hover:bg-muted/80 text-muted-foreground'
           }`}
         >
-          {autoAdvance && <Check className="h-3 w-3" />}
+          {autoAdvance && <Check className="h-3 w-3 md:h-4 md:w-4" />}
           Auto-advance
         </Badge>
       </header>
@@ -487,29 +487,29 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       />
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-12">
         {/* Exercise icon/indicator */}
-        <div className="mb-6">
+        <div className="mb-6 md:mb-8">
           {isBreak ? (
-            <Coffee className="h-16 w-16 text-muted-foreground" />
+            <Coffee className="h-16 w-16 md:h-24 md:w-24 text-muted-foreground" />
           ) : isTimeBased ? (
-            <Clock className="h-16 w-16 text-primary" />
+            <Clock className="h-16 w-16 md:h-24 md:w-24 text-primary" />
           ) : (
-            <Repeat className="h-16 w-16 text-primary" />
+            <Repeat className="h-16 w-16 md:h-24 md:w-24 text-primary" />
           )}
         </div>
 
         {/* Exercise name */}
-        <h2 className="text-2xl font-bold text-center mb-2">
+        <h2 className="text-2xl md:text-4xl font-bold text-center mb-2 md:mb-4">
           {getExerciseName(currentExercise.exerciseId)}
         </h2>
 
         {/* Timer/Counter */}
         {isTimeBased ? (
           // Time-based display
-          <div className="flex flex-col items-center mb-4">
+          <div className="flex flex-col items-center mb-4 md:mb-8">
             <div
-              className={`text-6xl font-mono font-bold ${
+              className={`text-6xl md:text-8xl font-mono font-bold ${
                 timeElapsed > targetValue
                   ? 'text-green-500'
                   : ''
@@ -520,26 +520,26 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                 : `+${timeElapsed - targetValue}`}
             </div>
             {timeElapsed > targetValue && targetValue > 0 && (
-              <div className="text-2xl text-muted-foreground">
+              <div className="text-2xl md:text-3xl text-muted-foreground">
                 /{targetValue}
               </div>
             )}
           </div>
         ) : (
           // Rep-based display with +/- buttons
-          <div className="flex flex-col items-center mb-4">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col items-center mb-4 md:mb-8">
+            <div className="flex items-center gap-4 md:gap-8">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setActualValue(Math.max(0, actualValue - 1))}
-                className="h-12 w-12"
+                className="h-12 w-12 md:h-16 md:w-16"
               >
-                <Minus className="h-6 w-6" />
+                <Minus className="h-6 w-6 md:h-8 md:w-8" />
               </Button>
               <div className="flex flex-col items-center">
                 <div
-                  className={`text-6xl font-mono font-bold ${
+                  className={`text-6xl md:text-8xl font-mono font-bold ${
                     actualValue > targetValue
                       ? 'text-green-500'
                       : actualValue < targetValue
@@ -550,7 +550,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                   {actualValue}
                 </div>
                 {actualValue !== targetValue && targetValue > 0 && (
-                  <div className="text-2xl text-muted-foreground">
+                  <div className="text-2xl md:text-3xl text-muted-foreground">
                     /{targetValue}
                   </div>
                 )}
@@ -559,15 +559,15 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                 variant="outline"
                 size="icon"
                 onClick={() => setActualValue(actualValue + 1)}
-                className="h-12 w-12"
+                className="h-12 w-12 md:h-16 md:w-16"
               >
-                <Plus className="h-6 w-6" />
+                <Plus className="h-6 w-6 md:h-8 md:w-8" />
               </Button>
             </div>
           </div>
         )}
 
-        <p className="text-muted-foreground mb-8">
+        <p className="text-muted-foreground md:text-lg mb-8 md:mb-12">
           {isTimeBased
             ? timeElapsed > targetValue
               ? 'seconds over target'
@@ -577,27 +577,27 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
         {/* Progress for time-based */}
         {isTimeBased && (
-          <div className="w-full max-w-xs mb-8">
-            <Progress value={Math.min(progress, 100)} className="h-2" />
+          <div className="w-full max-w-xs md:max-w-md mb-8 md:mb-12">
+            <Progress value={Math.min(progress, 100)} className="h-2 md:h-3" />
           </div>
         )}
 
         {/* Goal type indicator */}
-        <p className="text-sm text-muted-foreground capitalize">
+        <p className="text-sm md:text-base text-muted-foreground capitalize">
           {currentExercise.config.goal} goal
         </p>
       </main>
 
       {/* Controls */}
-      <div className="p-4 border-t">
-        <div className="flex gap-3 max-w-sm mx-auto">
+      <div className="p-4 md:p-6 border-t">
+        <div className="flex gap-3 md:gap-4 max-w-sm md:max-w-lg mx-auto">
           <Button
             variant="outline"
             size="lg"
-            className="flex-1"
+            className="flex-1 h-12 md:h-14 text-base md:text-lg"
             onClick={handleSkip}
           >
-            <SkipForward className="h-5 w-5 mr-2" />
+            <SkipForward className="h-5 w-5 md:h-6 md:w-6 mr-2" />
             Skip
           </Button>
 
@@ -606,17 +606,17 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
               <Button
                 variant={isPaused ? 'default' : 'secondary'}
                 size="lg"
-                className="flex-1"
+                className="flex-1 h-12 md:h-14 text-base md:text-lg"
                 onClick={togglePause}
               >
                 {isPaused ? (
                   <>
-                    <Play className="h-5 w-5 mr-2" />
+                    <Play className="h-5 w-5 md:h-6 md:w-6 mr-2" />
                     Resume
                   </>
                 ) : (
                   <>
-                    <Pause className="h-5 w-5 mr-2" />
+                    <Pause className="h-5 w-5 md:h-6 md:w-6 mr-2" />
                     Pause
                   </>
                 )}
@@ -624,20 +624,20 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             ) : (
               <Button
                 size="lg"
-                className="flex-1"
+                className="flex-1 h-12 md:h-14 text-base md:text-lg"
                 onClick={handleNextExercise}
               >
-                <CheckCircle className="h-5 w-5 mr-2" />
+                <CheckCircle className="h-5 w-5 md:h-6 md:w-6 mr-2" />
                 Done
               </Button>
             )
           ) : (
             <Button
               size="lg"
-              className="flex-1"
+              className="flex-1 h-12 md:h-14 text-base md:text-lg"
               onClick={handleNextExercise}
             >
-              <CheckCircle className="h-5 w-5 mr-2" />
+              <CheckCircle className="h-5 w-5 md:h-6 md:w-6 mr-2" />
               Done
             </Button>
           )}

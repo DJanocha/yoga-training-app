@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAppForm } from '@/hooks/form'
 import { sequenceLabelOverrides, sequenceRequiredDefaults, getFieldLabel } from '@/lib/form-utils'
 import { z } from 'zod'
+import { ListPageSkeleton } from '@/components/skeletons'
 
 // Simple validator for quick create form (only name field)
 const quickCreateValidator = z.object({
@@ -26,9 +27,7 @@ function Sequences() {
   return (
     <>
       <AuthLoading>
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <ListPageSkeleton />
       </AuthLoading>
       <RedirectToSignIn />
       <SignedIn>
@@ -81,11 +80,7 @@ function SequencesContent() {
   })
 
   if (isLoading || !sequences) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+    return <ListPageSkeleton />
   }
 
   // Calculate active filter count

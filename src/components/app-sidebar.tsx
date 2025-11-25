@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { Home, Dumbbell, ListOrdered, Settings, LogOut, WifiOff, User, Calendar, Trophy, SlidersHorizontal } from 'lucide-react'
+import { Home, Dumbbell, ListOrdered, LogOut, WifiOff, User, Calendar, Trophy, SlidersHorizontal } from 'lucide-react'
 import { UserButton, SignedIn, SignedOut } from '@/components/auth'
 
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -20,6 +20,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar'
 import { authClient } from '@/lib/auth-client'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const navItems = [
   { to: '/', label: 'Home', icon: Home },
@@ -48,6 +49,9 @@ function DesktopSidebar() {
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
             Yoga Training
           </span>
+          <div className="ml-auto group-data-[collapsible=icon]:hidden">
+            <ThemeToggle />
+          </div>
         </div>
       </SidebarHeader>
 

@@ -258,7 +258,7 @@ export function ExerciseList() {
 
       {exercises.length === 0 ? (
         level || category || bodyPart ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-muted-foreground">
             <p className="text-lg">No exercises match your filters.</p>
           </div>
         ) : (
@@ -271,17 +271,17 @@ export function ExerciseList() {
           />
         )
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {exercises.map((exercise) => (
             <div
               key={exercise.id}
               onClick={() => setSelectedItemId(
                 selectedItemId === String(exercise.id) ? undefined : String(exercise.id)
               )}
-              className={`bg-white rounded-lg shadow-sm border p-4 cursor-pointer transition-colors ${
+              className={`bg-card text-card-foreground rounded-lg shadow-sm border p-4 cursor-pointer transition-colors ${
                 selectedItemId === String(exercise.id)
                   ? 'border-primary ring-2 ring-primary/20'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-border hover:border-primary/50'
               }`}
             >
               <div className="flex items-start gap-4">
@@ -294,7 +294,7 @@ export function ExerciseList() {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-2 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 flex-1">
+                    <h3 className="text-lg font-semibold flex-1">
                       {exercise.name}
                     </h3>
                   </div>
@@ -332,21 +332,27 @@ export function ExerciseList() {
                     <div className="mt-2">
                       {expandedDescriptions.has(exercise.id) ? (
                         <div>
-                          <p className="text-sm text-gray-600 mb-2">{exercise.description}</p>
+                          <p className="text-sm text-muted-foreground mb-2">{exercise.description}</p>
                           {exercise.tips && (
-                            <p className="text-sm text-gray-600 italic">Tips: {exercise.tips}</p>
+                            <p className="text-sm text-muted-foreground italic">Tips: {exercise.tips}</p>
                           )}
                           <button
-                            onClick={() => toggleDescription(exercise.id)}
-                            className="text-sm text-blue-600 hover:underline mt-1"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleDescription(exercise.id)
+                            }}
+                            className="text-sm text-primary hover:underline mt-1"
                           >
                             Show less
                           </button>
                         </div>
                       ) : (
                         <button
-                          onClick={() => toggleDescription(exercise.id)}
-                          className="text-sm text-blue-600 hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleDescription(exercise.id)
+                          }}
+                          className="text-sm text-primary hover:underline"
                         >
                           Show description
                         </button>
@@ -362,7 +368,8 @@ export function ExerciseList() {
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block text-sm text-blue-600 hover:underline truncate"
+                          onClick={(e) => e.stopPropagation()}
+                          className="block text-sm text-primary hover:underline truncate"
                         >
                           {link}
                         </a>
@@ -389,7 +396,7 @@ export function ExerciseList() {
                     e.stopPropagation()
                     navigate({ to: '/exercises/$id/edit', params: { id: String(exercise.id) } })
                   }}
-                  className="flex-1 min-h-[44px] px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                  className="flex-1 min-h-[44px] px-4 py-2 bg-muted text-muted-foreground text-base font-medium rounded-lg hover:bg-muted/80 transition-colors"
                 >
                   Edit
                 </button>

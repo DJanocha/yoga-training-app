@@ -5,6 +5,7 @@ import { Download, Check } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ThemeSelector } from '@/components/theme-toggle'
 
 export const Route = createFileRoute('/preferences/')({
   component: Preferences,
@@ -150,9 +151,18 @@ function PreferencesContent() {
                 </p>
               </header>
 
-              {/* Theme Selector */}
+              {/* Dark/Light Mode Selector */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Theme</label>
+                <label className="text-sm font-medium">Appearance</label>
+                <p className="text-sm text-muted-foreground">
+                  Choose light or dark mode for the app.
+                </p>
+                <ThemeSelector />
+              </div>
+
+              {/* Workout Theme Selector */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Workout Theme</label>
                 <p className="text-sm text-muted-foreground">
                   Choose the visual style for your workout experience.
                 </p>

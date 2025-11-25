@@ -1,14 +1,20 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { lazy, Suspense } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Flame, Trophy, Clock, Star } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
-// import { sum } from 'lodash'
 import { useQuery } from '@tanstack/react-query'
 import { RedirectToSignIn, SignedIn, AuthLoading, } from '@/components/auth'
 import { authClient } from '@/lib/auth-client'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { HomePageSkeleton } from '@/components/skeletons'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Lazy load recharts (it's a heavy library)
+const WeeklyActivityChart = lazy(() =>
+  import('@/components/charts/weekly-activity-chart').then(m => ({ default: m.WeeklyActivityChart }))
+)
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -53,11 +59,7 @@ function HomeContent() {
   const weeklyGoal = settings?.weeklyGoal || 3
 
   if (settingsLoading || statsLoading || weekLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+    return <HomePageSkeleton />
   }
   if(!session?.user){
     return <RedirectToSignIn/>
@@ -152,36 +154,9 @@ function HomeContent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={weekData.map(day => ({
-                  day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
-                  workouts: day.workouts
-                }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="day"
-                    tick={{ fontSize: 12 }}
-                    stroke="#6b7280"
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12 }}
-                    stroke="#6b7280"
-                    allowDecimals={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar
-                    dataKey="workouts"
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<Skeleton className="h-[200px] w-full" />}>
+                <WeeklyActivityChart data={weekData} />
+              </Suspense>
             </CardContent>
           </Card>
         )}
@@ -201,9 +176,9 @@ function HomeContent() {
                 </span>
                 <span className="font-medium">{Math.round(weeklyProgressPercent)}%</span>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-600 transition-all duration-300"
+                  className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${weeklyProgressPercent}%` }}
                 />
               </div>

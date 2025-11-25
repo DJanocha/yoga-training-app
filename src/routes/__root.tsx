@@ -19,6 +19,9 @@ import type { TRPCOptionsProxy } from '@trpc/tanstack-react-query'
 
 import { Toaster } from '@/components/ui/sonner'
 import { AppSidebarLayout } from '@/components/app-sidebar'
+import { DefaultCatchBoundary } from '@/components/DefaultCatchBoundary'
+import { NotFound } from '@/components/NotFound'
+import { ThemeProvider } from '@/components/theme-provider'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -103,14 +106,14 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
   component: RootComponent,
-  errorComponent: (props) => {
-    return <RootDocument>{props.error.message}</RootDocument>
-  },
+  errorComponent: ({ error, reset }) => (
+    <RootDocument>
+      <DefaultCatchBoundary error={error} reset={reset} />
+    </RootDocument>
+  ),
   notFoundComponent: () => (
     <RootDocument>
-      <div className="flex items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold">Page not found</h1>
-      </div>
+      <NotFound />
     </RootDocument>
   ),
   shellComponent: RootDocument,
@@ -118,13 +121,30 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Prevent flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('yoga-theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
-        {children}
-        <Toaster />
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
