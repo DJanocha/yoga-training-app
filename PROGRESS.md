@@ -302,16 +302,100 @@ This document tracks what has been implemented and what still needs to be done.
 
 ---
 
-### Phase 9: Public Exercise Library (Future)
+### Phase 9: Modifiers System (Equipment Tracking)
 
-#### 9.1 Public Exercises System
+#### 9.1 Global Modifier Library
+- [ ] **Modifiers Table** - New database table for equipment (bands, blocks, weights)
+- [ ] **Modifier CRUD** - Create, read, update, delete modifiers
+- [ ] **Modifier Properties** - Name, unit (kg/cm/lbs/inches/level/none), value, description
+- [ ] **Modifiers Page** - `/modifiers` route for library management
+
+#### 9.2 Sequence-Level Modifier Assignment
+- [ ] **Available Modifiers** - Select which modifiers are relevant for each sequence
+- [ ] **Sequence Schema Update** - Add `availableModifiers` JSONB field to sequences table
+
+#### 9.3 Exercise-Level Modifier Assignment
+- [ ] **Modifier Assignment UI** - Assign modifiers to exercises within sequence builder
+- [ ] **Effect Direction** - Each modifier marked as "easier", "harder", or "neutral" per exercise
+- [ ] **Toggleable Badges** - Quick toggle modifiers on/off during workout execution
+
+#### 9.4 Modifier-Aware PR Tracking
+- [ ] **Modifier Signature** - PRs tracked separately per modifier combination
+- [ ] **PR Display Update** - Show which modifiers were active when PR was set
+- [ ] **Achievement Updates** - Achievements respect modifier combinations
+
+---
+
+### Phase 10: Sequence Builder UX Improvements
+
+#### 10.1 Configuration UI
+- [ ] **ButtonGroup for Measure** - Replace Select dropdown with toggle buttons (Time/Reps)
+- [ ] **Goal at Sequence Level** - Move strict/elastic from per-exercise to sequence level
+- [ ] **Auto-advance Connection** - Strict mode enables auto-advance, elastic disables it
+
+#### 10.2 Exercise Management
+- [ ] **Duplicate Exercise Button** - Copy exercise with config, insert below
+- [ ] **Apply to Many** - Configure one exercise, apply config to multiple selected
+- [ ] **Multiply/Multi-Insert** - Insert exercise at multiple positions at once
+- [ ] **Improved Break Insertion** - Show insertion points between exercises (not just append)
+
+#### 10.3 Sequence-Level Settings
+- [ ] **Available Modifiers UI** - Multi-select modifiers for sequence
+- [ ] **Per-Exercise Modifier Assignment** - Assign from available list with effect direction
+
+---
+
+### Phase 11: Execution Flow Enhancements
+
+#### 11.1 Modifier UI During Workout
+- [ ] **Modifier Toggle Chips** - Display assigned modifiers as toggleable badges
+- [ ] **Quick Toggle** - Enable/disable modifiers mid-exercise
+- [ ] **Modifier Picker Sheet** - Full list of available modifiers
+
+#### 11.2 Add Set Feature
+- [ ] **Add Set Button** - After completing exercise, option to do another set
+- [ ] **Set Number Tracking** - Track set 1, set 2, etc. separately
+- [ ] **Different Modifiers Per Set** - Each set can have different modifiers active
+
+#### 11.3 Display Fixes
+- [ ] **Image Display** - Show exercise photos during workout execution
+- [ ] **Goal Behavior** - Read strict/elastic from sequence level
+
+---
+
+### Phase 12: Home & UX Quick Wins
+
+#### 12.1 Home Screen
+- [ ] **Reduce Tile Sizes** - Smaller stat cards for better mobile UX
+- [ ] **Remove Redundant Button** - Remove "Browse Sequences" (duplicate of main nav)
+- [ ] **Progress Chart** - Show exercise improvement over time (e.g., "10 push-ups last week → 12 this week")
+- [ ] **Weekly Progress Display** - Top improving exercises sorted by % improvement
+
+#### 12.2 Sequences
+- [ ] **Sort by Last Used** - Default sort sequences by last execution date
+- [ ] **Sorting Options** - Allow user to change sort order
+- [ ] **Floating Action Button** - Quick start button always visible
+
+#### 12.3 Achievements & Records
+- [ ] **Merge PR into Achievements** - Move Personal Records into Achievements tab
+- [ ] **Enhanced PR Thresholds** - 1-20 by 1, then by 5 (e.g., 20, 25, 30...)
+- [ ] **Weekly Badges** - Small labels showing records/achievements from current week
+
+#### 12.4 Rating System
+- [ ] **Make Rating Optional** - One-tap skip option after workout
+
+---
+
+### Phase 13: Public Exercise Library (Future)
+
+#### 13.1 Public Exercises System
 - [ ] **Public/Private Toggle** - Make exercises shareable
 - [ ] **Explore Tab** - Browse public exercises
 - [ ] **Save System** - Save public exercises to personal library (ExerciseSaves table)
 - [ ] **Save Counter** - Show popularity (hearts/saves count)
 - [ ] **Creator Attribution** - Show who created exercise
 
-#### 9.2 Exercise Versioning (Optional)
+#### 13.2 Exercise Versioning (Optional)
 - [ ] **Version Management** - Track exercise updates
 - [ ] **Migration Prompts** - Notify users of updated versions
 - [ ] **Version History** - See exercise evolution
