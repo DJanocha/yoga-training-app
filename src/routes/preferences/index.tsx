@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
 import { Download, Check } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ThemeSelector } from '@/components/theme-toggle'
+import { ButtonGroup } from '@/components/ui/button-group'
+import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/preferences/')({
   component: Preferences,
@@ -44,8 +46,8 @@ function PreferencesContent() {
   const [beepStartSeconds, setBeepStartSeconds] = useState(
     settings?.beepStartSeconds || 3,
   )
-  const [theme, setTheme] = useState<'energy' | 'zen' | undefined>(
-    (settings?.theme as 'energy' | 'zen') || undefined,
+  const [workoutTheme, setWorkoutTheme] = useState<'default' | 'energy' | 'zen'>(
+    (settings?.theme as 'energy' | 'zen') || 'default',
   )
   const [hapticEnabled, setHapticEnabled] = useState(
     settings?.hapticEnabled ?? true,
@@ -61,11 +63,30 @@ function PreferencesContent() {
     'audio' | 'display' | 'goals' | 'data'
   >('audio')
 
+  // Apply workout theme and contrast mode immediately for preview
+  useEffect(() => {
+    const html = document.documentElement
+
+    // Apply workout theme
+    if (workoutTheme && workoutTheme !== 'default') {
+      html.setAttribute('data-workout-theme', workoutTheme)
+    } else {
+      html.removeAttribute('data-workout-theme')
+    }
+
+    // Apply contrast mode
+    if (contrastMode) {
+      html.setAttribute('data-contrast', 'high')
+    } else {
+      html.removeAttribute('data-contrast')
+    }
+  }, [workoutTheme, contrastMode])
+
   const handleSave = async () => {
     updateSettings.mutate({
       beepEnabled,
       beepStartSeconds,
-      theme,
+      theme: workoutTheme === 'default' ? undefined : workoutTheme,
       hapticEnabled,
       contrastMode,
       weeklyGoal,
@@ -164,30 +185,39 @@ function PreferencesContent() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Workout Theme</label>
                 <p className="text-sm text-muted-foreground">
-                  Choose the visual style for your workout experience.
+                  Choose the color style for buttons and accents.
                 </p>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="theme"
-                      checked={theme === 'energy'}
-                      onChange={() => setTheme('energy')}
-                      className="h-4 w-4"
-                    />
-                    <span>Energy (vibrant colors)</span>
-                  </label>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="theme"
-                      checked={theme === 'zen'}
-                      onChange={() => setTheme('zen')}
-                      className="h-4 w-4"
-                    />
-                    <span>Zen (calm tones)</span>
-                  </label>
-                </div>
+                <ButtonGroup className="w-full">
+                  <Button
+                    type="button"
+                    variant={workoutTheme === 'default' ? 'default' : 'outline'}
+                    className="flex-1"
+                    onClick={() => setWorkoutTheme('default')}
+                  >
+                    Default
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={workoutTheme === 'energy' ? 'default' : 'outline'}
+                    className="flex-1"
+                    onClick={() => setWorkoutTheme('energy')}
+                  >
+                    Energy
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={workoutTheme === 'zen' ? 'default' : 'outline'}
+                    className="flex-1"
+                    onClick={() => setWorkoutTheme('zen')}
+                  >
+                    Zen
+                  </Button>
+                </ButtonGroup>
+                <p className="text-xs text-muted-foreground">
+                  {workoutTheme === 'default' && 'Standard black/white theme'}
+                  {workoutTheme === 'energy' && 'Vibrant orange for high-intensity motivation'}
+                  {workoutTheme === 'zen' && 'Calm sage green for mindful practice'}
+                </p>
               </div>
 
               {/* Haptic Feedback */}

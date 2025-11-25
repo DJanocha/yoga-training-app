@@ -13,6 +13,7 @@ import { AuthQueryProvider } from '@daveyplate/better-auth-tanstack'
 import { AuthUIProviderTanstack } from '@daveyplate/better-auth-ui/tanstack'
 import { authClient } from '@/lib/auth-client'
 import { Link as RouterLink } from '@tanstack/react-router'
+import { WorkoutThemeProvider } from '@/components/workout-theme-provider'
 
 // Create a wrapper for Link that better-auth-ui can use
 const Link = (props: { href: string; className?: string; children: React.ReactNode }) => (
@@ -69,7 +70,6 @@ export function Provider({
         <AuthQueryProvider>
           <AuthUIProviderTanstack
             authClient={authClient}
-            settingsURL="/account/settings"
             navigate={(href: string) => {
               // Use window.location for auth navigation to ensure clean redirects
               window.location.href = href
@@ -83,7 +83,9 @@ export function Provider({
             }}
             Link={Link}
           >
-            {children}
+            <WorkoutThemeProvider>
+              {children}
+            </WorkoutThemeProvider>
           </AuthUIProviderTanstack>
         </AuthQueryProvider>
       </QueryClientProvider>

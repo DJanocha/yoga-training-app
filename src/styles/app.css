@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import "tw-animate-css";
-@import "./themes.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -130,3 +129,6 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Import workout themes AFTER base styles so they can override */
+@import "./themes.css";

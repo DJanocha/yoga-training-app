@@ -1,94 +1,92 @@
-/* Energy Theme - Vibrant and motivating */
-[data-theme='energy'] {
-  /* Primary colors */
-  --primary: 255 107 53; /* Orange */
-  --primary-foreground: 255 255 255;
+/* =============================================================================
+   WORKOUT THEMES
+   These themes affect the primary/accent colors for a different workout vibe.
+   Applied via data-workout-theme attribute on html element.
+   ============================================================================= */
 
-  /* Accent colors */
-  --accent: 14 165 233; /* Electric Blue */
-  --accent-foreground: 255 255 255;
-
-  /* Background colors */
-  --background: 31 41 55; /* Dark Gray */
-  --foreground: 255 255 255;
-
-  /* Card colors */
-  --card: 55 65 81;
-  --card-foreground: 255 255 255;
-
-  /* Muted colors */
-  --muted: 75 85 99;
-  --muted-foreground: 209 213 219;
-
-  /* Border colors */
-  --border: 75 85 99;
-  --input: 75 85 99;
-  --ring: 255 107 53;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
-
-  /* Shadows */
-  --shadow-strong: 0 10px 25px rgba(0, 0, 0, 0.3);
-
-  /* Destructive */
-  --destructive: 239 68 68;
-  --destructive-foreground: 255 255 255;
+/* Energy Theme - Vibrant orange for high-intensity motivation */
+[data-workout-theme='energy'] {
+  --primary: oklch(0.65 0.2 35); /* Vibrant Orange */
+  --primary-foreground: oklch(1 0 0);
+  --accent: oklch(0.95 0.05 35); /* Light orange tint */
+  --accent-foreground: oklch(0.3 0.1 35);
+  --ring: oklch(0.65 0.2 35);
+  --sidebar-primary: oklch(0.65 0.2 35);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.05 35);
+  --sidebar-accent-foreground: oklch(0.3 0.1 35);
+  --chart-1: oklch(0.65 0.2 35);
+  --chart-2: oklch(0.7 0.18 50);
+  --chart-3: oklch(0.6 0.15 20);
 }
 
-/* Zen Theme - Calm and peaceful */
-[data-theme='zen'] {
-  /* Primary colors */
-  --primary: 132 169 140; /* Sage Green */
-  --primary-foreground: 255 255 255;
-
-  /* Accent colors */
-  --accent: 202 162 132; /* Terracotta */
-  --accent-foreground: 255 255 255;
-
-  /* Background colors */
-  --background: 248 247 244; /* Off-white */
-  --foreground: 31 41 55;
-
-  /* Card colors */
-  --card: 255 255 255;
-  --card-foreground: 31 41 55;
-
-  /* Muted colors */
-  --muted: 229 231 235;
-  --muted-foreground: 107 114 128;
-
-  /* Border colors */
-  --border: 229 231 235;
-  --input: 229 231 235;
-  --ring: 132 169 140;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #84A98C 0%, #A5B99C 100%);
-
-  /* Shadows */
-  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
-
-  /* Destructive */
-  --destructive: 239 68 68;
-  --destructive-foreground: 255 255 255;
+[data-workout-theme='energy'].dark,
+.dark[data-workout-theme='energy'] {
+  --primary: oklch(0.7 0.22 35); /* Brighter orange in dark mode */
+  --primary-foreground: oklch(0.15 0 0);
+  --accent: oklch(0.3 0.1 35); /* Dark orange tint */
+  --accent-foreground: oklch(0.95 0.05 35);
+  --ring: oklch(0.7 0.22 35);
+  --sidebar-primary: oklch(0.7 0.22 35);
+  --sidebar-primary-foreground: oklch(0.15 0 0);
+  --sidebar-accent: oklch(0.3 0.1 35);
+  --sidebar-accent-foreground: oklch(0.95 0.05 35);
+  --chart-1: oklch(0.7 0.22 35);
+  --chart-2: oklch(0.75 0.2 50);
+  --chart-3: oklch(0.65 0.18 20);
 }
 
-/* Default theme (Energy) when no theme is set */
-:root {
-  --primary: 255 107 53;
-  --primary-foreground: 255 255 255;
-  --accent: 14 165 233;
-  --accent-foreground: 255 255 255;
-  --background: 31 41 55;
-  --foreground: 255 255 255;
-  --card: 55 65 81;
-  --card-foreground: 255 255 255;
-  --muted: 75 85 99;
-  --muted-foreground: 209 213 219;
-  --border: 75 85 99;
-  --input: 75 85 99;
-  --ring: 255 107 53;
-  --destructive: 239 68 68;
-  --destructive-foreground: 255 255 255;
+/* Zen Theme - Calm sage green for mindful practice */
+[data-workout-theme='zen'] {
+  --primary: oklch(0.55 0.12 155); /* Sage Green */
+  --primary-foreground: oklch(1 0 0);
+  --accent: oklch(0.95 0.03 155); /* Light sage tint */
+  --accent-foreground: oklch(0.3 0.08 155);
+  --ring: oklch(0.55 0.12 155);
+  --sidebar-primary: oklch(0.55 0.12 155);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.03 155);
+  --sidebar-accent-foreground: oklch(0.3 0.08 155);
+  --chart-1: oklch(0.55 0.12 155);
+  --chart-2: oklch(0.6 0.1 175);
+  --chart-3: oklch(0.5 0.08 135);
+}
+
+[data-workout-theme='zen'].dark,
+.dark[data-workout-theme='zen'] {
+  --primary: oklch(0.65 0.14 155); /* Brighter sage in dark mode */
+  --primary-foreground: oklch(0.15 0 0);
+  --accent: oklch(0.25 0.06 155); /* Dark sage tint */
+  --accent-foreground: oklch(0.9 0.04 155);
+  --ring: oklch(0.65 0.14 155);
+  --sidebar-primary: oklch(0.65 0.14 155);
+  --sidebar-primary-foreground: oklch(0.15 0 0);
+  --sidebar-accent: oklch(0.25 0.06 155);
+  --sidebar-accent-foreground: oklch(0.9 0.04 155);
+  --chart-1: oklch(0.65 0.14 155);
+  --chart-2: oklch(0.7 0.12 175);
+  --chart-3: oklch(0.6 0.1 135);
+}
+
+/* =============================================================================
+   HIGH CONTRAST MODE
+   Increases contrast ratios for better accessibility.
+   Applied via data-contrast="high" attribute on html element.
+   ============================================================================= */
+
+[data-contrast='high'] {
+  --foreground: oklch(0 0 0); /* Pure black text */
+  --card-foreground: oklch(0 0 0);
+  --muted-foreground: oklch(0.25 0 0); /* Much darker muted text */
+  --border: oklch(0.4 0 0); /* Darker borders */
+  --input: oklch(0.4 0 0);
+}
+
+[data-contrast='high'].dark,
+.dark[data-contrast='high'] {
+  --foreground: oklch(1 0 0); /* Pure white text */
+  --card-foreground: oklch(1 0 0);
+  --muted-foreground: oklch(0.85 0 0); /* Much lighter muted text */
+  --border: oklch(0.7 0 0); /* Lighter borders */
+  --input: oklch(0.7 0 0);
 }
