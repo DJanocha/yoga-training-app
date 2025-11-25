@@ -69,6 +69,7 @@ export function Provider({
         <AuthQueryProvider>
           <AuthUIProviderTanstack
             authClient={authClient}
+            settingsURL="/account/settings"
             navigate={(href: string) => {
               // Use window.location for auth navigation to ensure clean redirects
               window.location.href = href

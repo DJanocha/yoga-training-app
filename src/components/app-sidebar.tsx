@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { Home, Dumbbell, ListOrdered, Settings, LogOut, WifiOff, User, Calendar, Trophy } from 'lucide-react'
+import { Home, Dumbbell, ListOrdered, Settings, LogOut, WifiOff, User, Calendar, Trophy, SlidersHorizontal } from 'lucide-react'
 import { UserButton, SignedIn, SignedOut } from '@/components/auth'
 
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -27,7 +27,7 @@ const navItems = [
   { to: '/sequences', label: 'Sequences', icon: ListOrdered },
   { to: '/history', label: 'History', icon: Calendar },
   { to: '/achievements', label: 'Achievements', icon: Trophy },
-  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/preferences', label: 'Preferences', icon: SlidersHorizontal },
 ] as const
 
 function DesktopSidebar() {

@@ -245,13 +245,16 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 5: Settings & Profile
 
 #### 5.1 User Profile
-- [ ] **Profile Page** - User profile with stats
-- [ ] **Theme Switcher** - Energy vs Zen theme implementation
+- [x] **Account Settings Page** - Auth-related settings at /account/settings using better-auth-ui cards (UpdateAvatarCard, UpdateNameCard, ChangeEmailCard, ChangePasswordCard, SessionsCard, DeleteAccountCard)
+- [x] **Preferences Page Split** - Separated app preferences (/preferences) from account settings (/account/settings)
+- [x] **Theme Switcher** - Energy vs Zen theme selection in preferences
 
 #### 5.2 Preferences
-- [ ] **Notification Preferences** - Push notification settings
-- [ ] **Data Management** - Delete account, export data
-- [ ] **Accessibility Settings** - High contrast, font size
+- [x] **Audio Settings** - Beep sounds and interval countdown preferences
+- [x] **Display Settings** - Theme, haptic feedback, high contrast mode, PWA install
+- [x] **Goals Settings** - Weekly workout goal configuration
+- [x] **Data Management** - Export workout data as JSON
+- [ ] **Notification Preferences** - Push notification settings (future)
 
 ---
 

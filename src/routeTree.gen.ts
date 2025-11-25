@@ -10,8 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SequencesIndexRouteImport } from './routes/sequences/index'
+import { Route as PreferencesIndexRouteImport } from './routes/preferences/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as HistoryIndexRouteImport } from './routes/history/index'
@@ -23,6 +23,7 @@ import { Route as HistoryRecordsIndexRouteImport } from './routes/history/record
 import { Route as HistoryCalendarIndexRouteImport } from './routes/history/calendar/index'
 import { Route as HistoryIdIndexRouteImport } from './routes/history/$id/index'
 import { Route as ExercisesIdIndexRouteImport } from './routes/exercises/$id/index'
+import { Route as AccountSettingsIndexRouteImport } from './routes/account/settings/index'
 import { Route as SequencesIdExecuteRouteImport } from './routes/sequences/$id/execute'
 import { Route as SequencesIdEditRouteImport } from './routes/sequences/$id/edit'
 import { Route as ExercisesIdEditRouteImport } from './routes/exercises/$id/edit'
@@ -34,14 +35,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsIndexRoute = SettingsIndexRouteImport.update({
-  id: '/settings/',
-  path: '/settings/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SequencesIndexRoute = SequencesIndexRouteImport.update({
   id: '/sequences/',
   path: '/sequences/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreferencesIndexRoute = PreferencesIndexRouteImport.update({
+  id: '/preferences/',
+  path: '/preferences/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
@@ -99,6 +100,11 @@ const ExercisesIdIndexRoute = ExercisesIdIndexRouteImport.update({
   path: '/exercises/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountSettingsIndexRoute = AccountSettingsIndexRouteImport.update({
+  id: '/account/settings/',
+  path: '/account/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SequencesIdExecuteRoute = SequencesIdExecuteRouteImport.update({
   id: '/sequences/$id/execute',
   path: '/sequences/$id/execute',
@@ -133,13 +139,14 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryIndexRoute
   '/login': typeof LoginIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/preferences': typeof PreferencesIndexRoute
   '/sequences': typeof SequencesIndexRoute
-  '/settings': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
+  '/account/settings': typeof AccountSettingsIndexRoute
   '/exercises/$id': typeof ExercisesIdIndexRoute
   '/history/$id': typeof HistoryIdIndexRoute
   '/history/calendar': typeof HistoryCalendarIndexRoute
@@ -154,13 +161,14 @@ export interface FileRoutesByTo {
   '/history': typeof HistoryIndexRoute
   '/login': typeof LoginIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/preferences': typeof PreferencesIndexRoute
   '/sequences': typeof SequencesIndexRoute
-  '/settings': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
+  '/account/settings': typeof AccountSettingsIndexRoute
   '/exercises/$id': typeof ExercisesIdIndexRoute
   '/history/$id': typeof HistoryIdIndexRoute
   '/history/calendar': typeof HistoryCalendarIndexRoute
@@ -176,13 +184,14 @@ export interface FileRoutesById {
   '/history/': typeof HistoryIndexRoute
   '/login/': typeof LoginIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
+  '/preferences/': typeof PreferencesIndexRoute
   '/sequences/': typeof SequencesIndexRoute
-  '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/exercises/$id/edit': typeof ExercisesIdEditRoute
   '/sequences/$id/edit': typeof SequencesIdEditRoute
   '/sequences/$id/execute': typeof SequencesIdExecuteRoute
+  '/account/settings/': typeof AccountSettingsIndexRoute
   '/exercises/$id/': typeof ExercisesIdIndexRoute
   '/history/$id/': typeof HistoryIdIndexRoute
   '/history/calendar/': typeof HistoryCalendarIndexRoute
@@ -199,13 +208,14 @@ export interface FileRouteTypes {
     | '/history'
     | '/login'
     | '/onboarding'
+    | '/preferences'
     | '/sequences'
-    | '/settings'
     | '/api/auth/$'
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
     | '/sequences/$id/execute'
+    | '/account/settings'
     | '/exercises/$id'
     | '/history/$id'
     | '/history/calendar'
@@ -220,13 +230,14 @@ export interface FileRouteTypes {
     | '/history'
     | '/login'
     | '/onboarding'
+    | '/preferences'
     | '/sequences'
-    | '/settings'
     | '/api/auth/$'
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
     | '/sequences/$id/execute'
+    | '/account/settings'
     | '/exercises/$id'
     | '/history/$id'
     | '/history/calendar'
@@ -241,13 +252,14 @@ export interface FileRouteTypes {
     | '/history/'
     | '/login/'
     | '/onboarding/'
+    | '/preferences/'
     | '/sequences/'
-    | '/settings/'
     | '/api/auth/$'
     | '/api/trpc/$'
     | '/exercises/$id/edit'
     | '/sequences/$id/edit'
     | '/sequences/$id/execute'
+    | '/account/settings/'
     | '/exercises/$id/'
     | '/history/$id/'
     | '/history/calendar/'
@@ -263,13 +275,14 @@ export interface RootRouteChildren {
   HistoryIndexRoute: typeof HistoryIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
+  PreferencesIndexRoute: typeof PreferencesIndexRoute
   SequencesIndexRoute: typeof SequencesIndexRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
   ExercisesIdEditRoute: typeof ExercisesIdEditRoute
   SequencesIdEditRoute: typeof SequencesIdEditRoute
   SequencesIdExecuteRoute: typeof SequencesIdExecuteRoute
+  AccountSettingsIndexRoute: typeof AccountSettingsIndexRoute
   ExercisesIdIndexRoute: typeof ExercisesIdIndexRoute
   HistoryIdIndexRoute: typeof HistoryIdIndexRoute
   HistoryCalendarIndexRoute: typeof HistoryCalendarIndexRoute
@@ -286,18 +299,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/': {
-      id: '/settings/'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sequences/': {
       id: '/sequences/'
       path: '/sequences'
       fullPath: '/sequences'
       preLoaderRoute: typeof SequencesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preferences/': {
+      id: '/preferences/'
+      path: '/preferences'
+      fullPath: '/preferences'
+      preLoaderRoute: typeof PreferencesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding/': {
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExercisesIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/settings/': {
+      id: '/account/settings/'
+      path: '/account/settings'
+      fullPath: '/account/settings'
+      preLoaderRoute: typeof AccountSettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sequences/$id/execute': {
       id: '/sequences/$id/execute'
       path: '/sequences/$id/execute'
@@ -423,13 +443,14 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryIndexRoute: HistoryIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,
+  PreferencesIndexRoute: PreferencesIndexRoute,
   SequencesIndexRoute: SequencesIndexRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
   ExercisesIdEditRoute: ExercisesIdEditRoute,
   SequencesIdEditRoute: SequencesIdEditRoute,
   SequencesIdExecuteRoute: SequencesIdExecuteRoute,
+  AccountSettingsIndexRoute: AccountSettingsIndexRoute,
   ExercisesIdIndexRoute: ExercisesIdIndexRoute,
   HistoryIdIndexRoute: HistoryIdIndexRoute,
   HistoryCalendarIndexRoute: HistoryCalendarIndexRoute,

@@ -1,17 +1,16 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
-import { signOut } from '@/lib/auth-client'
-import { Download, Check, LogOut } from 'lucide-react'
+import { Download, Check } from 'lucide-react'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-export const Route = createFileRoute('/settings/')({
-  component: Settings,
+export const Route = createFileRoute('/preferences/')({
+  component: Preferences,
 })
 
-function Settings() {
+function Preferences() {
   return (
     <>
       <AuthLoading>
@@ -21,15 +20,14 @@ function Settings() {
       </AuthLoading>
       <RedirectToSignIn />
       <SignedIn>
-        <SettingsContent />
+        <PreferencesContent />
       </SignedIn>
     </>
   )
 }
 
-function SettingsContent() {
+function PreferencesContent() {
   const trpc = useTRPC()
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: settings, isLoading } = useQuery(trpc.settings.get.queryOptions())
   const updateSettings = useMutation(trpc.settings.update.mutationOptions({
@@ -39,7 +37,6 @@ function SettingsContent() {
   }))
   const { isInstallable, isInstalled, promptInstall } = usePWAInstall()
 
-  const [name, setName] = useState(settings?.userName || '')
   const [beepEnabled, setBeepEnabled] = useState(
     settings?.beepEnabled ?? true,
   )
@@ -60,12 +57,11 @@ function SettingsContent() {
   )
 
   const [activeTab, setActiveTab] = useState<
-    'profile' | 'audio' | 'display' | 'goals'
-  >('profile')
+    'audio' | 'display' | 'goals' | 'data'
+  >('audio')
 
   const handleSave = async () => {
     updateSettings.mutate({
-      userName: name,
       beepEnabled,
       beepStartSeconds,
       theme,
@@ -86,13 +82,13 @@ function SettingsContent() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Customize your experience</p>
+        <h1 className="text-3xl font-bold">Preferences</h1>
+        <p className="text-muted-foreground">Customize your workout experience</p>
       </div>
 
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="grid grid-cols-4 border-b">
-          {(['profile', 'audio', 'display', 'goals'] as const).map((tab) => (
+          {(['audio', 'display', 'goals', 'data'] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -109,58 +105,6 @@ function SettingsContent() {
         </div>
 
         <div className="p-6 space-y-6">
-          {activeTab === 'profile' && (
-            <section className="space-y-4">
-              <header>
-                <h2 className="text-lg font-semibold">Profile</h2>
-                <p className="text-sm text-muted-foreground">
-                  Update how your name appears across the app.
-                </p>
-              </header>
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium">
-                  Name
-                </label>
-                <input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-              </div>
-
-              {/* Data Management */}
-              <div className="space-y-2 pt-4 border-t">
-                <h3 className="text-sm font-medium">Data Management</h3>
-                <p className="text-sm text-muted-foreground">
-                  Export your workout data as JSON for backup or analysis.
-                </p>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      const data = await queryClient.fetchQuery(trpc.executions.exportData.queryOptions())
-                      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = `yogaflow-data-${new Date().toISOString().split('T')[0]}.json`
-                      document.body.appendChild(a)
-                      a.click()
-                      document.body.removeChild(a)
-                      URL.revokeObjectURL(url)
-                    } catch (error) {
-                      console.error('Export failed:', error)
-                    }
-                  }}
-                  className="inline-flex items-center gap-2 justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Download className="h-4 w-4" />
-                  Export Workout Data
-                </button>
-              </div>
-            </section>
-          )}
 
           {activeTab === 'audio' && (
             <section className="space-y-4">
@@ -328,23 +272,53 @@ function SettingsContent() {
             </section>
           )}
 
-          <div className="flex justify-between items-center gap-2 pt-4 border-t">
-            <button
-              onClick={async () => {
-                await signOut()
-                navigate({ to: '/login' })
-              }}
-              className="inline-flex items-center gap-2 justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign out
-            </button>
+          {activeTab === 'data' && (
+            <section className="space-y-4">
+              <header>
+                <h2 className="text-lg font-semibold">Data Management</h2>
+                <p className="text-sm text-muted-foreground">
+                  Export your workout data for backup or analysis.
+                </p>
+              </header>
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Export Workout Data</h3>
+                <p className="text-sm text-muted-foreground">
+                  Download all your workout history, sequences, and exercises as JSON.
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const data = await queryClient.fetchQuery(trpc.executions.exportData.queryOptions())
+                      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `yogaflow-data-${new Date().toISOString().split('T')[0]}.json`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                    } catch (error) {
+                      console.error('Export failed:', error)
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Download className="h-4 w-4" />
+                  Export Data
+                </button>
+              </div>
+            </section>
+          )}
+
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <button
               onClick={handleSave}
-              aria-label="Save all settings changes"
+              aria-label="Save all preferences"
               className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              Save Settings
+              Save Preferences
             </button>
           </div>
         </div>
