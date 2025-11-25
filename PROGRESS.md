@@ -321,9 +321,9 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Toggleable Badges** - Quick toggle modifiers on/off during workout execution with counter display
 
 #### 9.4 Modifier-Aware PR Tracking
-- [ ] **Modifier Signature** - PRs tracked separately per modifier combination
-- [ ] **PR Display Update** - Show which modifiers were active when PR was set
-- [ ] **Achievement Updates** - Achievements respect modifier combinations
+- [x] **Modifier Signature** - PRs tracked separately per modifier combination
+- [x] **PR Display Update** - Show which modifiers were active when PR was set
+- [x] **Achievement Updates** - Achievements respect modifier combinations
 
 ---
 

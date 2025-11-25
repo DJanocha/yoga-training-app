@@ -194,12 +194,17 @@ function AchievementsContent() {
                       </Badge>
                     </div>
                     {achievement.metadata && (
-                      <div className="mt-2 text-sm text-muted-foreground">
+                      <div className="mt-2 text-sm text-muted-foreground space-y-1">
                         {achievement.metadata.exerciseName && (
                           <p>Exercise: {achievement.metadata.exerciseName}</p>
                         )}
                         {achievement.metadata.value && (
                           <p>Value: {achievement.metadata.value}</p>
+                        )}
+                        {achievement.metadata.modifierSignature && (
+                          <p className="text-xs italic">
+                            With modifiers: {achievement.metadata.modifierSignature}
+                          </p>
                         )}
                       </div>
                     )}

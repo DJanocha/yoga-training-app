@@ -70,6 +70,9 @@ function WorkoutDetailContent({ executionId }: { executionId: number }) {
   // Fetch all exercises for names
   const { data: allExercises } = useQuery(trpc.exercises.list.queryOptions())
 
+  // Fetch all modifiers for names
+  const { data: allModifiers } = useQuery(trpc.modifiers.list.queryOptions())
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -213,6 +216,24 @@ function WorkoutDetailContent({ executionId }: { executionId: number }) {
                         <p className="text-xs text-muted-foreground">
                           {exercise.value} {exercise.measure === 'time' ? 'seconds' : 'reps'}
                         </p>
+                      )}
+                      {exercise.activeModifiers && exercise.activeModifiers.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {exercise.activeModifiers.map((am: any, idx: number) => {
+                            const modifier = allModifiers?.find(m => m.id === am.modifierId)
+                            if (!modifier) return null
+                            const displayText = [
+                              modifier.name,
+                              am.value || (modifier.value !== null && modifier.value !== undefined ? modifier.value : null),
+                              modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                            ].filter(Boolean).join(' ')
+                            return (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {displayText}
+                              </Badge>
+                            )
+                          })}
+                        </div>
                       )}
                     </div>
                   </div>
