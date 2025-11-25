@@ -10,7 +10,6 @@ import {
   CardContent,
 } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import {
   ArrowLeft,
   Play,
@@ -103,7 +102,6 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [completedExercises, setCompletedExercises] = useState<CompletedExercise[]>([])
-  const [autoAdvance, setAutoAdvance] = useState(true)
   const [actualValue, setActualValue] = useState<number>(0)
 
   // Rating state
@@ -245,21 +243,23 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
   }, [timeElapsed, exercises, currentIndex, userSettings?.beepStartSeconds, playBeep])
 
-  // Check if current exercise is complete (for time-based with auto-advance)
+  // Auto-advance for strict mode sequences (time-based exercises only)
   useEffect(() => {
-    if (!exercises || currentIndex >= exercises.length) return
+    if (!exercises || !sequence || currentIndex >= exercises.length) return
 
     const currentExercise = exercises[currentIndex]
+    const goal = (sequence as any).goal || 'elastic'
+
     if (
-      autoAdvance &&
+      goal === 'strict' &&
       currentExercise.config.measure === 'time' &&
       currentExercise.config.targetValue &&
       timeElapsed >= currentExercise.config.targetValue
     ) {
-      // Auto-advance for time-based exercises
+      // Auto-advance for time-based exercises in strict mode
       handleNextExercise()
     }
-  }, [timeElapsed, exercises, currentIndex, autoAdvance])
+  }, [timeElapsed, exercises, currentIndex, sequence])
 
   // Handle next exercise
   const handleNextExercise = useCallback(() => {
@@ -492,17 +492,6 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             Exercise {currentIndex + 1} of {exercises.length}
           </p>
         </div>
-        <Badge
-          onClick={() => setAutoAdvance(!autoAdvance)}
-          className={`cursor-pointer px-3 py-1.5 md:px-4 md:py-2 gap-1 text-xs md:text-sm ${
-            autoAdvance
-              ? 'bg-green-500 hover:bg-green-600 text-white'
-              : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-          }`}
-        >
-          {autoAdvance && <Check className="h-3 w-3 md:h-4 md:w-4" />}
-          Auto-advance
-        </Badge>
       </header>
 
       {/* Progress bar */}
@@ -609,7 +598,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
         {/* Goal type indicator */}
         <p className="text-sm md:text-base text-muted-foreground capitalize mb-4">
-          {currentExercise.config.goal} goal
+          {sequence?.goal || 'elastic'} goal
         </p>
 
         {/* Active modifiers (only show if exercise has assigned modifiers) */}
@@ -691,7 +680,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           </Button>
 
           {isTimeBased ? (
-            autoAdvance ? (
+            ((sequence as any)?.goal || 'elastic') === 'strict' ? (
               <Button
                 variant={isPaused ? 'default' : 'secondary'}
                 size="lg"

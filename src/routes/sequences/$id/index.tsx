@@ -152,7 +152,7 @@ function SequenceDetailContent({ sequenceId }: { sequenceId: number }) {
         <div className="flex-1">
           <h1 className="text-lg font-semibold">{sequence.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {exercises.length} exercises • {Math.floor(totalDuration / 60)}m {totalDuration % 60}s
+            {exercises.length} exercises • {Math.floor(totalDuration / 60)}m {totalDuration % 60}s • <span className="capitalize">{sequence.goal || 'elastic'} mode</span>
           </p>
         </div>
         <Button
@@ -265,8 +265,6 @@ function SequenceDetailContent({ sequenceId }: { sequenceId: number }) {
                             <span>{item.config.targetValue} reps</span>
                           </>
                         )}
-                        <span>•</span>
-                        <span className="capitalize">{item.config.goal}</span>
                       </div>
                     </div>
                   </div>

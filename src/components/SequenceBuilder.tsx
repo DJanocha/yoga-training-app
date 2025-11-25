@@ -32,13 +32,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Card,
   CardContent,
@@ -62,7 +56,7 @@ import {
   ChevronUp,
   MoreHorizontal,
 } from 'lucide-react'
-import type { SequenceExercise, GoalType, MeasureType, ExerciseModifierAssignment } from '@/db/types'
+import type { SequenceExercise, MeasureType, ExerciseModifierAssignment } from '@/db/types'
 import type { Modifier } from '@/validators/entities'
 
 type SequenceBuilderProps = {
@@ -141,9 +135,6 @@ function SortableExerciseItem({
               <span>{item.config.targetValue || 0} reps</span>
             </>
           )}
-          <Badge variant="outline" className="text-xs">
-            {item.config.goal}
-          </Badge>
           {/* Show assigned modifiers */}
           {modifiers && modifiers.length > 0 && item.modifiers && item.modifiers.length > 0 && (
             <>
@@ -219,6 +210,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   // Local state for editing
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [goal, setGoal] = useState<'strict' | 'elastic'>('elastic')
   const [exercises, setExercises] = useState<SequenceItemWithId[]>([])
   const [availableModifiers, setAvailableModifiers] = useState<number[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
@@ -234,6 +226,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   if (sequence && !isInitialized) {
     setName(sequence.name)
     setDescription(sequence.description || '')
+    setGoal((sequence.goal as 'strict' | 'elastic') || 'elastic')
     // Add unique IDs to exercises for DnD
     const exercisesWithIds = (sequence.exercises as SequenceExercise[]).map(
       (ex, index) => ({
@@ -279,7 +272,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       id: `${exerciseId}-${Date.now()}`,
       exerciseId,
       config: {
-        goal: 'strict',
         measure: 'time',
         targetValue: 30,
       },
@@ -294,7 +286,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       id: `break-${Date.now()}`,
       exerciseId: 'break',
       config: {
-        goal: 'strict',
         measure: 'time',
         targetValue: 10,
       },
@@ -332,6 +323,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       id: sequenceId,
       name,
       description: description || undefined,
+      goal,
       exercises: exercisesToSave,
       availableModifiers,
     })
@@ -469,6 +461,28 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 placeholder="Optional description"
                 rows={2}
               />
+            </div>
+
+            <div>
+              <Label>Goal Type</Label>
+              <ToggleGroup
+                type="single"
+                value={goal}
+                onValueChange={(value: 'strict' | 'elastic') => {
+                  if (value) setGoal(value)
+                }}
+                className="justify-start"
+              >
+                <ToggleGroupItem value="strict" className="flex-1">
+                  Strict (exact target)
+                </ToggleGroupItem>
+                <ToggleGroupItem value="elastic" className="flex-1">
+                  Elastic (flexible)
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Strict: Auto-advance when time target is reached. Elastic: Manual progression with option to edit value before completing.
+              </p>
             </div>
 
             {/* Available Modifiers */}
@@ -641,39 +655,22 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
           {configureItem && (
             <div className="mt-4 space-y-4">
               <div>
-                <Label>Goal Type</Label>
-                <Select
-                  value={configureItem.config.goal}
-                  onValueChange={(value: GoalType) =>
-                    updateItemConfig(configureItem.id, { goal: value })
-                  }
-                >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="strict">Strict (exact target)</SelectItem>
-                    <SelectItem value="elastic">Elastic (flexible)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
                 <Label>Measure</Label>
-                <Select
+                <ToggleGroup
+                  type="single"
                   value={configureItem.config.measure}
-                  onValueChange={(value: MeasureType) =>
-                    updateItemConfig(configureItem.id, { measure: value })
-                  }
+                  onValueChange={(value: MeasureType) => {
+                    if (value) updateItemConfig(configureItem.id, { measure: value })
+                  }}
+                  className="mt-1.5 justify-start"
                 >
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="time">Time (seconds)</SelectItem>
-                    <SelectItem value="repetitions">Repetitions</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <ToggleGroupItem value="time" className="flex-1">
+                    Time
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="repetitions" className="flex-1">
+                    Reps
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
 
               <div>
@@ -844,6 +841,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
               <span>{exercises.length} exercises</span>
               <span>•</span>
               <span>{Math.floor(totalDuration / 60)}m {totalDuration % 60}s</span>
+              <span>•</span>
+              <span className="capitalize">{goal} mode</span>
             </div>
 
             <div className="space-y-2">
@@ -863,8 +862,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                       {item.config.measure === 'time'
                         ? `${item.config.targetValue}s`
                         : `${item.config.targetValue} reps`}
-                      {' • '}
-                      {item.config.goal}
                     </p>
                   </div>
                 </div>

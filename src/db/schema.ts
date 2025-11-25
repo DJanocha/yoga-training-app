@@ -63,7 +63,9 @@ export const sequences = pgTable(
     description: text('description'),
     level: text('level'), // 'beginner' | 'intermediate' | 'advanced'
     category: text('category'), // 'yoga' | 'calisthenics' | 'cardio' | 'flexibility' | 'strength'
-    // JSON structure: Array<{ exerciseId: number | 'break', config: { goal: 'strict' | 'elastic', measure: 'repetitions' | 'time', targetValue?: number }, modifiers?: Array<{ modifierId: number, effect: 'easier' | 'harder' | 'neutral' }> }>
+    goal: text('goal').default('elastic'), // 'strict' | 'elastic' - moved from per-exercise to sequence level
+    // JSON structure: Array<{ exerciseId: number | 'break', config: { measure: 'repetitions' | 'time', targetValue?: number }, modifiers?: Array<{ modifierId: number, effect: 'easier' | 'harder' | 'neutral' }> }>
+    // NOTE: goal was removed from exercise config and moved to sequence level
     exercises: jsonb('exercises').notNull(),
     // JSON structure: Array<number> - modifier IDs that are available for this sequence
     availableModifiers: jsonb('available_modifiers').default([]),

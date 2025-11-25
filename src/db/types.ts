@@ -48,8 +48,8 @@ export type AchievementCategory = z.infer<typeof AchievementCategory>
 // ============================================================================
 
 // Exercise configuration within a sequence
+// NOTE: goal was moved to sequence level (not per-exercise)
 export const ExerciseConfig = z.object({
-  goal: GoalType,
   measure: MeasureType,
   targetValue: z.number().optional(),
 })
@@ -130,6 +130,7 @@ export const refinedSequenceSchema = z.object({
   description: z.string().optional(),
   level: Level.optional(),
   category: Category.optional(),
+  goal: GoalType.optional().default('elastic'), // Sequence-level goal (strict or elastic)
   exercises: z.array(SequenceExercise), // Allow empty during creation, validate when starting workout
   isFavorite: z.boolean().default(false).optional(),
   isPreBuilt: z.boolean().default(false).optional(),

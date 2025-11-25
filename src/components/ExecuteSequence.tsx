@@ -96,7 +96,9 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
     if (!currentExercise) return;
 
     const { config } = currentExercise;
-    if (config.goal === "strict" && config.measure === "time" && config.targetValue) {
+    // Auto-advance only in strict mode (default to elastic if not set)
+    const goal = (sequence as any).goal || "elastic";
+    if (goal === "strict" && config.measure === "time" && config.targetValue) {
       const remaining = config.targetValue - Math.floor(elapsedTime / 1000);
 
       if (settings.beepEnabled && remaining <= settings.beepStartSeconds && remaining > 0) {

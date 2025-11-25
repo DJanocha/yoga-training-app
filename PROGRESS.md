@@ -330,9 +330,9 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 10: Sequence Builder UX Improvements
 
 #### 10.1 Configuration UI
-- [ ] **ButtonGroup for Measure** - Replace Select dropdown with toggle buttons (Time/Reps)
-- [ ] **Goal at Sequence Level** - Move strict/elastic from per-exercise to sequence level
-- [ ] **Auto-advance Connection** - Strict mode enables auto-advance, elastic disables it
+- [x] **ButtonGroup for Measure** - Replace Select dropdown with toggle buttons (Time/Reps)
+- [x] **Goal at Sequence Level** - Move strict/elastic from per-exercise to sequence level
+- [x] **Auto-advance Connection** - Strict mode enables auto-advance, elastic disables it
 
 #### 10.2 Exercise Management
 - [ ] **Duplicate Exercise Button** - Copy exercise with config, insert below
