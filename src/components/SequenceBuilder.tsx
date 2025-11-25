@@ -55,6 +55,7 @@ import {
   ChevronDown,
   ChevronUp,
   MoreHorizontal,
+  Copy,
 } from 'lucide-react'
 import type { SequenceExercise, MeasureType, ExerciseModifierAssignment } from '@/db/types'
 import type { Modifier } from '@/validators/entities'
@@ -71,12 +72,14 @@ function SortableExerciseItem({
   exerciseName,
   modifiers,
   onConfigure,
+  onDuplicate,
   onRemove,
 }: {
   item: SequenceItemWithId
   exerciseName: string
   modifiers?: Modifier[]
   onConfigure: () => void
+  onDuplicate: () => void
   onRemove: () => void
 }) {
   const {
@@ -166,6 +169,16 @@ function SortableExerciseItem({
           className="h-8 w-8"
         >
           <Settings className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onDuplicate}
+          className="h-8 w-8"
+          title="Duplicate exercise"
+        >
+          <Copy className="h-4 w-4" />
         </Button>
         <Button
           type="button"
@@ -280,8 +293,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     setIsPickerOpen(false)
   }, [])
 
-  // Add break
-  const addBreak = useCallback(() => {
+  // Add break at specific index (or at end if not specified)
+  const addBreak = useCallback((atIndex?: number) => {
     const newItem: SequenceItemWithId = {
       id: `break-${Date.now()}`,
       exerciseId: 'break',
@@ -290,7 +303,37 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         targetValue: 10,
       },
     }
-    setExercises((prev) => [...prev, newItem])
+    setExercises((prev) => {
+      if (atIndex === undefined) {
+        return [...prev, newItem]
+      }
+      return [
+        ...prev.slice(0, atIndex),
+        newItem,
+        ...prev.slice(atIndex),
+      ]
+    })
+  }, [])
+
+  // Duplicate item (copy and insert below)
+  const duplicateItem = useCallback((id: string) => {
+    setExercises((prev) => {
+      const index = prev.findIndex((item) => item.id === id)
+      if (index === -1) return prev
+
+      const itemToDuplicate = prev[index]
+      const duplicated: SequenceItemWithId = {
+        ...itemToDuplicate,
+        id: `${itemToDuplicate.exerciseId}-${Date.now()}`,
+      }
+
+      // Insert right after the original
+      return [
+        ...prev.slice(0, index + 1),
+        duplicated,
+        ...prev.slice(index + 1),
+      ]
+    })
   }, [])
 
   // Remove item
@@ -556,7 +599,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={addBreak}
+                onClick={() => addBreak()}
               >
                 <Coffee className="h-4 w-4 mr-2" />
                 Add Break
@@ -619,15 +662,32 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 strategy={verticalListSortingStrategy}
               >
                 <div className="space-y-2">
-                  {exercises.map((item) => (
-                    <SortableExerciseItem
-                      key={item.id}
-                      item={item}
-                      exerciseName={getExerciseName(item.exerciseId)}
-                      modifiers={allModifiers}
-                      onConfigure={() => setConfigureItem(item)}
-                      onRemove={() => removeItem(item.id)}
-                    />
+                  {exercises.map((item, index) => (
+                    <div key={item.id}>
+                      <SortableExerciseItem
+                        item={item}
+                        exerciseName={getExerciseName(item.exerciseId)}
+                        modifiers={allModifiers}
+                        onConfigure={() => setConfigureItem(item)}
+                        onDuplicate={() => duplicateItem(item.id)}
+                        onRemove={() => removeItem(item.id)}
+                      />
+                      {/* Insert break button between exercises */}
+                      {index < exercises.length - 1 && (
+                        <div className="flex justify-center py-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => addBreak(index + 1)}
+                            className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            <Coffee className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </SortableContext>

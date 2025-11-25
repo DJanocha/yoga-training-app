@@ -335,10 +335,10 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Auto-advance Connection** - Strict mode enables auto-advance, elastic disables it
 
 #### 10.2 Exercise Management
-- [ ] **Duplicate Exercise Button** - Copy exercise with config, insert below
-- [ ] **Apply to Many** - Configure one exercise, apply config to multiple selected
-- [ ] **Multiply/Multi-Insert** - Insert exercise at multiple positions at once
-- [ ] **Improved Break Insertion** - Show insertion points between exercises (not just append)
+- [x] **Duplicate Exercise Button** - Copy exercise with config, insert below
+- [ ] **Apply to Many** - Configure one exercise, apply config to multiple selected (skipped - complex, low priority)
+- [ ] **Multiply/Multi-Insert** - Insert exercise at multiple positions at once (skipped - complex, low priority)
+- [x] **Improved Break Insertion** - Show insertion points between exercises (not just append)
 
 #### 10.3 Sequence-Level Settings
 - [ ] **Available Modifiers UI** - Multi-select modifiers for sequence
