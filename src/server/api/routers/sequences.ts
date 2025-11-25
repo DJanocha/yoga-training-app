@@ -181,6 +181,7 @@ export const sequencesRouter = {
           level: original.level,
           category: original.category,
           exercises: original.exercises,
+          availableModifiers: original.availableModifiers,
           userId: ctx.userId,
           isFavorite: false,
           isPreBuilt: false,

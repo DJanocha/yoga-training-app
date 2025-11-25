@@ -488,32 +488,36 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 </button>
 
                 {isModifiersExpanded && (
-                  <div className="mt-3 space-y-2 pl-6">
-                    <p className="text-xs text-muted-foreground mb-2">
+                  <div className="mt-3 pl-6">
+                    <p className="text-xs text-muted-foreground mb-3">
                       Select equipment that can be used during this sequence
                     </p>
-                    {allModifiers.map((modifier) => {
-                      const displayText = [
-                        modifier.name,
-                        modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
-                        modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
-                      ].filter(Boolean).join(' ')
-                      return (
-                        <div key={modifier.id} className="flex items-center gap-2">
-                          <Checkbox
-                            id={`modifier-${modifier.id}`}
-                            checked={availableModifiers.includes(modifier.id)}
-                            onCheckedChange={() => toggleModifier(modifier.id)}
-                          />
-                          <label
-                            htmlFor={`modifier-${modifier.id}`}
-                            className="text-sm cursor-pointer flex-1"
+                    <div className="flex flex-wrap gap-2">
+                      {allModifiers.map((modifier) => {
+                        const displayText = [
+                          modifier.name,
+                          modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                          modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                        ].filter(Boolean).join(' ')
+                        const isSelected = availableModifiers.includes(modifier.id)
+                        return (
+                          <button
+                            key={modifier.id}
+                            type="button"
+                            onClick={() => toggleModifier(modifier.id)}
+                            className={`
+                              px-3 py-1.5 rounded-full text-sm font-medium transition-all
+                              ${isSelected
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                              }
+                            `}
                           >
                             {displayText}
-                          </label>
-                        </div>
-                      )
-                    })}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

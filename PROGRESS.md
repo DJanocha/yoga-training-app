@@ -313,7 +313,7 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Modifiers Page** - `/modifiers` route for library management
 
 #### 9.2 Sequence-Level Modifier Assignment
-- [ ] **Available Modifiers** - Select which modifiers are relevant for each sequence
+- [x] **Available Modifiers** - Select which modifiers are relevant for each sequence
 - [x] **Sequence Schema Update** - Add `availableModifiers` JSONB field to sequences table
 
 #### 9.3 Exercise-Level Modifier Assignment
