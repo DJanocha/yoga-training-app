@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
   GripVertical,
@@ -56,6 +57,8 @@ import {
   CheckSquare,
   X,
   Ungroup,
+  FileText,
+  ListOrdered,
 } from "lucide-react";
 import type {
   SequenceExercise,
@@ -500,6 +503,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // UI state
+  const [activeTab, setActiveTab] = useState<"details" | "exercises">("exercises");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [configureItem, setConfigureItem] = useState<SequenceItemWithId | null>(
     null
@@ -1064,134 +1068,152 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         </Button>
       </header>
 
-      {/* Main content */}
-      <main className={cn("flex-1 overflow-y-auto p-1", selectionMode && "pb-20")}>
-        {/* Sequence info */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-base">Sequence Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Sequence name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional description"
-                rows={2}
-              />
-            </div>
-
-            <div>
-              <Label>Goal Type</Label>
-              <ToggleGroup
-                type="single"
-                value={goal}
-                onValueChange={(value: "strict" | "elastic") => {
-                  if (value) setGoal(value);
-                }}
-                className="justify-start"
-              >
-                <ToggleGroupItem value="strict" className="flex-1">
-                  Strict (exact target)
-                </ToggleGroupItem>
-                <ToggleGroupItem value="elastic" className="flex-1">
-                  Elastic (flexible)
-                </ToggleGroupItem>
-              </ToggleGroup>
-              <p className="text-xs text-muted-foreground mt-1.5">
-                Strict: Auto-advance when time target is reached. Elastic:
-                Manual progression with option to edit value before completing.
-              </p>
-            </div>
-
-            {/* Available Modifiers */}
-            {allModifiers && allModifiers.length > 0 && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  className="flex items-center justify-between w-full text-left"
-                  onClick={() => setIsModifiersExpanded(!isModifiersExpanded)}
-                >
-                  <div className="flex items-center gap-2">
-                    <Package2 className="h-4 w-4 text-muted-foreground" />
-                    <Label className="cursor-pointer">
-                      Available Modifiers
-                    </Label>
-                    {availableModifiers.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        {availableModifiers.length}
-                      </Badge>
-                    )}
-                  </div>
-                  {isModifiersExpanded ? (
-                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </button>
-
-                {isModifiersExpanded && (
-                  <div className="mt-3 pl-6">
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Select equipment that can be used during this sequence
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {allModifiers.map((modifier) => {
-                        const displayText = [
-                          modifier.name,
-                          modifier.value !== null &&
-                          modifier.value !== undefined
-                            ? modifier.value
-                            : null,
-                          modifier.unit && modifier.unit !== "none"
-                            ? modifier.unit
-                            : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" ");
-                        const isSelected = availableModifiers.includes(
-                          modifier.id
-                        );
-                        return (
-                          <button
-                            key={modifier.id}
-                            type="button"
-                            onClick={() => toggleModifier(modifier.id)}
-                            className={`
-                              px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                              ${
-                                isSelected
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-                              }
-                            `}
-                          >
-                            {displayText}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+      {/* Main content with tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "details" | "exercises")} className="flex-1 flex flex-col">
+        <TabsList className="grid w-full grid-cols-2 mx-1 mt-1">
+          <TabsTrigger value="exercises" className="flex items-center gap-2">
+            <ListOrdered className="h-4 w-4" />
+            Exercises
+            {exercises.length > 0 && (
+              <Badge variant="secondary" className="text-xs ml-1">
+                {exercises.length}
+              </Badge>
             )}
-          </CardContent>
-        </Card>
+          </TabsTrigger>
+          <TabsTrigger value="details" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Details
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Exercises list */}
-        <div className="space-y-3">
-          <h2 className="font-semibold">Exercises</h2>
+        {/* Details Tab */}
+        <TabsContent value="details" className="flex-1 overflow-y-auto p-2 mt-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Sequence Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Sequence name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Optional description"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label>Goal Type</Label>
+                <ToggleGroup
+                  type="single"
+                  value={goal}
+                  onValueChange={(value: "strict" | "elastic") => {
+                    if (value) setGoal(value);
+                  }}
+                  className="justify-start"
+                >
+                  <ToggleGroupItem value="strict" className="flex-1">
+                    Strict (exact target)
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="elastic" className="flex-1">
+                    Elastic (flexible)
+                  </ToggleGroupItem>
+                </ToggleGroup>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Strict: Auto-advance when time target is reached. Elastic:
+                  Manual progression with option to edit value before completing.
+                </p>
+              </div>
+
+              {/* Available Modifiers */}
+              {allModifiers && allModifiers.length > 0 && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    className="flex items-center justify-between w-full text-left"
+                    onClick={() => setIsModifiersExpanded(!isModifiersExpanded)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Package2 className="h-4 w-4 text-muted-foreground" />
+                      <Label className="cursor-pointer">
+                        Available Modifiers
+                      </Label>
+                      {availableModifiers.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {availableModifiers.length}
+                        </Badge>
+                      )}
+                    </div>
+                    {isModifiersExpanded ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+
+                  {isModifiersExpanded && (
+                    <div className="mt-3 pl-6">
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Select equipment that can be used during this sequence
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {allModifiers.map((modifier) => {
+                          const displayText = [
+                            modifier.name,
+                            modifier.value !== null &&
+                            modifier.value !== undefined
+                              ? modifier.value
+                              : null,
+                            modifier.unit && modifier.unit !== "none"
+                              ? modifier.unit
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" ");
+                          const isSelected = availableModifiers.includes(
+                            modifier.id
+                          );
+                          return (
+                            <button
+                              key={modifier.id}
+                              type="button"
+                              onClick={() => toggleModifier(modifier.id)}
+                              className={`
+                                px-3 py-1.5 rounded-full text-sm font-medium transition-all
+                                ${
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                }
+                              `}
+                            >
+                              {displayText}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Exercises Tab */}
+        <TabsContent value="exercises" className={cn("flex-1 overflow-y-auto p-1 mt-0", selectionMode && "pb-20")}>
+          <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
             {exercises.length > 0 && (
               <Button
@@ -1377,7 +1399,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
             onMerge={mergeSelectedIntoGroup}
           />
         )}
-      </main>
+        </TabsContent>
+      </Tabs>
 
       {/* Configure exercise sheet */}
       <Sheet

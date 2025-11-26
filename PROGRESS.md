@@ -485,6 +485,15 @@ Allow users to merge exercises into named groups within sequences. Groups can be
 
 ---
 
+### Phase 15: Sequence Editor UX Improvements
+
+#### 15.1 Tabbed Interface
+- [x] **Details Tab** - Sequence metadata (name, description, goal type, available modifiers)
+- [x] **Exercises Tab** - Exercise management (list, picker, config, groups, batch operations)
+- [x] **Tab State** - Defaults to Exercises tab, shows exercise count badge
+
+---
+
 ## Notes
 
 - All user data is scoped by `userId` for privacy
