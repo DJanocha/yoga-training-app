@@ -887,18 +887,19 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
           {/* Configuration Controls */}
           <div className="mt-4 space-y-3">
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 select-none touch-manipulation">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
+                className="select-none touch-manipulation active:scale-95"
                 onMouseDown={(e) => startHoldRepeat(decrementValue, e)}
                 onMouseUp={stopHoldRepeat}
                 onMouseLeave={stopHoldRepeat}
                 onTouchStart={(e) => startHoldRepeat(decrementValue, e)}
                 onTouchEnd={stopHoldRepeat}
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-4 w-4 pointer-events-none" />
               </Button>
               <Input
                 type="number"
@@ -911,13 +912,14 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                 type="button"
                 variant="outline"
                 size="icon"
+                className="select-none touch-manipulation active:scale-95"
                 onMouseDown={(e) => startHoldRepeat(incrementValue, e)}
                 onMouseUp={stopHoldRepeat}
                 onMouseLeave={stopHoldRepeat}
                 onTouchStart={(e) => startHoldRepeat(incrementValue, e)}
                 onTouchEnd={stopHoldRepeat}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 pointer-events-none" />
               </Button>
               <ToggleGroup
                 type="single"
