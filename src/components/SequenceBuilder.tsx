@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   GripVertical,
   Plus,
+  Minus,
   Trash2,
   Settings,
   Coffee,
@@ -529,6 +530,10 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   // Collapsed groups state
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
+  // Exercise picker configuration
+  const [pickerTargetValue, setPickerTargetValue] = useState(30);
+  const [pickerMeasure, setPickerMeasure] = useState<MeasureType>("time");
+
   // Compute which exercises are grouped
   const groupedExerciseIds = useMemo(() => {
     return new Set(groups.flatMap((g) => g.exerciseIds));
@@ -669,13 +674,13 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       id: `${exerciseId}-${Date.now()}`,
       exerciseId,
       config: {
-        measure: "time",
-        targetValue: 30,
+        measure: pickerMeasure,
+        targetValue: pickerTargetValue,
       },
     };
     setExercises((prev) => [...prev, newItem]);
     setIsPickerOpen(false);
-  }, []);
+  }, [pickerMeasure, pickerTargetValue]);
 
   // Add break at specific index (or at end if not specified)
   const addBreak = useCallback((atIndex?: number) => {
@@ -1045,7 +1050,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       </header>
 
       {/* Main content with tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "details" | "exercises")} className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "details" | "exercises")} className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid w-full grid-cols-2 mx-1 mt-1">
           <TabsTrigger value="exercises" className="flex items-center gap-2">
             <ListOrdered className="h-4 w-4" />
@@ -1188,7 +1193,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         </TabsContent>
 
         {/* Exercises Tab */}
-        <TabsContent value="exercises" className={cn("flex-1 p-1 mt-0 flex flex-col", selectionMode && "pb-20")}>
+        <TabsContent value="exercises" className={cn("flex-1 p-1 mt-0 flex flex-col min-h-0", selectionMode && "pb-20")}>
           <div className="flex flex-wrap gap-2 shrink-0">
             {exercises.length > 0 && (
               <Button
@@ -1239,7 +1244,51 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                     Choose an exercise to add to your sequence
                   </SheetDescription>
                 </SheetHeader>
-                <div className="mt-4 overflow-y-auto max-h-[calc(80vh-120px)]">
+
+                {/* Configuration Controls */}
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setPickerTargetValue(Math.max(1, pickerTargetValue - (pickerMeasure === 'time' ? 5 : 1)))}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={pickerTargetValue}
+                    onChange={(e) => setPickerTargetValue(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-20 text-center"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setPickerTargetValue(pickerTargetValue + (pickerMeasure === 'time' ? 5 : 1))}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <ToggleGroup
+                    type="single"
+                    value={pickerMeasure}
+                    onValueChange={(value) => {
+                      if (value) setPickerMeasure(value as MeasureType)
+                    }}
+                    variant="outline"
+                    spacing={0}
+                  >
+                    <ToggleGroupItem value="repetitions" aria-label="Repetitions">
+                      reps
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="time" aria-label="Time">
+                      sec
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+
+                <div className="mt-4 overflow-y-auto max-h-[calc(80vh-260px)]">
                   {allExercises && allExercises.length > 0 ? (
                     <div className="grid gap-2">
                       {allExercises.map((exercise) => (
@@ -1273,7 +1322,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
           </div>
 
           {/* Scrollable exercise list */}
-          <div className="flex-1 overflow-y-auto mt-3">
+          <div className="flex-1 overflow-y-auto mt-3 min-h-0">
         {exercises.length > 0 ? (
           <DndContext
             sensors={sensors}
