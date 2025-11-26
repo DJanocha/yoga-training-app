@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WheelDemoRouteImport } from './routes/wheel-demo'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SequencesIndexRouteImport } from './routes/sequences/index'
 import { Route as PreferencesIndexRouteImport } from './routes/preferences/index'
@@ -31,6 +32,11 @@ import { Route as ExercisesIdEditRouteImport } from './routes/exercises/$id/edit
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
+const WheelDemoRoute = WheelDemoRouteImport.update({
+  id: '/wheel-demo',
+  path: '/wheel-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -139,6 +145,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/wheel-demo': typeof WheelDemoRoute
   '/auth/$pathname': typeof AuthPathnameRoute
   '/achievements': typeof AchievementsIndexRoute
   '/exercises': typeof ExercisesIndexRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/wheel-demo': typeof WheelDemoRoute
   '/auth/$pathname': typeof AuthPathnameRoute
   '/achievements': typeof AchievementsIndexRoute
   '/exercises': typeof ExercisesIndexRoute
@@ -186,6 +194,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/wheel-demo': typeof WheelDemoRoute
   '/auth/$pathname': typeof AuthPathnameRoute
   '/achievements/': typeof AchievementsIndexRoute
   '/exercises/': typeof ExercisesIndexRoute
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/wheel-demo'
     | '/auth/$pathname'
     | '/achievements'
     | '/exercises'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/wheel-demo'
     | '/auth/$pathname'
     | '/achievements'
     | '/exercises'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/wheel-demo'
     | '/auth/$pathname'
     | '/achievements/'
     | '/exercises/'
@@ -281,6 +293,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  WheelDemoRoute: typeof WheelDemoRoute
   AuthPathnameRoute: typeof AuthPathnameRoute
   AchievementsIndexRoute: typeof AchievementsIndexRoute
   ExercisesIndexRoute: typeof ExercisesIndexRoute
@@ -305,6 +318,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wheel-demo': {
+      id: '/wheel-demo'
+      path: '/wheel-demo'
+      fullPath: '/wheel-demo'
+      preLoaderRoute: typeof WheelDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -457,6 +477,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  WheelDemoRoute: WheelDemoRoute,
   AuthPathnameRoute: AuthPathnameRoute,
   AchievementsIndexRoute: AchievementsIndexRoute,
   ExercisesIndexRoute: ExercisesIndexRoute,

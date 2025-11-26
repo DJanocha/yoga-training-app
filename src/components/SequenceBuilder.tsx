@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { WheelNumberInput } from "@/components/ui/wheel-number-input";
+import { WheelSelect } from "@/components/ui/wheel-select";
 import {
   DndContext,
   closestCenter,
@@ -1287,57 +1289,27 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                   </SheetDescription>
                 </SheetHeader>
 
-                {/* Configuration Controls */}
-                <div className="mt-4 flex items-center justify-center gap-2 select-none touch-manipulation">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="select-none touch-manipulation active:scale-95"
-                    onMouseDown={(e) => startHoldRepeat(decrementValue, e)}
-                    onMouseUp={stopHoldRepeat}
-                    onMouseLeave={stopHoldRepeat}
-                    onTouchStart={(e) => startHoldRepeat(decrementValue, e)}
-                    onTouchEnd={stopHoldRepeat}
-                  >
-                    <Minus className="h-4 w-4 pointer-events-none" />
-                  </Button>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={pickerTargetValue}
-                    onChange={(e) => setPickerTargetValue(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-20 text-center"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="select-none touch-manipulation active:scale-95"
-                    onMouseDown={(e) => startHoldRepeat(incrementValue, e)}
-                    onMouseUp={stopHoldRepeat}
-                    onMouseLeave={stopHoldRepeat}
-                    onTouchStart={(e) => startHoldRepeat(incrementValue, e)}
-                    onTouchEnd={stopHoldRepeat}
-                  >
-                    <Plus className="h-4 w-4 pointer-events-none" />
-                  </Button>
-                  <ToggleGroup
-                    type="single"
-                    value={pickerMeasure}
-                    onValueChange={(value) => {
-                      if (value) setPickerMeasure(value as MeasureType)
-                    }}
-                    variant="outline"
-                    spacing={0}
-                  >
-                    <ToggleGroupItem value="repetitions" aria-label="Repetitions">
-                      reps
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="time" aria-label="Time">
-                      sec
-                    </ToggleGroupItem>
-                  </ToggleGroup>
+                {/* Configuration Controls - Two Wheels Side by Side */}
+                <div className="mt-4 flex items-center justify-center gap-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <WheelNumberInput
+                      value={pickerTargetValue}
+                      onChange={setPickerTargetValue}
+                      min={1}
+                      max={999}
+                    />
+                    <span className="text-xs text-muted-foreground">Value</span>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2">
+                    <WheelSelect
+                      value={pickerMeasure}
+                      onChange={setPickerMeasure}
+                      options={['repetitions', 'time'] as const}
+                      formatOption={(opt) => opt === 'repetitions' ? 'reps' : 'sec'}
+                    />
+                    <span className="text-xs text-muted-foreground">Unit</span>
+                  </div>
                 </div>
 
                 <div className="mt-4 overflow-y-auto max-h-[calc(80vh-260px)]">
