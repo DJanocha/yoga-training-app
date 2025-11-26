@@ -67,7 +67,7 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
       if (!isDragging) return
 
       const deltaY = startY - clientY
-      const steps = Math.round(deltaY / 20) // 20px = 1 step
+      const steps = Math.round(deltaY / 16) // 16px = 1 step (faster scrolling)
       const newIndex = Math.max(0, Math.min(options.length - 1, startIndexRef.current + steps))
 
       if (newIndex !== currentIndex) {
@@ -92,11 +92,15 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
   // Touch events
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     handleDragStart(e.touches[0].clientY)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return
+
     e.preventDefault()
+    e.stopPropagation()
     handleDragMove(e.touches[0].clientY)
   }
 
@@ -114,23 +118,35 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
     if (!isDragging) return
 
     const handleGlobalMouseMove = (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
       handleDragMove(e.clientY)
     }
 
     const handleGlobalTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
       handleDragMove(e.touches[0].clientY)
     }
 
-    document.addEventListener("mousemove", handleGlobalMouseMove)
-    document.addEventListener("mouseup", handleDragEnd)
-    document.addEventListener("touchmove", handleGlobalTouchMove)
-    document.addEventListener("touchend", handleDragEnd)
+    const handleGlobalEnd = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      handleDragEnd()
+    }
+
+    document.addEventListener("mousemove", handleGlobalMouseMove, { passive: false })
+    document.addEventListener("mouseup", handleGlobalEnd, { passive: false })
+    document.addEventListener("touchmove", handleGlobalTouchMove, { passive: false })
+    document.addEventListener("touchend", handleGlobalEnd, { passive: false })
+    document.addEventListener("touchcancel", handleGlobalEnd, { passive: false })
 
     return () => {
       document.removeEventListener("mousemove", handleGlobalMouseMove)
-      document.removeEventListener("mouseup", handleDragEnd)
+      document.removeEventListener("mouseup", handleGlobalEnd)
       document.removeEventListener("touchmove", handleGlobalTouchMove)
-      document.removeEventListener("touchend", handleDragEnd)
+      document.removeEventListener("touchend", handleGlobalEnd)
+      document.removeEventListener("touchcancel", handleGlobalEnd)
     }
   }, [isDragging, handleDragMove, handleDragEnd])
 
@@ -147,15 +163,17 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
       tabIndex={0}
       role="listbox"
       aria-label="Option picker"
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleDragEnd}
     >
-      <div className="relative h-32 w-20 rounded-lg border bg-background overflow-hidden">
+      <div
+        className="relative h-32 w-20 rounded-lg border bg-background overflow-hidden"
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleDragEnd}
+      >
         {/* Options - with smooth transform animation */}
         <div
-          className="absolute w-full transition-transform duration-150 ease-out"
+          className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
           style={{
             // Position so that index 3 (4th item) is centered
             top: 'calc(50% - 112px)', // 50% - (3 * 32px + 16px)
@@ -172,7 +190,7 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
                 key={`${option}-${index}`}
                 className={cn(
                   "h-8 flex items-center justify-center transition-opacity duration-150",
-                  "text-lg font-medium",
+                  "text-lg font-medium pointer-events-none",
                   isSelected && "text-2xl font-bold"
                 )}
                 style={{ opacity: option === null ? 0 : opacity }}
