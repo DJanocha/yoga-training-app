@@ -500,6 +500,49 @@ Allow users to merge exercises into named groups within sequences. Groups can be
 
 ---
 
+### Phase 16: Action Bar Redesign
+
+Redesign the sequence builder action bar to be more responsive and contextual.
+
+#### 16.1 Responsive Action Bar
+- [ ] **Add flex-wrap** - Allow buttons to wrap on narrow screens instead of overflowing horizontally
+- [ ] **Simplify Primary Actions** - Replace "Select" + "Add Break" + "Add Exercise" with just "Select" + "Add"
+- [ ] **Unified Add Button** - "Add" opens ExercisePickerDrawer with both exercises AND breaks
+
+#### 16.2 Contextual Selection Actions
+- [ ] **Show Actions on Selection** - When items are selected, show contextual actions in a top row above primary actions
+- [ ] **Selection Action Bar** - Display: [Merge] [Clone] [Configure N] [Delete] (where N = selected count)
+- [ ] **Primary Actions Persist** - Keep [Cancel] [Add] visible below selection actions
+- [ ] **Action Bar Stacking** - Use flex-wrap to stack actions vertically on narrow screens
+
+#### 16.3 Break as Special Exercise
+- [ ] **Break in Exercise List** - Add "Break" as a special item at the TOP of ExercisePickerDrawer list
+- [ ] **Visual Distinction** - Style break differently (Coffee icon, different background color)
+- [ ] **Default Config** - Breaks default to 30 seconds (time-based)
+
+#### 16.4 Visual Design
+```
+Default state:
+┌─────────────────────────────┐
+│  Select  │  Add             │
+└─────────────────────────────┘
+
+When 2 items selected:
+┌─────────────────────────────┐
+│ Merge │ Clone │ Configure 2 │ Delete │  ← Selection actions
+├─────────────────────────────┤
+│  Cancel  │  Add             │  ← Primary actions
+└─────────────────────────────┘
+```
+
+**Benefits:**
+- Better space usage on mobile (no horizontal overflow)
+- Consistent action location (all in top bar, not jumping to bottom)
+- Simpler mental model (selection mode is a toggle)
+- Unified "Add" concept (exercises + breaks in one place)
+
+---
+
 ## Notes
 
 - All user data is scoped by `userId` for privacy
