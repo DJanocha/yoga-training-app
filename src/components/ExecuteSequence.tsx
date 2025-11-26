@@ -381,9 +381,11 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
   const { data: lastAttemptData } = useQuery(trpc.executions.getLastAttempt.queryOptions({ exerciseId: currentExercise.exerciseId },{enabled: currentExercise.exerciseId !== "break"}))
 
   const { config } = currentExercise;
-  const isStrictTime = config.goal === "strict" && config.measure === "time";
-  const isStrictReps = config.goal === "strict" && config.measure === "repetitions";
-  const isElastic = config.goal === "elastic";
+  // Goal is now at sequence level (Phase 10.1)
+  const sequenceGoal = (sequence.goal as 'strict' | 'elastic') || 'elastic';
+  const isStrictTime = sequenceGoal === "strict" && config.measure === "time";
+  const isStrictReps = sequenceGoal === "strict" && config.measure === "repetitions";
+  const isElastic = sequenceGoal === "elastic";
 
   const timeRemaining = isStrictTime && config.targetValue
     ? Math.max(0, config.targetValue - Math.floor(elapsedTime / 1000))

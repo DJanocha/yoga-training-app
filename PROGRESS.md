@@ -349,8 +349,8 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 11: Execution Flow Enhancements
 
 #### 11.1 Modifier UI During Workout
-- [ ] **Modifier Toggle Chips** - Display assigned modifiers as toggleable badges
-- [ ] **Quick Toggle** - Enable/disable modifiers mid-exercise
+- [x] **Modifier Toggle Chips** - Display assigned modifiers as toggleable badges (implemented in Phase 9.3)
+- [x] **Quick Toggle** - Enable/disable modifiers mid-exercise (implemented in Phase 9.3)
 - [ ] **Modifier Picker Sheet** - Full list of available modifiers
 
 #### 11.2 Add Set Feature
@@ -359,8 +359,8 @@ This document tracks what has been implemented and what still needs to be done.
 - [ ] **Different Modifiers Per Set** - Each set can have different modifiers active
 
 #### 11.3 Display Fixes
-- [ ] **Image Display** - Show exercise photos during workout execution
-- [ ] **Goal Behavior** - Read strict/elastic from sequence level
+- [x] **Image Display** - Show exercise photos during workout execution (already implemented)
+- [x] **Goal Behavior** - Read strict/elastic from sequence level
 
 ---
 
