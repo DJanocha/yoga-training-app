@@ -353,10 +353,16 @@ This document tracks what has been implemented and what still needs to be done.
 - [x] **Quick Toggle** - Enable/disable modifiers mid-exercise (implemented in Phase 9.3)
 - [ ] **Modifier Picker Sheet** - Full list of available modifiers
 
-#### 11.2 Add Set Feature
-- [ ] **Add Set Button** - After completing exercise, option to do another set
-- [ ] **Set Number Tracking** - Track set 1, set 2, etc. separately
-- [ ] **Different Modifiers Per Set** - Each set can have different modifiers active
+#### 11.2 Add Exercise During Workout
+- [x] **Add Exercise Button** - "+" button visible during workout execution
+- [x] **Exercise Picker Modal** - Open exercise picker to select any exercise from library mid-workout
+- [x] **Insert After Current** - Selected exercise is inserted immediately after the current exercise
+- [x] **Persistence Prompt** - Ask user whether to save changes to sequence permanently or just for this workout
+
+#### 11.2.1 Exercise Picker UX Improvements
+- [x] **Set Value & Unit in Picker** - Add controls above/below exercise list: [-][numberInput][+][reps/time ButtonGroup] to configure exercise before adding
+- [x] **Remove Multi-Insert** - Remove insert count feature from SequenceBuilder picker (prefer clicking duplicate/copy icon multiple times)
+- [x] **Fix Scrollability** - Fix scroll issues in SequenceBuilder Exercises tab
 
 #### 11.3 Display Fixes
 - [x] **Image Display** - Show exercise photos during workout execution (already implemented)

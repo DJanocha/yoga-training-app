@@ -10,6 +10,25 @@ import {
   CardContent,
 } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import {
   ArrowLeft,
   Play,
@@ -24,8 +43,10 @@ import {
   Minus,
   Check,
   Package2,
+  Search,
 } from 'lucide-react'
 import type { SequenceExercise, CompletedExercise, ActiveModifier } from '@/db/types'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/sequences/$id/execute')({
   component: ExecuteSequence,
@@ -94,6 +115,14 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       },
     })
   )
+  const updateSequence = useMutation(
+    trpc.sequences.update.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.sequences.byId.queryKey({ id: sequenceId }) })
+        toast.success('Exercise saved to sequence')
+      },
+    })
+  )
 
   // Execution state
   const [executionId, setExecutionId] = useState<number | null>(null)
@@ -111,13 +140,41 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   // Active modifiers state (per-exercise during execution)
   const [activeModifiers, setActiveModifiers] = useState<ActiveModifier[]>([])
 
+  // Add Exercise during workout state
+  const [workoutExercises, setWorkoutExercises] = useState<SequenceExercise[] | null>(null)
+  const [showExercisePicker, setShowExercisePicker] = useState(false)
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
+  const [showSavePrompt, setShowSavePrompt] = useState(false)
+  const [pendingExerciseToAdd, setPendingExerciseToAdd] = useState<number | null>(null)
+
+  // Exercise picker configuration
+  const [pickerTargetValue, setPickerTargetValue] = useState(30)
+  const [pickerMeasure, setPickerMeasure] = useState<'time' | 'repetitions'>('time')
+
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const exerciseStartRef = useRef<Date>(new Date())
   const hasStartedRef = useRef(false)
 
-  // Get exercises from sequence
-  const exercises = sequence?.exercises as SequenceExercise[] | undefined
+  // Get exercises from sequence (use workoutExercises if modified)
+  const exercises = (workoutExercises ?? sequence?.exercises) as SequenceExercise[] | undefined
+
+  // Filter exercises for picker
+  const filteredExercises = allExercises?.filter((ex) => {
+    if (!exerciseSearchQuery.trim()) return true
+    const query = exerciseSearchQuery.toLowerCase()
+    return (
+      ex.name.toLowerCase().includes(query) ||
+      ex.description?.toLowerCase().includes(query)
+    )
+  }) || []
+
+  // Handle adding exercise to workout
+  const handleAddExercise = useCallback((exerciseId: number) => {
+    setPendingExerciseToAdd(exerciseId)
+    setShowExercisePicker(false)
+    setShowSavePrompt(true)
+  }, [])
 
   // Get exercise name
   const getExerciseName = useCallback((exerciseId: number | 'break'): string => {
@@ -162,6 +219,44 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       console.error('Haptic feedback failed:', error)
     }
   }, [userSettings?.hapticEnabled])
+
+  // Insert exercise after current position
+  const insertExerciseAfterCurrent = useCallback((exerciseId: number, saveToSequence: boolean) => {
+    if (!sequence) return
+
+    const currentExercises = workoutExercises ?? [...(sequence.exercises as SequenceExercise[])]
+
+    const newExercise: SequenceExercise = {
+      id: `${exerciseId}-${Date.now()}`,
+      exerciseId,
+      config: {
+        measure: pickerMeasure,
+        targetValue: pickerTargetValue,
+      },
+    }
+
+    // Insert after current index
+    const insertIndex = currentIndex + 1
+    const updatedExercises = [
+      ...currentExercises.slice(0, insertIndex),
+      newExercise,
+      ...currentExercises.slice(insertIndex),
+    ]
+
+    setWorkoutExercises(updatedExercises)
+
+    // If user wants to save to sequence permanently
+    if (saveToSequence) {
+      updateSequence.mutate({
+        id: sequenceId,
+        exercises: updatedExercises,
+      })
+    } else {
+      toast.success('Exercise added to workout')
+    }
+
+    triggerHaptic(200)
+  }, [sequence, workoutExercises, currentIndex, sequenceId, updateSequence, triggerHaptic, pickerMeasure, pickerTargetValue])
 
   // Start execution on mount
   useEffect(() => {
@@ -492,6 +587,14 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             Exercise {currentIndex + 1} of {exercises.length}
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setShowExercisePicker(true)}
+          className="h-12 w-12 md:h-14 md:w-14"
+        >
+          <Plus className="h-5 w-5 md:h-6 md:w-6" />
+        </Button>
       </header>
 
       {/* Progress bar */}
@@ -721,6 +824,143 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           )}
         </div>
       </div>
+
+      {/* Exercise Picker Sheet */}
+      <Sheet open={showExercisePicker} onOpenChange={setShowExercisePicker}>
+        <SheetContent side="bottom" className="h-[80vh]">
+          <SheetHeader>
+            <SheetTitle>Add Exercise</SheetTitle>
+            <SheetDescription>
+              Select an exercise to add after the current one
+            </SheetDescription>
+          </SheetHeader>
+
+          {/* Configuration Controls */}
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setPickerTargetValue(Math.max(1, pickerTargetValue - (pickerMeasure === 'time' ? 5 : 1)))}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Input
+                type="number"
+                min="1"
+                value={pickerTargetValue}
+                onChange={(e) => setPickerTargetValue(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 text-center"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setPickerTargetValue(pickerTargetValue + (pickerMeasure === 'time' ? 5 : 1))}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <ToggleGroup
+                type="single"
+                value={pickerMeasure}
+                onValueChange={(value) => {
+                  if (value) setPickerMeasure(value as 'time' | 'repetitions')
+                }}
+                variant="outline"
+                spacing={0}
+              >
+                <ToggleGroupItem value="repetitions" aria-label="Repetitions">
+                  reps
+                </ToggleGroupItem>
+                <ToggleGroupItem value="time" aria-label="Time">
+                  sec
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search exercises..."
+                value={exerciseSearchQuery}
+                onChange={(e) => setExerciseSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+          <div className="mt-4 overflow-y-auto max-h-[calc(80vh-260px)]">
+            {filteredExercises.length > 0 ? (
+              <div className="grid gap-2">
+                {filteredExercises.map((exercise) => (
+                  <button
+                    key={exercise.id}
+                    type="button"
+                    onClick={() => handleAddExercise(exercise.id)}
+                    className="flex items-center gap-3 p-3 text-left hover:bg-muted rounded-lg transition-colors"
+                  >
+                    {exercise.photoUrls && exercise.photoUrls.length > 0 && (
+                      <img
+                        src={exercise.photoUrls[0]}
+                        alt={exercise.name}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{exercise.name}</p>
+                      {exercise.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-1">
+                          {exercise.description}
+                        </p>
+                      )}
+                    </div>
+                    <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                {exerciseSearchQuery ? 'No exercises match your search' : 'No exercises available'}
+              </p>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Save to Sequence Prompt */}
+      <AlertDialog open={showSavePrompt} onOpenChange={setShowSavePrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save to sequence?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you want to save this exercise to the sequence permanently, or just add it for this workout?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel
+              onClick={() => {
+                if (pendingExerciseToAdd !== null) {
+                  insertExerciseAfterCurrent(pendingExerciseToAdd, false)
+                  setPendingExerciseToAdd(null)
+                }
+              }}
+            >
+              This workout only
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingExerciseToAdd !== null) {
+                  insertExerciseAfterCurrent(pendingExerciseToAdd, true)
+                  setPendingExerciseToAdd(null)
+                }
+              }}
+            >
+              Save permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

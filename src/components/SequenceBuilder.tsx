@@ -526,9 +526,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     ExerciseModifierAssignment[]
   >([]);
 
-  // Multiply count for multi-insert
-  const [multiplyCount, setMultiplyCount] = useState(1);
-
   // Collapsed groups state
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
@@ -962,27 +959,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     });
   }, []);
 
-  // Add exercise with multiply (multi-insert)
-  const addExerciseMultiple = useCallback(
-    (exerciseId: number, count: number) => {
-      const newItems: SequenceItemWithId[] = [];
-      for (let i = 0; i < count; i++) {
-        newItems.push({
-          id: `${exerciseId}-${Date.now()}-${i}`,
-          exerciseId,
-          config: {
-            measure: "time",
-            targetValue: 30,
-          },
-        });
-      }
-      setExercises((prev) => [...prev, ...newItems]);
-      setIsPickerOpen(false);
-      setMultiplyCount(1); // Reset counter
-    },
-    []
-  );
-
   // Sync configureItem when exercises state changes
   useEffect(() => {
     if (configureItem) {
@@ -1212,9 +1188,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         </TabsContent>
 
         {/* Exercises Tab */}
-        <TabsContent value="exercises" className={cn("flex-1 overflow-y-auto p-1 mt-0", selectionMode && "pb-20")}>
-          <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
+        <TabsContent value="exercises" className={cn("flex-1 p-1 mt-0 flex flex-col", selectionMode && "pb-20")}>
+          <div className="flex flex-wrap gap-2 shrink-0">
             {exercises.length > 0 && (
               <Button
                 type="button"
@@ -1264,43 +1239,14 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                     Choose an exercise to add to your sequence
                   </SheetDescription>
                 </SheetHeader>
-                <div className="mt-4 p-4 border rounded-lg">
-                  <Label>Insert Count (Multi-Insert)</Label>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <Input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={multiplyCount}
-                      onChange={(e) =>
-                        setMultiplyCount(
-                          Math.max(1, parseInt(e.target.value, 10) || 1)
-                        )
-                      }
-                      className="w-20"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {multiplyCount === 1
-                        ? "Insert once"
-                        : `Insert ${multiplyCount} times`}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-4 overflow-y-auto max-h-[calc(80vh-200px)]">
+                <div className="mt-4 overflow-y-auto max-h-[calc(80vh-120px)]">
                   {allExercises && allExercises.length > 0 ? (
                     <div className="grid gap-2">
                       {allExercises.map((exercise) => (
                         <button
                           key={exercise.id}
                           type="button"
-                          onClick={() =>
-                            multiplyCount > 1
-                              ? addExerciseMultiple(
-                                  exercise.id,
-                                  multiplyCount
-                                )
-                              : addExercise(exercise.id)
-                          }
+                          onClick={() => addExercise(exercise.id)}
                           className="flex items-center gap-3 p-3 text-left hover:bg-muted rounded-lg transition-colors"
                         >
                           <div className="flex-1">
@@ -1324,6 +1270,10 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
               </SheetContent>
             </Sheet>
             )}
+          </div>
+
+          {/* Scrollable exercise list */}
+          <div className="flex-1 overflow-y-auto mt-3">
         {exercises.length > 0 ? (
           <DndContext
             sensors={sensors}
@@ -1385,9 +1335,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
           />
         )}
           </div>
-        </div>
-
-
 
         {/* Batch action buttons (floating) */}
         {selectionMode && (
