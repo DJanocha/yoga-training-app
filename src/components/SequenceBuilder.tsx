@@ -536,7 +536,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
 
   // Hold-to-repeat refs
   const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isHoldingRef = useRef(false);
 
   // Compute which exercises are grouped
@@ -695,29 +694,22 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     if (isHoldingRef.current) return;
     isHoldingRef.current = true;
 
-    // Clear any existing intervals
+    // Clear any existing interval
     if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
-    if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
 
     // Initial click - execute once immediately
     callback();
 
-    // Start repeating after 500ms hold
-    holdTimeoutRef.current = setTimeout(() => {
-      holdIntervalRef.current = setInterval(() => {
-        callback();
-      }, 100); // Repeat every 100ms
-    }, 500);
+    // Start repeating every 150ms (good balance for hold-to-increment)
+    holdIntervalRef.current = setInterval(() => {
+      callback();
+    }, 150);
   }, []);
 
   const stopHoldRepeat = useCallback(() => {
     if (holdIntervalRef.current) {
       clearInterval(holdIntervalRef.current);
       holdIntervalRef.current = null;
-    }
-    if (holdTimeoutRef.current) {
-      clearTimeout(holdTimeoutRef.current);
-      holdTimeoutRef.current = null;
     }
     // Reset holding state
     isHoldingRef.current = false;
