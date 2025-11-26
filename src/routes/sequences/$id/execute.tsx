@@ -181,7 +181,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   }, [])
 
   // Hold-to-repeat increment/decrement
-  const startHoldRepeat = useCallback((callback: () => void) => {
+  const startHoldRepeat = useCallback((callback: () => void, event: React.MouseEvent | React.TouchEvent) => {
+    event.preventDefault()
+
     // Clear any existing intervals
     if (holdIntervalRef.current) clearInterval(holdIntervalRef.current)
     if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current)
@@ -883,10 +885,10 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                 type="button"
                 variant="outline"
                 size="icon"
-                onMouseDown={() => startHoldRepeat(decrementValue)}
+                onMouseDown={(e) => startHoldRepeat(decrementValue, e)}
                 onMouseUp={stopHoldRepeat}
                 onMouseLeave={stopHoldRepeat}
-                onTouchStart={() => startHoldRepeat(decrementValue)}
+                onTouchStart={(e) => startHoldRepeat(decrementValue, e)}
                 onTouchEnd={stopHoldRepeat}
               >
                 <Minus className="h-4 w-4" />
@@ -902,10 +904,10 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                 type="button"
                 variant="outline"
                 size="icon"
-                onMouseDown={() => startHoldRepeat(incrementValue)}
+                onMouseDown={(e) => startHoldRepeat(incrementValue, e)}
                 onMouseUp={stopHoldRepeat}
                 onMouseLeave={stopHoldRepeat}
-                onTouchStart={() => startHoldRepeat(incrementValue)}
+                onTouchStart={(e) => startHoldRepeat(incrementValue, e)}
                 onTouchEnd={stopHoldRepeat}
               >
                 <Plus className="h-4 w-4" />
