@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTRPC } from '@/lib/trpc'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
@@ -10,15 +10,8 @@ import {
   CardContent,
 } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { ExercisePickerDrawer } from '@/components/exercise-picker-drawer'
+import type { ExercisePickerConfig } from '@/components/exercise-picker-drawer'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,7 +36,6 @@ import {
   Minus,
   Check,
   Package2,
-  Search,
 } from 'lucide-react'
 import type { SequenceExercise, CompletedExercise, ActiveModifier } from '@/db/types'
 import { toast } from 'sonner'
@@ -142,18 +134,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
   // Add Exercise during workout state
   const [workoutExercises, setWorkoutExercises] = useState<SequenceExercise[] | null>(null)
-  const [showExercisePicker, setShowExercisePicker] = useState(false)
-  const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
+  const [exercisePickerOpen, setExercisePickerOpen] = useState(false)
   const [showSavePrompt, setShowSavePrompt] = useState(false)
-  const [pendingExerciseToAdd, setPendingExerciseToAdd] = useState<number | null>(null)
-
-  // Exercise picker configuration
-  const [pickerTargetValue, setPickerTargetValue] = useState(30)
-  const [pickerMeasure, setPickerMeasure] = useState<'time' | 'repetitions'>('time')
-
-  // Hold-to-repeat for increment/decrement
-  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const isHoldingRef = useRef(false)
+  const [pendingExerciseToAdd, setPendingExerciseToAdd] = useState<{ exerciseId: number, config: ExercisePickerConfig } | null>(null)
 
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -162,61 +145,6 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
   // Get exercises from sequence (use workoutExercises if modified)
   const exercises = (workoutExercises ?? sequence?.exercises) as SequenceExercise[] | undefined
-
-  // Filter exercises for picker
-  const filteredExercises = allExercises?.filter((ex) => {
-    if (!exerciseSearchQuery.trim()) return true
-    const query = exerciseSearchQuery.toLowerCase()
-    return (
-      ex.name.toLowerCase().includes(query) ||
-      ex.description?.toLowerCase().includes(query)
-    )
-  }) || []
-
-  // Handle adding exercise to workout
-  const handleAddExercise = useCallback((exerciseId: number) => {
-    setPendingExerciseToAdd(exerciseId)
-    setShowExercisePicker(false)
-    setShowSavePrompt(true)
-  }, [])
-
-  // Hold-to-repeat increment/decrement
-  const startHoldRepeat = useCallback((callback: () => void, event: React.MouseEvent | React.TouchEvent) => {
-    event.preventDefault()
-
-    // Prevent if already holding
-    if (isHoldingRef.current) return
-    isHoldingRef.current = true
-
-    // Clear any existing interval
-    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current)
-
-    // Initial click - execute once immediately
-    callback()
-
-    // Start repeating every 150ms (good balance for hold-to-increment)
-    holdIntervalRef.current = setInterval(() => {
-      callback()
-    }, 150)
-  }, [])
-
-  const stopHoldRepeat = useCallback(() => {
-    if (holdIntervalRef.current) {
-      clearInterval(holdIntervalRef.current)
-      holdIntervalRef.current = null
-    }
-    // Reset holding state
-    isHoldingRef.current = false
-  }, [])
-
-  // Increment/decrement helpers
-  const incrementValue = useCallback(() => {
-    setPickerTargetValue(prev => prev + 1)
-  }, [])
-
-  const decrementValue = useCallback(() => {
-    setPickerTargetValue(prev => Math.max(1, prev - 1))
-  }, [])
 
   // Get exercise name
   const getExerciseName = useCallback((exerciseId: number | 'break'): string => {
@@ -262,8 +190,8 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
   }, [userSettings?.hapticEnabled])
 
-  // Insert exercise after current position
-  const insertExerciseAfterCurrent = useCallback((exerciseId: number, saveToSequence: boolean) => {
+  // Handle exercise selected from picker
+  const handleExerciseSelected = useCallback((exerciseId: number, config: ExercisePickerConfig, saveToSequence: boolean) => {
     if (!sequence) return
 
     const currentExercises = workoutExercises ?? [...(sequence.exercises as SequenceExercise[])]
@@ -272,8 +200,8 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       id: `${exerciseId}-${Date.now()}`,
       exerciseId,
       config: {
-        measure: pickerMeasure,
-        targetValue: pickerTargetValue,
+        measure: config.measure,
+        targetValue: config.targetValue,
       },
     }
 
@@ -298,7 +226,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
 
     triggerHaptic(200)
-  }, [sequence, workoutExercises, currentIndex, sequenceId, updateSequence, triggerHaptic, pickerMeasure, pickerTargetValue])
+  }, [sequence, workoutExercises, currentIndex, sequenceId, updateSequence, triggerHaptic])
 
   // Start execution on mount
   useEffect(() => {
@@ -632,7 +560,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => setShowExercisePicker(true)}
+          onClick={() => setExercisePickerOpen(true)}
           className="h-12 w-12 md:h-14 md:w-14"
         >
           <Plus className="h-5 w-5 md:h-6 md:w-6" />
@@ -867,118 +795,17 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         </div>
       </div>
 
-      {/* Exercise Picker Sheet */}
-      <Sheet open={showExercisePicker} onOpenChange={setShowExercisePicker}>
-        <SheetContent side="bottom" className="h-[80vh]">
-          <SheetHeader>
-            <SheetTitle>Add Exercise</SheetTitle>
-            <SheetDescription>
-              Select an exercise to add after the current one
-            </SheetDescription>
-          </SheetHeader>
-
-          {/* Configuration Controls */}
-          <div className="mt-4 space-y-3">
-            <div className="flex items-center justify-center gap-2 select-none touch-manipulation">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="select-none touch-manipulation active:scale-95"
-                onMouseDown={(e) => startHoldRepeat(decrementValue, e)}
-                onMouseUp={stopHoldRepeat}
-                onMouseLeave={stopHoldRepeat}
-                onTouchStart={(e) => startHoldRepeat(decrementValue, e)}
-                onTouchEnd={stopHoldRepeat}
-              >
-                <Minus className="h-4 w-4 pointer-events-none" />
-              </Button>
-              <Input
-                type="number"
-                min="1"
-                value={pickerTargetValue}
-                onChange={(e) => setPickerTargetValue(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-20 text-center"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="select-none touch-manipulation active:scale-95"
-                onMouseDown={(e) => startHoldRepeat(incrementValue, e)}
-                onMouseUp={stopHoldRepeat}
-                onMouseLeave={stopHoldRepeat}
-                onTouchStart={(e) => startHoldRepeat(incrementValue, e)}
-                onTouchEnd={stopHoldRepeat}
-              >
-                <Plus className="h-4 w-4 pointer-events-none" />
-              </Button>
-              <ToggleGroup
-                type="single"
-                value={pickerMeasure}
-                onValueChange={(value) => {
-                  if (value) setPickerMeasure(value as 'time' | 'repetitions')
-                }}
-                variant="outline"
-                spacing={0}
-              >
-                <ToggleGroupItem value="repetitions" aria-label="Repetitions">
-                  reps
-                </ToggleGroupItem>
-                <ToggleGroupItem value="time" aria-label="Time">
-                  sec
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search exercises..."
-                value={exerciseSearchQuery}
-                onChange={(e) => setExerciseSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-          <div className="mt-4 overflow-y-auto max-h-[calc(80vh-260px)]">
-            {filteredExercises.length > 0 ? (
-              <div className="grid gap-2">
-                {filteredExercises.map((exercise) => (
-                  <button
-                    key={exercise.id}
-                    type="button"
-                    onClick={() => handleAddExercise(exercise.id)}
-                    className="flex items-center gap-3 p-3 text-left hover:bg-muted rounded-lg transition-colors"
-                  >
-                    {exercise.photoUrls && exercise.photoUrls.length > 0 && (
-                      <img
-                        src={exercise.photoUrls[0]}
-                        alt={exercise.name}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{exercise.name}</p>
-                      {exercise.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-1">
-                          {exercise.description}
-                        </p>
-                      )}
-                    </div>
-                    <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">
-                {exerciseSearchQuery ? 'No exercises match your search' : 'No exercises available'}
-              </p>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Exercise Picker Drawer */}
+      <ExercisePickerDrawer
+        open={exercisePickerOpen}
+        onOpenChange={setExercisePickerOpen}
+        onExerciseSelected={(exerciseId, config) => {
+          setPendingExerciseToAdd({ exerciseId, config })
+          setShowSavePrompt(true)
+        }}
+        title="Add Exercise"
+        description="Select an exercise to add after the current one"
+      />
 
       {/* Save to Sequence Prompt */}
       <AlertDialog open={showSavePrompt} onOpenChange={setShowSavePrompt}>
@@ -993,7 +820,11 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             <AlertDialogCancel
               onClick={() => {
                 if (pendingExerciseToAdd !== null) {
-                  insertExerciseAfterCurrent(pendingExerciseToAdd, false)
+                  handleExerciseSelected(
+                    pendingExerciseToAdd.exerciseId,
+                    pendingExerciseToAdd.config,
+                    false
+                  )
                   setPendingExerciseToAdd(null)
                 }
               }}
@@ -1003,7 +834,11 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             <AlertDialogAction
               onClick={() => {
                 if (pendingExerciseToAdd !== null) {
-                  insertExerciseAfterCurrent(pendingExerciseToAdd, true)
+                  handleExerciseSelected(
+                    pendingExerciseToAdd.exerciseId,
+                    pendingExerciseToAdd.config,
+                    true
+                  )
                   setPendingExerciseToAdd(null)
                 }
               }}

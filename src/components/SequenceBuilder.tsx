@@ -1,7 +1,9 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ExercisePickerDrawer } from "@/components/exercise-picker-drawer";
+import type { ExercisePickerConfig } from "@/components/exercise-picker-drawer";
 import { WheelNumberInput } from "@/components/ui/wheel-number-input";
 import { WheelSelect } from "@/components/ui/wheel-select";
 import {
@@ -32,7 +34,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +42,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   GripVertical,
   Plus,
-  Minus,
   Trash2,
   Settings,
   Coffee,
@@ -507,7 +507,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
 
   // UI state
   const [activeTab, setActiveTab] = useState<"details" | "exercises">("exercises");
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [configureItem, setConfigureItem] = useState<SequenceItemWithId | null>(
     null
   );
@@ -532,13 +531,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   // Collapsed groups state
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
-  // Exercise picker configuration
-  const [pickerTargetValue, setPickerTargetValue] = useState(30);
-  const [pickerMeasure, setPickerMeasure] = useState<MeasureType>("time");
-
-  // Hold-to-repeat refs
-  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isHoldingRef = useRef(false);
+  // Exercise picker drawer state
+  const [exercisePickerOpen, setExercisePickerOpen] = useState(false);
 
   // Compute which exercises are grouped
   const groupedExerciseIds = useMemo(() => {
@@ -675,55 +669,16 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   );
 
   // Add exercise
-  const addExercise = useCallback((exerciseId: number) => {
+  const handleExerciseSelected = useCallback((exerciseId: number, config: ExercisePickerConfig) => {
     const newItem: SequenceItemWithId = {
       id: `${exerciseId}-${Date.now()}`,
       exerciseId,
       config: {
-        measure: pickerMeasure,
-        targetValue: pickerTargetValue,
+        measure: config.measure,
+        targetValue: config.targetValue,
       },
     };
     setExercises((prev) => [...prev, newItem]);
-    setIsPickerOpen(false);
-  }, [pickerMeasure, pickerTargetValue]);
-
-  // Hold-to-repeat increment/decrement
-  const startHoldRepeat = useCallback((callback: () => void, event: React.MouseEvent | React.TouchEvent) => {
-    event.preventDefault();
-
-    // Prevent if already holding
-    if (isHoldingRef.current) return;
-    isHoldingRef.current = true;
-
-    // Clear any existing interval
-    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
-
-    // Initial click - execute once immediately
-    callback();
-
-    // Start repeating every 150ms (good balance for hold-to-increment)
-    holdIntervalRef.current = setInterval(() => {
-      callback();
-    }, 150);
-  }, []);
-
-  const stopHoldRepeat = useCallback(() => {
-    if (holdIntervalRef.current) {
-      clearInterval(holdIntervalRef.current);
-      holdIntervalRef.current = null;
-    }
-    // Reset holding state
-    isHoldingRef.current = false;
-  }, []);
-
-  // Increment/decrement helpers
-  const incrementValue = useCallback(() => {
-    setPickerTargetValue(prev => prev + 1);
-  }, []);
-
-  const decrementValue = useCallback(() => {
-    setPickerTargetValue(prev => Math.max(1, prev - 1));
   }, []);
 
   // Add break at specific index (or at end if not specified)
@@ -1274,74 +1229,20 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                             </Button>
             )}
             {!selectionMode && (
-              <Sheet open={isPickerOpen} onOpenChange={setIsPickerOpen}>
-              <SheetTrigger asChild>
-                <Button type="button" size="sm">
+              <>
+                <Button type="button" size="sm" onClick={() => setExercisePickerOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Exercise
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[80vh]">
-                <SheetHeader>
-                  <SheetTitle>Select Exercise</SheetTitle>
-                  <SheetDescription>
-                    Choose an exercise to add to your sequence
-                  </SheetDescription>
-                </SheetHeader>
 
-                {/* Configuration Controls - Two Wheels Side by Side */}
-                <div className="mt-4 flex items-center justify-center gap-4">
-                  <div className="flex flex-col items-center gap-2">
-                    <WheelNumberInput
-                      value={pickerTargetValue}
-                      onChange={setPickerTargetValue}
-                      min={1}
-                      max={999}
-                    />
-                    <span className="text-xs text-muted-foreground">Value</span>
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2">
-                    <WheelSelect
-                      value={pickerMeasure}
-                      onChange={setPickerMeasure}
-                      options={['repetitions', 'time'] as const}
-                      formatOption={(opt) => opt === 'repetitions' ? 'reps' : 'sec'}
-                    />
-                    <span className="text-xs text-muted-foreground">Unit</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 overflow-y-auto max-h-[calc(80vh-260px)]">
-                  {allExercises && allExercises.length > 0 ? (
-                    <div className="grid gap-2">
-                      {allExercises.map((exercise) => (
-                        <button
-                          key={exercise.id}
-                          type="button"
-                          onClick={() => addExercise(exercise.id)}
-                          className="flex items-center gap-3 p-3 text-left hover:bg-muted rounded-lg transition-colors"
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium">{exercise.name}</p>
-                            {exercise.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-1">
-                                {exercise.description}
-                              </p>
-                            )}
-                          </div>
-                          <Plus className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      No exercises available. Create some exercises first.
-                    </p>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+                <ExercisePickerDrawer
+                  open={exercisePickerOpen}
+                  onOpenChange={setExercisePickerOpen}
+                  onExerciseSelected={handleExerciseSelected}
+                  title="Select Exercise"
+                  description="Choose an exercise to add to your sequence"
+                />
+              </>
             )}
           </div>
 
@@ -1400,7 +1301,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         ) : (
           <EmptyState
           actionLabel="Add Exercise"
-          onAction={() => setIsPickerOpen(true)}
+          onAction={() => setExercisePickerOpen(true)}
           icon={Plus}
           title="No exercises yet"
           description="Add exercises to build your sequence"
@@ -1439,43 +1340,33 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
           </SheetHeader>
           {configureItem && (
             <div className="mt-4 space-y-4">
-              <div>
-                <Label>Measure</Label>
-                <ToggleGroup
-                  type="single"
-                  value={configureItem.config.measure}
-                  onValueChange={(value: MeasureType) => {
-                    if (value)
-                      updateItemConfig(configureItem.id, { measure: value });
-                  }}
-                  className="mt-1.5 justify-start"
-                >
-                  <ToggleGroupItem value="time" className="flex-1">
-                    Time
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="repetitions" className="flex-1">
-                    Reps
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
+              {/* Configuration Controls - Two Wheels Side by Side */}
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex flex-col items-center gap-2">
+                  <WheelNumberInput
+                    value={configureItem.config.targetValue || 30}
+                    onChange={(value) =>
+                      updateItemConfig(configureItem.id, {
+                        targetValue: value,
+                      })
+                    }
+                    min={1}
+                    max={999}
+                  />
+                  <span className="text-xs text-muted-foreground">Value</span>
+                </div>
 
-              <div>
-                <Label>
-                  Target Value (
-                  {configureItem.config.measure === "time" ? "seconds" : "reps"}
-                  )
-                </Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={configureItem.config.targetValue || ""}
-                  onChange={(e) =>
-                    updateItemConfig(configureItem.id, {
-                      targetValue: parseInt(e.target.value) || undefined,
-                    })
-                  }
-                  className="mt-1.5"
-                />
+                <div className="flex flex-col items-center gap-2">
+                  <WheelSelect
+                    value={configureItem.config.measure}
+                    onChange={(value) =>
+                      updateItemConfig(configureItem.id, { measure: value })
+                    }
+                    options={['repetitions', 'time'] as const}
+                    formatOption={(opt) => opt === 'repetitions' ? 'reps' : 'sec'}
+                  />
+                  <span className="text-xs text-muted-foreground">Unit</span>
+                </div>
               </div>
 
               {/* Modifier assignment (always visible for non-break exercises) */}
