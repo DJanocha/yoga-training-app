@@ -261,7 +261,7 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 6: Mobile & PWA
 
 #### 6.1 Installation
-- [ ] **Install Prompt** - Prompt user to install PWA
+- [x] **Install Prompt** - Prompt user to install PWA (banner on home page + button in preferences)
 
 #### 6.2 Offline Capabilities
 - [ ] **Offline Support** - Cache critical data for offline use

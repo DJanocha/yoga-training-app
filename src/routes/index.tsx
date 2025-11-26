@@ -10,6 +10,7 @@ import { RedirectToSignIn, SignedIn, AuthLoading, } from '@/components/auth'
 import { authClient } from '@/lib/auth-client'
 import { HomePageSkeleton } from '@/components/skeletons'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 
 // Lazy load recharts (it's a heavy library)
 const WeeklyActivityChart = lazy(() =>
@@ -81,6 +82,9 @@ function HomeContent() {
               : 'Build your yoga practice'}
           </p>
         </div>
+
+        {/* PWA Install Prompt */}
+        <PWAInstallPrompt />
 
         {/* Stats Grid - Compact */}
         <div className="grid grid-cols-2 gap-2">
