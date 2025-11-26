@@ -4,6 +4,24 @@ import { useHaptic } from '@/hooks/useHaptic'
 import { useTRPC } from '@/lib/trpc'
 import { useMutation, useQuery,  useQueryClient } from '@tanstack/react-query'
 import type { ExerciseModifierAssignment, ActiveModifier, ExerciseGroup } from '@/db/types'
+import { toast } from 'sonner'
+
+// Badge display names
+const BADGE_NAMES: Record<string, string> = {
+  first_workout: '🎉 First Workout',
+  workout_5: '💪 5 Workouts',
+  workout_10: '🔥 10 Workouts',
+  workout_25: '⭐ 25 Workouts',
+  workout_50: '🏆 50 Workouts',
+  workout_100: '👑 100 Workouts',
+  streak_3: '📅 3 Day Streak',
+  streak_7: '🔥 7 Day Streak',
+  streak_14: '⚡ 14 Day Streak',
+  streak_30: '💫 30 Day Streak',
+  streak_100: '🌟 100 Day Streak',
+  consistent_12: '📊 12 Workouts/Month',
+  consistent_20: '🎯 20 Workouts/Month',
+}
 
 interface ExecuteSequenceProps {
   sequenceId: number;
@@ -260,9 +278,34 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
         feedback: feedback || undefined,
       }, {
         onSuccess: (result) => {
-          // Calculate streak and check for new badges
-          calculateStreak.mutate(undefined as any);
-          checkBadges.mutate(undefined as any);
+          // Calculate streak and show milestone notifications
+          calculateStreak.mutate(undefined as any, {
+            onSuccess: (streakResult) => {
+              // Celebrate streak milestones
+              const streakMilestones = [3, 7, 14, 30, 100];
+              if (streakResult.currentStreak && streakMilestones.includes(streakResult.currentStreak)) {
+                toast.success(`${streakResult.currentStreak} Day Streak!`, {
+                  description: 'Keep up the amazing work! 🔥',
+                  duration: 5000,
+                });
+              }
+            },
+          });
+
+          // Check for new badges and show notifications
+          checkBadges.mutate(undefined as any, {
+            onSuccess: (newBadges) => {
+              if (newBadges && newBadges.length > 0) {
+                for (const badgeId of newBadges) {
+                  const badgeName = BADGE_NAMES[badgeId] || badgeId;
+                  toast.success('Achievement Unlocked!', {
+                    description: badgeName,
+                    duration: 5000,
+                  });
+                }
+              }
+            },
+          });
 
           // Show PR celebration if any PRs were achieved
           if (result.personalRecords && result.personalRecords.length > 0) {

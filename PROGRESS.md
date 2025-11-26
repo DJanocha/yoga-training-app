@@ -218,10 +218,10 @@ This document tracks what has been implemented and what still needs to be done.
 #### 4.1 Achievement System
 - [x] **Achievements Page** - Display unlocked achievements
 - [x] **Badge Display** - Show badges on profile/home
-- [ ] **Achievement Notifications** - Toast when badge unlocked
+- [x] **Achievement Notifications** - Toast when badge unlocked (sonner toast)
 
 #### 4.2 Engagement Features
-- [ ] **Streak Notifications** - Celebrate streak milestones
+- [x] **Streak Notifications** - Celebrate streak milestones (3, 7, 14, 30, 100 days)
 - [ ] **Level Up System** - Progress through levels
 
 #### 4.3 Auth Error Handling & Navigation
