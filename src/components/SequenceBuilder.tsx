@@ -537,6 +537,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   // Hold-to-repeat refs
   const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isHoldingRef = useRef(false);
 
   // Compute which exercises are grouped
   const groupedExerciseIds = useMemo(() => {
@@ -690,11 +691,15 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const startHoldRepeat = useCallback((callback: () => void, event: React.MouseEvent | React.TouchEvent) => {
     event.preventDefault();
 
+    // Prevent if already holding
+    if (isHoldingRef.current) return;
+    isHoldingRef.current = true;
+
     // Clear any existing intervals
     if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
     if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
 
-    // Initial click
+    // Initial click - execute once immediately
     callback();
 
     // Start repeating after 500ms hold
@@ -714,6 +719,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       clearTimeout(holdTimeoutRef.current);
       holdTimeoutRef.current = null;
     }
+    // Reset holding state
+    isHoldingRef.current = false;
   }, []);
 
   // Increment/decrement helpers

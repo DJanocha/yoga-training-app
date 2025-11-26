@@ -154,6 +154,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   // Hold-to-repeat for increment/decrement
   const holdIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isHoldingRef = useRef(false)
 
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -184,11 +185,15 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   const startHoldRepeat = useCallback((callback: () => void, event: React.MouseEvent | React.TouchEvent) => {
     event.preventDefault()
 
+    // Prevent if already holding
+    if (isHoldingRef.current) return
+    isHoldingRef.current = true
+
     // Clear any existing intervals
     if (holdIntervalRef.current) clearInterval(holdIntervalRef.current)
     if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current)
 
-    // Initial click
+    // Initial click - execute once immediately
     callback()
 
     // Start repeating after 500ms hold
@@ -208,6 +213,8 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       clearTimeout(holdTimeoutRef.current)
       holdTimeoutRef.current = null
     }
+    // Reset holding state
+    isHoldingRef.current = false
   }, [])
 
   // Increment/decrement helpers
