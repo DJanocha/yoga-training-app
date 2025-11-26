@@ -427,6 +427,64 @@ This document tracks what has been implemented and what still needs to be done.
 
 ---
 
+### Phase 14: Exercise Groups
+
+Allow users to merge exercises into named groups within sequences. Groups can be cloned, reordered as units, and progress is tracked during execution.
+
+**Design Decisions:**
+- Groups are metadata on top of flat exercise array (not nested hierarchy)
+- Exercises in groups are referenced by stable IDs
+- Groups appear at position of their first exercise
+- Only ungrouped exercises can be selected for batch operations
+- Cloned groups keep the same name
+- Groups are collapsible in the builder UI
+- Hooks extracted but kept in same file (SequenceBuilder.tsx) for now
+
+#### 14.1 Data Model
+- [ ] **ExerciseGroup Type** - Add to `db/types.ts`: id, name, exerciseIds array
+- [ ] **Stable Exercise IDs** - Add optional `id` field to SequenceExercise schema (backwards compatible)
+- [ ] **Groups Column** - Add `groups` JSONB column to sequences table
+- [ ] **Zod Schema Update** - Add groups to refinedSequenceSchema
+- [ ] **Migration** - Generate and apply Drizzle migration
+
+#### 14.2 Group Operations
+- [ ] **Merge into Group** - Select 2+ exercises → create named group
+- [ ] **Ungroup** - Dissolve group, exercises stay in place
+- [ ] **Clone Group** - Duplicate all exercises with new IDs, insert after original
+- [ ] **Rename Group** - Inline editing of group name
+- [ ] **Remove Item Cascade** - Removing exercise updates group, empty groups auto-delete
+
+#### 14.3 Selection & Rendering
+- [ ] **Computed Render Order** - Build render items from flat array + groups
+- [ ] **Selection Rules** - Prevent selection of grouped exercises
+- [ ] **Batch Merge Button** - Add "Merge" to BatchActionsBar when 2+ selected
+
+#### 14.4 Drag & Drop
+- [ ] **Group DnD** - Groups draggable as single units with `group:` ID prefix
+- [ ] **Target Detection** - Handle drops on groups vs exercises
+- [ ] **Exercise Order** - Keep group exercises contiguous in flat array
+
+#### 14.5 UI Components
+- [ ] **SortableGroupItem** - Collapsible group card with drag handle
+- [ ] **GroupedExerciseRow** - Compact exercise display within group
+- [ ] **Group Header** - Name, collapse toggle, clone/ungroup actions
+
+#### 14.6 Execution UI
+- [ ] **Group Progress Tracking** - Track position within current group
+- [ ] **Group Name Display** - Show "(Group: 2/4)" during execution
+
+#### 14.7 API Updates
+- [ ] **sequences.update** - Accept groups field
+- [ ] **sequences.duplicate** - Clone groups with new IDs
+
+#### 14.8 Edge Cases
+- [ ] **Backwards Compatibility** - Generate IDs for exercises without them on load
+- [ ] **Orphaned References** - Filter invalid exercise IDs from groups
+- [ ] **Empty Groups** - Auto-delete groups with no exercises
+- [ ] **Validation** - Enforce min 1 char group name
+
+---
+
 ## Notes
 
 - All user data is scoped by `userId` for privacy
