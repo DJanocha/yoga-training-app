@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTRPC } from '@/lib/trpc'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
@@ -12,6 +12,8 @@ import { useAppForm } from '@/hooks/form'
 import { sequenceLabelOverrides, sequenceRequiredDefaults, getFieldLabel } from '@/lib/form-utils'
 import { z } from 'zod'
 import { ListPageSkeleton } from '@/components/skeletons'
+
+type SortOption = 'lastUsed' | 'newest' | 'name' | 'favorite'
 
 // Simple validator for quick create form (only name field)
 const quickCreateValidator = z.object({
@@ -50,6 +52,9 @@ function SequencesContent() {
   // Search state
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Sort state - default to last used
+  const [sortBy, setSortBy] = useState<SortOption>('lastUsed')
+
   // Selected item for copy functionality
   const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined)
 
@@ -78,6 +83,43 @@ function SequencesContent() {
       onSubmit: quickCreateValidator,
     },
   })
+
+  // Sort sequences based on selected option
+  const sortedSequences = useMemo(() => {
+    if (!sequences) return []
+
+    const sorted = [...sequences]
+    switch (sortBy) {
+      case 'lastUsed':
+        // Sort by lastExecutedAt descending, then by createdAt for never-used sequences
+        return sorted.sort((a, b) => {
+          if (a.lastExecutedAt && b.lastExecutedAt) {
+            return new Date(b.lastExecutedAt).getTime() - new Date(a.lastExecutedAt).getTime()
+          }
+          if (a.lastExecutedAt) return -1
+          if (b.lastExecutedAt) return 1
+          return new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+        })
+      case 'newest':
+        return sorted.sort((a, b) =>
+          new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+        )
+      case 'name':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name))
+      case 'favorite':
+        // Favorites first, then by last used
+        return sorted.sort((a, b) => {
+          if (a.isFavorite && !b.isFavorite) return -1
+          if (!a.isFavorite && b.isFavorite) return 1
+          if (a.lastExecutedAt && b.lastExecutedAt) {
+            return new Date(b.lastExecutedAt).getTime() - new Date(a.lastExecutedAt).getTime()
+          }
+          return 0
+        })
+      default:
+        return sorted
+    }
+  }, [sequences, sortBy])
 
   if (isLoading || !sequences) {
     return <ListPageSkeleton />
@@ -143,6 +185,20 @@ function SequencesContent() {
   const filterContent = (
     <div className="space-y-4">
       <div>
+        <Label className="text-sm font-medium">Sort by</Label>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+          <SelectTrigger className="mt-1.5">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="lastUsed">Last Used</SelectItem>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="name">Name</SelectItem>
+            <SelectItem value="favorite">Favorites First</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
         <Label className="text-sm font-medium">Level</Label>
         <Select value={level} onValueChange={setLevel}>
           <SelectTrigger className="mt-1.5">
@@ -203,9 +259,9 @@ function SequencesContent() {
 
       {/* Main content - scrollable */}
       <main className="flex-1 overflow-y-auto p-4 pb-32 md:pb-4">
-        {sequences && sequences.length > 0 ? (
+        {sortedSequences && sortedSequences.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
-            {sequences.map((seq) => (
+            {sortedSequences.map((seq) => (
               <div
                 key={seq.id}
                 onClick={() => setSelectedItemId(

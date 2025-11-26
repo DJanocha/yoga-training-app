@@ -1,7 +1,7 @@
 import type { TRPCRouterRecord } from '@trpc/server'
-import { eq, and, isNull, desc } from 'drizzle-orm'
+import { eq, and, isNull, desc, max } from 'drizzle-orm'
 import {db } from '@/db'
-import { sequences } from '../../../db/schema'
+import { sequences, sequenceExecutions } from '../../../db/schema'
 import type { ExerciseGroup } from '@/db/types'
 import {
   getSequenceByIdInputValidator,
@@ -16,12 +16,40 @@ import { protectedProcedure } from '../trpc'
 
 export const sequencesRouter = {
   /**
-   * Get all sequences for the current user
+   * Get all sequences for the current user with last execution date
    */
   list: protectedProcedure.query(async ({ ctx }) => {
+    // Get last execution date for each sequence
+    const lastExecutions = db
+      .select({
+        sequenceId: sequenceExecutions.sequenceId,
+        lastExecutedAt: max(sequenceExecutions.startedAt).as('last_executed_at'),
+      })
+      .from(sequenceExecutions)
+      .where(eq(sequenceExecutions.userId, ctx.userId))
+      .groupBy(sequenceExecutions.sequenceId)
+      .as('last_executions')
+
     const allSequences = await db
-      .select()
+      .select({
+        id: sequences.id,
+        name: sequences.name,
+        description: sequences.description,
+        level: sequences.level,
+        category: sequences.category,
+        exercises: sequences.exercises,
+        groups: sequences.groups,
+        availableModifiers: sequences.availableModifiers,
+        isFavorite: sequences.isFavorite,
+        isPreBuilt: sequences.isPreBuilt,
+        userId: sequences.userId,
+        createdAt: sequences.createdAt,
+        deletedAt: sequences.deletedAt,
+        goal: sequences.goal,
+        lastExecutedAt: lastExecutions.lastExecutedAt,
+      })
       .from(sequences)
+      .leftJoin(lastExecutions, eq(sequences.id, lastExecutions.sequenceId))
       .where(and(eq(sequences.userId, ctx.userId), isNull(sequences.deletedAt)))
       .orderBy(desc(sequences.createdAt))
 

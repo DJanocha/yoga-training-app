@@ -82,66 +82,54 @@ function HomeContent() {
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Flame className="h-4 w-4 text-orange-500" />
-                Streak
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{currentStreak}</div>
-              <p className="text-xs text-muted-foreground">
-                {currentStreak === 1 ? 'day' : 'days'}
-              </p>
-            </CardContent>
+        {/* Stats Grid - Compact */}
+        <div className="grid grid-cols-2 gap-2">
+          <Card className="p-3">
+            <div className="flex items-center gap-2">
+              <Flame className="h-4 w-4 text-orange-500 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-lg font-bold leading-tight">{currentStreak}</div>
+                <p className="text-xs text-muted-foreground truncate">
+                  day streak
+                </p>
+              </div>
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-yellow-500" />
-                Total Workouts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.totalWorkouts || 0}
+          <Card className="p-3">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-yellow-500 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-lg font-bold leading-tight">
+                  {stats?.totalWorkouts || 0}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">workouts</p>
               </div>
-              <p className="text-xs text-muted-foreground">completed</p>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-500" />
-                Total Time
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.totalMinutes || 0}
+          <Card className="p-3">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-500 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-lg font-bold leading-tight">
+                  {stats?.totalMinutes || 0}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">minutes</p>
               </div>
-              <p className="text-xs text-muted-foreground">minutes</p>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Star className="h-4 w-4 text-purple-500" />
-                Avg Rating
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.avgRating ? stats.avgRating.toFixed(1) : '-'}
+          <Card className="p-3">
+            <div className="flex items-center gap-2">
+              <Star className="h-4 w-4 text-purple-500 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-lg font-bold leading-tight">
+                  {stats?.avgRating ? stats.avgRating.toFixed(1) : '-'}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">avg rating</p>
               </div>
-              <p className="text-xs text-muted-foreground">out of 5</p>
-            </CardContent>
+            </div>
           </Card>
         </div>
 
@@ -245,11 +233,6 @@ function HomeContent() {
         <div className="space-y-3">
           <Link to="/sequences">
             <Button className="w-full">Start Workout</Button>
-          </Link>
-          <Link to="/sequences">
-            <Button variant="outline" className="w-full bg-transparent">
-              Browse Sequences
-            </Button>
           </Link>
         </div>
       </div>

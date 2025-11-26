@@ -391,14 +391,14 @@ This document tracks what has been implemented and what still needs to be done.
 ### Phase 12: Home & UX Quick Wins
 
 #### 12.1 Home Screen
-- [ ] **Reduce Tile Sizes** - Smaller stat cards for better mobile UX
-- [ ] **Remove Redundant Button** - Remove "Browse Sequences" (duplicate of main nav)
+- [x] **Reduce Tile Sizes** - Smaller stat cards for better mobile UX
+- [x] **Remove Redundant Button** - Remove "Browse Sequences" (only "Start Workout" remains)
 - [ ] **Progress Chart** - Show exercise improvement over time (e.g., "10 push-ups last week → 12 this week")
 - [ ] **Weekly Progress Display** - Top improving exercises sorted by % improvement
 
 #### 12.2 Sequences
-- [ ] **Sort by Last Used** - Default sort sequences by last execution date
-- [ ] **Sorting Options** - Allow user to change sort order
+- [x] **Sort by Last Used** - Default sort sequences by last execution date
+- [x] **Sorting Options** - Allow user to change sort order (Last Used, Newest, Name, Favorites First)
 - [ ] **Floating Action Button** - Quick start button always visible
 
 #### 12.3 Achievements & Records
@@ -407,7 +407,7 @@ This document tracks what has been implemented and what still needs to be done.
 - [ ] **Weekly Badges** - Small labels showing records/achievements from current week
 
 #### 12.4 Rating System
-- [ ] **Make Rating Optional** - One-tap skip option after workout
+- [x] **Make Rating Optional** - One-tap skip option after workout (already implemented)
 
 ---
 
