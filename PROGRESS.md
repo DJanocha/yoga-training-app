@@ -441,47 +441,47 @@ Allow users to merge exercises into named groups within sequences. Groups can be
 - Hooks extracted but kept in same file (SequenceBuilder.tsx) for now
 
 #### 14.1 Data Model
-- [ ] **ExerciseGroup Type** - Add to `db/types.ts`: id, name, exerciseIds array
-- [ ] **Stable Exercise IDs** - Add optional `id` field to SequenceExercise schema (backwards compatible)
-- [ ] **Groups Column** - Add `groups` JSONB column to sequences table
-- [ ] **Zod Schema Update** - Add groups to refinedSequenceSchema
-- [ ] **Migration** - Generate and apply Drizzle migration
+- [x] **ExerciseGroup Type** - Add to `db/types.ts`: id, name, exerciseIds array
+- [x] **Stable Exercise IDs** - Add optional `id` field to SequenceExercise schema (backwards compatible)
+- [x] **Groups Column** - Add `groups` JSONB column to sequences table
+- [x] **Zod Schema Update** - Add groups to refinedSequenceSchema
+- [x] **Migration** - Generate and apply Drizzle migration
 
 #### 14.2 Group Operations
-- [ ] **Merge into Group** - Select 2+ exercises → create named group
-- [ ] **Ungroup** - Dissolve group, exercises stay in place
-- [ ] **Clone Group** - Duplicate all exercises with new IDs, insert after original
-- [ ] **Rename Group** - Inline editing of group name
-- [ ] **Remove Item Cascade** - Removing exercise updates group, empty groups auto-delete
+- [x] **Merge into Group** - Select 2+ exercises → create named group
+- [x] **Ungroup** - Dissolve group, exercises stay in place
+- [x] **Clone Group** - Duplicate all exercises with new IDs, insert after original
+- [x] **Rename Group** - Inline editing of group name
+- [x] **Remove Item Cascade** - Removing exercise updates group, empty groups auto-delete
 
 #### 14.3 Selection & Rendering
-- [ ] **Computed Render Order** - Build render items from flat array + groups
-- [ ] **Selection Rules** - Prevent selection of grouped exercises
-- [ ] **Batch Merge Button** - Add "Merge" to BatchActionsBar when 2+ selected
+- [x] **Computed Render Order** - Build render items from flat array + groups
+- [x] **Selection Rules** - Prevent selection of grouped exercises
+- [x] **Batch Merge Button** - Add "Merge" to BatchActionsBar when 2+ selected
 
 #### 14.4 Drag & Drop
-- [ ] **Group DnD** - Groups draggable as single units with `group:` ID prefix
-- [ ] **Target Detection** - Handle drops on groups vs exercises
-- [ ] **Exercise Order** - Keep group exercises contiguous in flat array
+- [x] **Group DnD** - Groups draggable as single units with `group:` ID prefix
+- [x] **Target Detection** - Handle drops on groups vs exercises
+- [x] **Exercise Order** - Keep group exercises contiguous in flat array
 
 #### 14.5 UI Components
-- [ ] **SortableGroupItem** - Collapsible group card with drag handle
-- [ ] **GroupedExerciseRow** - Compact exercise display within group
-- [ ] **Group Header** - Name, collapse toggle, clone/ungroup actions
+- [x] **SortableGroupItem** - Collapsible group card with drag handle
+- [x] **GroupedExerciseRow** - Compact exercise display within group (integrated into SortableGroupItem)
+- [x] **Group Header** - Name, collapse toggle, clone/ungroup actions
 
 #### 14.6 Execution UI
-- [ ] **Group Progress Tracking** - Track position within current group
-- [ ] **Group Name Display** - Show "(Group: 2/4)" during execution
+- [x] **Group Progress Tracking** - Track position within current group
+- [x] **Group Name Display** - Show "(Group: 2/4)" during execution
 
 #### 14.7 API Updates
-- [ ] **sequences.update** - Accept groups field
-- [ ] **sequences.duplicate** - Clone groups with new IDs
+- [x] **sequences.update** - Accept groups field
+- [x] **sequences.duplicate** - Clone groups with new IDs
 
 #### 14.8 Edge Cases
-- [ ] **Backwards Compatibility** - Generate IDs for exercises without them on load
-- [ ] **Orphaned References** - Filter invalid exercise IDs from groups
-- [ ] **Empty Groups** - Auto-delete groups with no exercises
-- [ ] **Validation** - Enforce min 1 char group name
+- [x] **Backwards Compatibility** - Generate IDs for exercises without them on load
+- [x] **Orphaned References** - Filter invalid exercise IDs from groups (via removeItem cascade)
+- [x] **Empty Groups** - Auto-delete groups with no exercises
+- [x] **Validation** - Enforce min 1 char group name (via Zod schema)
 
 ---
 

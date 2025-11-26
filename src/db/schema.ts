@@ -69,6 +69,8 @@ export const sequences = pgTable(
     exercises: jsonb('exercises').notNull(),
     // JSON structure: Array<number> - modifier IDs that are available for this sequence
     availableModifiers: jsonb('available_modifiers').default([]),
+    // JSON structure: Array<{ id: string, name: string, exerciseIds: string[] }> - exercise groups
+    groups: jsonb('groups').default([]),
     isFavorite: boolean('is_favorite').default(false),
     isPreBuilt: boolean('is_pre_built').default(false),
     deletedAt: timestamp('deleted_at'),

@@ -3,7 +3,7 @@ import { Star, Trophy, Package2 } from 'lucide-react'
 import { useHaptic } from '@/hooks/useHaptic'
 import { useTRPC } from '@/lib/trpc'
 import { useMutation, useQuery,  useQueryClient } from '@tanstack/react-query'
-import type { ExerciseModifierAssignment, ActiveModifier } from '@/db/types'
+import type { ExerciseModifierAssignment, ActiveModifier, ExerciseGroup } from '@/db/types'
 
 interface ExecuteSequenceProps {
   sequenceId: number;
@@ -326,9 +326,26 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
     );
   }
 
-  const sequenceExercises = sequence.exercises as Array<{ exerciseId: number | "break"; config: any; modifiers?: ExerciseModifierAssignment[] }>;
+  const sequenceExercises = sequence.exercises as Array<{ id?: string; exerciseId: number | "break"; config: any; modifiers?: ExerciseModifierAssignment[] }>;
+  const sequenceGroups = (sequence.groups as ExerciseGroup[]) || [];
   const sequenceAvailableModifiers = (sequence.availableModifiers as number[]) || [];
   const currentExercise = sequenceExercises[currentIndex];
+
+  // Track current group progress during execution
+  const currentGroupInfo = useMemo(() => {
+    if (!currentExercise?.id) return null;
+
+    const group = sequenceGroups.find((g) => g.exerciseIds.includes(currentExercise.id!));
+    if (!group) return null;
+
+    const positionInGroup = group.exerciseIds.indexOf(currentExercise.id!) + 1;
+
+    return {
+      name: group.name,
+      current: positionInGroup,
+      total: group.exerciseIds.length,
+    };
+  }, [currentExercise, sequenceGroups]);
   const currentExerciseData =
     currentExercise.exerciseId === "break"
       ? { name: "Break", photoUrls: [], links: [] }
@@ -395,6 +412,11 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
         </div>
         <p className="text-base text-gray-600 mt-1">
           Exercise {currentIndex + 1} of {sequenceExercises.length}
+          {currentGroupInfo && (
+            <span className="ml-2 text-primary font-medium">
+              ({currentGroupInfo.name}: {currentGroupInfo.current}/{currentGroupInfo.total})
+            </span>
+          )}
         </p>
       </header>
 

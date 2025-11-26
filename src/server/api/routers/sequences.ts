@@ -2,6 +2,7 @@ import type { TRPCRouterRecord } from '@trpc/server'
 import { eq, and, isNull, desc } from 'drizzle-orm'
 import {db } from '@/db'
 import { sequences } from '../../../db/schema'
+import type { ExerciseGroup } from '@/db/types'
 import {
   getSequenceByIdInputValidator,
   calculateSequenceDurationInputValidator,
@@ -172,6 +173,13 @@ export const sequencesRouter = {
         throw new Error('Sequence not found')
       }
 
+      // Clone groups with new IDs
+      const originalGroups = (original.groups as ExerciseGroup[]) || []
+      const newGroups = originalGroups.map((g) => ({
+        ...g,
+        id: `group-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      }))
+
       // Create duplicate
       const [duplicate] = await db
         .insert(sequences)
@@ -182,6 +190,7 @@ export const sequencesRouter = {
           category: original.category,
           exercises: original.exercises,
           availableModifiers: original.availableModifiers,
+          groups: newGroups,
           userId: ctx.userId,
           isFavorite: false,
           isPreBuilt: false,

@@ -64,11 +64,20 @@ export type ExerciseModifierAssignment = z.infer<typeof ExerciseModifierAssignme
 
 // Exercise reference within a sequence (can be an exercise ID or 'break')
 export const SequenceExercise = z.object({
+  id: z.string().optional(), // Stable identifier for group references (optional for backwards compat)
   exerciseId: z.union([z.number(), z.literal('break')]),
   config: ExerciseConfig,
   modifiers: z.array(ExerciseModifierAssignment).optional(),
 })
 export type SequenceExercise = z.infer<typeof SequenceExercise>
+
+// Exercise group within a sequence - groups exercises together
+export const ExerciseGroup = z.object({
+  id: z.string(),
+  name: z.string().min(1, 'Group name is required'),
+  exerciseIds: z.array(z.string()), // References to exercise IDs in the flat exercises array
+})
+export type ExerciseGroup = z.infer<typeof ExerciseGroup>
 
 // Active modifier during exercise execution
 export const ActiveModifier = z.object({
@@ -132,6 +141,7 @@ export const refinedSequenceSchema = z.object({
   category: Category.optional(),
   goal: GoalType.optional().default('elastic'), // Sequence-level goal (strict or elastic)
   exercises: z.array(SequenceExercise), // Allow empty during creation, validate when starting workout
+  groups: z.array(ExerciseGroup).optional().default([]), // Exercise groups
   isFavorite: z.boolean().default(false).optional(),
   isPreBuilt: z.boolean().default(false).optional(),
 })

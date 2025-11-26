@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -49,16 +49,19 @@ import {
   Package2,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   MoreHorizontal,
   Copy,
   Check,
   CheckSquare,
   X,
+  Ungroup,
 } from "lucide-react";
 import type {
   SequenceExercise,
   MeasureType,
   ExerciseModifierAssignment,
+  ExerciseGroup,
 } from "@/db/types";
 import type { Modifier } from "@/validators/entities";
 import { cn } from "@/lib/utils";
@@ -247,6 +250,216 @@ function SortableExerciseItem({
   );
 }
 
+// Sortable group item component
+function SortableGroupItem({
+  group,
+  groupExercises,
+  allExercises,
+  modifiers,
+  isCollapsed,
+  onToggleCollapse,
+  onUngroup,
+  onClone,
+  onRename,
+  onConfigureExercise,
+  onRemoveExercise,
+}: {
+  group: ExerciseGroup;
+  groupExercises: SequenceItemWithId[];
+  allExercises?: { id: number; name: string }[];
+  modifiers?: Modifier[];
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  onUngroup: () => void;
+  onClone: () => void;
+  onRename: (newName: string) => void;
+  onConfigureExercise: (exercise: SequenceItemWithId) => void;
+  onRemoveExercise: (id: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(group.name);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `group:${group.id}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const getExerciseName = (exerciseId: number | "break"): string => {
+    if (exerciseId === "break") return "Break";
+    return (
+      allExercises?.find((ex) => ex.id === exerciseId)?.name ||
+      `Exercise #${exerciseId}`
+    );
+  };
+
+  const handleNameSubmit = () => {
+    if (editName.trim()) {
+      onRename(editName.trim());
+    } else {
+      setEditName(group.name);
+    }
+    setIsEditing(false);
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "border-2 border-primary/30 rounded-lg bg-primary/5",
+        isDragging && "opacity-50 shadow-lg"
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 p-3">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded touch-none"
+        >
+          <GripVertical className="h-5 w-5 text-muted-foreground" />
+        </button>
+
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="p-1 hover:bg-muted rounded"
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+
+        {isEditing ? (
+          <Input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={handleNameSubmit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleNameSubmit();
+              if (e.key === "Escape") {
+                setEditName(group.name);
+                setIsEditing(false);
+              }
+            }}
+            className="h-7 text-sm flex-1"
+            autoFocus
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="flex-1 text-left font-medium text-sm hover:underline"
+          >
+            {group.name}
+          </button>
+        )}
+
+        <Badge variant="secondary" className="text-xs">
+          {groupExercises.length}
+        </Badge>
+
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onClone}
+            className="h-7 w-7"
+            title="Clone group"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onUngroup}
+            className="h-7 w-7"
+            title="Ungroup"
+          >
+            <Ungroup className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Collapsible exercise list */}
+      {!isCollapsed && (
+        <div className="px-3 pb-3 space-y-1">
+          {groupExercises.map((ex) => {
+            const isBreak = ex.exerciseId === "break";
+            return (
+              <div
+                key={ex.id}
+                className="flex items-center gap-2 p-2 bg-background rounded border"
+              >
+                {isBreak ? (
+                  <Coffee className="h-3.5 w-3.5 text-muted-foreground" />
+                ) : null}
+                <span className="flex-1 truncate text-sm">
+                  {getExerciseName(ex.exerciseId)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {ex.config.targetValue || 0}
+                  {ex.config.measure === "time" ? "s" : "x"}
+                </span>
+                {/* Show assigned modifiers */}
+                {modifiers &&
+                  ex.modifiers &&
+                  ex.modifiers.length > 0 &&
+                  ex.modifiers.slice(0, 2).map((assignment) => {
+                    const modifier = modifiers.find(
+                      (m) => m.id === assignment.modifierId
+                    );
+                    if (!modifier) return null;
+                    return (
+                      <Badge
+                        key={assignment.modifierId}
+                        className="text-[10px] px-1 py-0 bg-blue-50 text-blue-700 border-blue-200"
+                      >
+                        {modifier.name}
+                      </Badge>
+                    );
+                  })}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onConfigureExercise(ex)}
+                  className="h-6 w-6"
+                >
+                  <Settings className="h-3 w-3" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onRemoveExercise(ex.id)}
+                  className="h-6 w-6 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -282,6 +495,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [description, setDescription] = useState("");
   const [goal, setGoal] = useState<"strict" | "elastic">("elastic");
   const [exercises, setExercises] = useState<SequenceItemWithId[]>([]);
+  const [groups, setGroups] = useState<ExerciseGroup[]>([]);
   const [availableModifiers, setAvailableModifiers] = useState<number[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -311,19 +525,57 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   // Multiply count for multi-insert
   const [multiplyCount, setMultiplyCount] = useState(1);
 
+  // Collapsed groups state
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  // Compute which exercises are grouped
+  const groupedExerciseIds = useMemo(() => {
+    return new Set(groups.flatMap((g) => g.exerciseIds));
+  }, [groups]);
+
+  // Build render list - groups appear at position of first exercise
+  type RenderItem =
+    | { type: "exercise"; exercise: SequenceItemWithId }
+    | { type: "group"; group: ExerciseGroup; exercises: SequenceItemWithId[] };
+
+  const renderItems = useMemo((): RenderItem[] => {
+    const items: RenderItem[] = [];
+    const processedGroups = new Set<string>();
+
+    for (const exercise of exercises) {
+      // Check if this exercise is the first in any unprocessed group
+      const group = groups.find(
+        (g) => g.exerciseIds[0] === exercise.id && !processedGroups.has(g.id)
+      );
+
+      if (group) {
+        processedGroups.add(group.id);
+        const groupExercises = group.exerciseIds
+          .map((id) => exercises.find((e) => e.id === id))
+          .filter((e): e is SequenceItemWithId => e !== undefined);
+        items.push({ type: "group", group, exercises: groupExercises });
+      } else if (!groupedExerciseIds.has(exercise.id)) {
+        items.push({ type: "exercise", exercise });
+      }
+    }
+    return items;
+  }, [exercises, groups, groupedExerciseIds]);
+
   // Initialize form when sequence loads
   if (sequence && !isInitialized) {
     setName(sequence.name);
     setDescription(sequence.description || "");
     setGoal((sequence.goal as "strict" | "elastic") || "elastic");
-    // Add unique IDs to exercises for DnD
+    // Add unique IDs to exercises for DnD (use existing ID if present for backwards compat)
     const exercisesWithIds = (sequence.exercises as SequenceExercise[]).map(
       (ex, index) => ({
         ...ex,
-        id: `${ex.exerciseId}-${index}-${Date.now()}`,
+        id: ex.id || `${ex.exerciseId}-${index}-${Date.now()}`,
       })
     );
     setExercises(exercisesWithIds);
+    // Load groups for this sequence
+    setGroups((sequence.groups as ExerciseGroup[]) || []);
     // Load available modifiers for this sequence
     setAvailableModifiers((sequence.availableModifiers as number[]) || []);
     setIsInitialized(true);
@@ -347,18 +599,68 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     })
   );
 
-  // Handle drag end
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
+  // Handle drag end (supports both individual exercises and groups)
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
 
-    if (over && active.id !== over.id) {
-      setExercises((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  }, []);
+      const activeId = String(active.id);
+      const overId = String(over.id);
+
+      // Check if dragging a group
+      if (activeId.startsWith("group:")) {
+        const groupId = activeId.slice(6);
+        const group = groups.find((g) => g.id === groupId);
+        if (!group) return;
+
+        // Find target position in flat exercises array
+        let targetIndex: number;
+        if (overId.startsWith("group:")) {
+          const targetGroupId = overId.slice(6);
+          const targetGroup = groups.find((g) => g.id === targetGroupId);
+          if (!targetGroup) return;
+          targetIndex = exercises.findIndex(
+            (e) => e.id === targetGroup.exerciseIds[0]
+          );
+        } else {
+          targetIndex = exercises.findIndex((e) => e.id === overId);
+        }
+
+        // Move group exercises together
+        const groupExercises = group.exerciseIds
+          .map((id) => exercises.find((e) => e.id === id))
+          .filter((e): e is SequenceItemWithId => e !== undefined);
+        const withoutGroup = exercises.filter(
+          (e) => !group.exerciseIds.includes(e.id)
+        );
+
+        // Calculate adjusted target index (accounts for removed items)
+        const originalFirstIndex = exercises.findIndex(
+          (e) => e.id === group.exerciseIds[0]
+        );
+        const adjustedIndex =
+          targetIndex > originalFirstIndex
+            ? targetIndex - group.exerciseIds.length + 1
+            : targetIndex;
+
+        setExercises([
+          ...withoutGroup.slice(0, adjustedIndex),
+          ...groupExercises,
+          ...withoutGroup.slice(adjustedIndex),
+        ]);
+      } else {
+        // Regular exercise move
+        setExercises((items) => {
+          const oldIndex = items.findIndex((item) => item.id === activeId);
+          const newIndex = items.findIndex((item) => item.id === overId);
+          if (oldIndex === -1 || newIndex === -1) return items;
+          return arrayMove(items, oldIndex, newIndex);
+        });
+      }
+    },
+    [groups, exercises]
+  );
 
   // Add exercise
   const addExercise = useCallback((exerciseId: number) => {
@@ -413,9 +715,18 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     });
   }, []);
 
-  // Remove item
+  // Remove item (also cascade to groups)
   const removeItem = useCallback((id: string) => {
     setExercises((prev) => prev.filter((item) => item.id !== id));
+    // Remove from groups and delete empty groups
+    setGroups((prev) =>
+      prev
+        .map((g) => ({
+          ...g,
+          exerciseIds: g.exerciseIds.filter((exId) => exId !== id),
+        }))
+        .filter((g) => g.exerciseIds.length > 0)
+    );
   }, []);
 
   // Update item config
@@ -436,8 +747,13 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const handleSave = async () => {
     if (!sequence) return;
 
-    // Strip IDs before saving
-    const exercisesToSave = exercises.map(({ id: _id, ...rest }) => rest);
+    // Keep IDs when saving (needed for group references)
+    const exercisesToSave = exercises.map((ex) => ({
+      id: ex.id,
+      exerciseId: ex.exerciseId,
+      config: ex.config,
+      modifiers: ex.modifiers,
+    }));
 
     await updateSequence.mutateAsync({
       id: sequenceId,
@@ -445,6 +761,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       description: description || undefined,
       goal,
       exercises: exercisesToSave,
+      groups,
       availableModifiers,
     });
 
@@ -500,18 +817,22 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     setBatchModifiers([]);
   }, [selectedItems, batchMeasure, batchTargetValue, batchModifiers]);
 
-  // Toggle item selection
-  const toggleItemSelection = useCallback((id: string) => {
-    setSelectedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  }, []);
+  // Toggle item selection (only ungrouped exercises can be selected)
+  const toggleItemSelection = useCallback(
+    (id: string) => {
+      if (groupedExerciseIds.has(id)) return; // Can't select grouped exercises
+      setSelectedItems((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(id)) {
+          newSet.delete(id);
+        } else {
+          newSet.add(id);
+        }
+        return newSet;
+      });
+    },
+    [groupedExerciseIds]
+  );
 
   // Batch clone selected items
   const batchCloneSelected = useCallback(() => {
@@ -548,6 +869,94 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     setSelectedItems(new Set());
     setSelectionMode(false);
   }, [selectedItems]);
+
+  // Merge selected exercises into a group
+  const mergeSelectedIntoGroup = useCallback(() => {
+    if (selectedItems.size < 2) return;
+
+    // Get selected IDs in order they appear in exercises array
+    const selectedIds = exercises
+      .filter((e) => selectedItems.has(e.id))
+      .map((e) => e.id);
+
+    const newGroup: ExerciseGroup = {
+      id: `group-${Date.now()}`,
+      name: "New Group",
+      exerciseIds: selectedIds,
+    };
+
+    setGroups((prev) => [...prev, newGroup]);
+    setSelectedItems(new Set());
+    setSelectionMode(false);
+  }, [selectedItems, exercises]);
+
+  // Ungroup exercises (dissolve group)
+  const ungroupExercises = useCallback((groupId: string) => {
+    setGroups((prev) => prev.filter((g) => g.id !== groupId));
+  }, []);
+
+  // Clone a group (duplicate exercises and create new group)
+  const cloneGroup = useCallback(
+    (groupId: string) => {
+      const group = groups.find((g) => g.id === groupId);
+      if (!group) return;
+
+      // Clone exercises with new IDs
+      const newExercises: SequenceItemWithId[] = [];
+      const newExerciseIds: string[] = [];
+
+      group.exerciseIds.forEach((oldId, i) => {
+        const original = exercises.find((e) => e.id === oldId);
+        if (original) {
+          const newId = `${original.exerciseId}-${Date.now()}-${i}`;
+          newExercises.push({ ...original, id: newId });
+          newExerciseIds.push(newId);
+        }
+      });
+
+      // Insert after original group (after last exercise of the group)
+      const lastOriginalIndex = Math.max(
+        ...group.exerciseIds.map((id) => exercises.findIndex((e) => e.id === id))
+      );
+
+      setExercises((prev) => [
+        ...prev.slice(0, lastOriginalIndex + 1),
+        ...newExercises,
+        ...prev.slice(lastOriginalIndex + 1),
+      ]);
+
+      // Create new group with same name
+      setGroups((prev) => [
+        ...prev,
+        {
+          id: `group-${Date.now()}-clone`,
+          name: group.name,
+          exerciseIds: newExerciseIds,
+        },
+      ]);
+    },
+    [groups, exercises]
+  );
+
+  // Rename a group
+  const renameGroup = useCallback((groupId: string, newName: string) => {
+    setGroups((prev) =>
+      prev.map((g) => (g.id === groupId ? { ...g, name: newName } : g))
+    );
+  }, []);
+
+  // Toggle group collapsed state
+  const toggleGroupCollapsed = useCallback((groupId: string) => {
+    setCollapsedGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
+  }, []);
 
   // Add exercise with multiply (multi-insert)
   const addExerciseMultiple = useCallback(
@@ -900,26 +1309,46 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={exercises.map((e) => e.id)}
+              items={renderItems.map((item) =>
+                item.type === "group" ? `group:${item.group.id}` : item.exercise.id
+              )}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-2 flex flex-col gap-2 w-full">
-                {exercises.map((item) => (
-                  <div key={item.id}>
+                {renderItems.map((renderItem) => {
+                  if (renderItem.type === "group") {
+                    return (
+                      <SortableGroupItem
+                        key={`group:${renderItem.group.id}`}
+                        group={renderItem.group}
+                        groupExercises={renderItem.exercises}
+                        allExercises={allExercises}
+                        modifiers={allModifiers}
+                        isCollapsed={collapsedGroups.has(renderItem.group.id)}
+                        onToggleCollapse={() => toggleGroupCollapsed(renderItem.group.id)}
+                        onUngroup={() => ungroupExercises(renderItem.group.id)}
+                        onClone={() => cloneGroup(renderItem.group.id)}
+                        onRename={(newName) => renameGroup(renderItem.group.id, newName)}
+                        onConfigureExercise={(ex) => setConfigureItem(ex)}
+                        onRemoveExercise={removeItem}
+                      />
+                    );
+                  }
+                  return (
                     <SortableExerciseItem
-                      item={item}
-                      exerciseName={getExerciseName(item.exerciseId)}
+                      key={renderItem.exercise.id}
+                      item={renderItem.exercise}
+                      exerciseName={getExerciseName(renderItem.exercise.exerciseId)}
                       modifiers={allModifiers}
-                      onConfigure={() => setConfigureItem(item)}
-                      onDuplicate={() => duplicateItem(item.id)}
-                      onRemove={() => removeItem(item.id)}
+                      onConfigure={() => setConfigureItem(renderItem.exercise)}
+                      onDuplicate={() => duplicateItem(renderItem.exercise.id)}
+                      onRemove={() => removeItem(renderItem.exercise.id)}
                       selectionMode={selectionMode}
-                      isSelected={selectedItems.has(item.id)}
-                      onToggleSelection={() => toggleItemSelection(item.id)}
+                      isSelected={selectedItems.has(renderItem.exercise.id)}
+                      onToggleSelection={() => toggleItemSelection(renderItem.exercise.id)}
                     />
-                    {/* Insert break button between exercises - hidden in selection mode */}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </SortableContext>
           </DndContext>
@@ -945,6 +1374,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
             onClone={batchCloneSelected}
             onConfigure={() => setIsBatchConfigOpen(true)}
             onDelete={batchDeleteSelected}
+            onMerge={mergeSelectedIntoGroup}
           />
         )}
       </main>
