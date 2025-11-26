@@ -500,46 +500,76 @@ Allow users to merge exercises into named groups within sequences. Groups can be
 
 ---
 
-### Phase 16: Action Bar Redesign
+### Phase 16: Floating Action Dock (Inspired by shadcn Dock)
 
-Redesign the sequence builder action bar to be more responsive and contextual.
+**Design inspiration:** https://www.shadcn.io/components/dock/message-dock
 
-#### 16.1 Responsive Action Bar
-- [ ] **Add flex-wrap** - Allow buttons to wrap on narrow screens instead of overflowing horizontally
-- [ ] **Simplify Primary Actions** - Replace "Select" + "Add Break" + "Add Exercise" with just "Select" + "Add"
-- [ ] **Unified Add Button** - "Add" opens ExercisePickerDrawer with both exercises AND breaks
+Redesign the sequence builder action bar as a modern floating dock with smooth animations and contextual expansion.
 
-#### 16.2 Contextual Selection Actions
-- [ ] **Show Actions on Selection** - When items are selected, show contextual actions in a top row above primary actions
-- [ ] **Selection Action Bar** - Display: [Merge] [Clone] [Configure N] [Delete] (where N = selected count)
-- [ ] **Primary Actions Persist** - Keep [Cancel] [Add] visible below selection actions
-- [ ] **Action Bar Stacking** - Use flex-wrap to stack actions vertically on narrow screens
+#### 16.1 Floating Dock Component
+- [ ] **Fixed Bottom Position** - Dock floats at bottom of screen (above navigation) like iOS/macOS dock
+- [ ] **Backdrop Blur Effect** - Semi-transparent background with `backdrop-filter: blur(12px)`
+- [ ] **Circular Icon Buttons** - Replace rectangular buttons with circular icon buttons
+- [ ] **Spring Animations** - Use Framer Motion with spring physics for expand/collapse
+- [ ] **Separator Lines** - Animated vertical dividers between action groups
 
-#### 16.3 Break as Special Exercise
+#### 16.2 Icon-based Action Design
+Primary actions (always visible):
+- [ ] **Select** - ✓ icon (checkmark) - Toggles selection mode
+- [ ] **Add** - + icon (plus) - Opens ExercisePickerDrawer with exercises AND breaks
+
+Selection actions (appear when items selected):
+- [ ] **Merge** - ⛓️ icon (link/chain) - Merge selected into group
+- [ ] **Clone** - 📋 icon (clipboard) - Duplicate selected items
+- [ ] **Configure** - ⚙️ icon (gear) - Configure selected items with badge count (e.g., "2")
+- [ ] **Delete** - 🗑️ icon (trash) - Delete selected items
+
+#### 16.3 Dock States & Animations
+```
+Default (compact, ~80px width):
+┌────────────────────┐
+│    [✓]    [+]      │  ← Primary actions only
+└────────────────────┘
+
+Selection Active (expanded, ~300px width):
+┌──────────────────────────────────────┐
+│  [⛓️] [📋] [⚙️²] [🗑️]  │  [✕] [+]  │  ← Selection + Primary
+└──────────────────────────────────────┘
+           ↑ badge shows count
+```
+
+- [ ] **Smooth Expansion** - Dock expands left-to-right when entering selection mode
+- [ ] **Icon Animations** - Icons scale up on hover/press (1.1x)
+- [ ] **Badge Count** - Show selected count on Configure button
+- [ ] **Disabled States** - Gray out unavailable actions (e.g., Merge when < 2 selected)
+
+#### 16.4 Break as Special Exercise
 - [ ] **Break in Exercise List** - Add "Break" as a special item at the TOP of ExercisePickerDrawer list
-- [ ] **Visual Distinction** - Style break differently (Coffee icon, different background color)
+- [ ] **Visual Distinction** - Style break with Coffee icon (☕), different background color (e.g., blue-50)
 - [ ] **Default Config** - Breaks default to 30 seconds (time-based)
+- [ ] **Simplified Add** - Remove separate "Add Break" button, unify into single "Add" action
 
-#### 16.4 Visual Design
-```
-Default state:
-┌─────────────────────────────┐
-│  Select  │  Add             │
-└─────────────────────────────┘
+#### 16.5 Enhanced Interactions
+- [ ] **Click Outside to Cancel** - Clicking outside dock or list exits selection mode
+- [ ] **Keyboard Shortcuts** - Esc to cancel selection, Delete key for delete action
+- [ ] **Touch-friendly** - Larger touch targets (48px minimum) for mobile
+- [ ] **Haptic Feedback** - Vibration on action button press (if enabled in settings)
+- [ ] **Visual Feedback** - Active state glow/highlight on pressed buttons
 
-When 2 items selected:
-┌─────────────────────────────┐
-│ Merge │ Clone │ Configure 2 │ Delete │  ← Selection actions
-├─────────────────────────────┤
-│  Cancel  │  Add             │  ← Primary actions
-└─────────────────────────────┘
-```
+#### 16.6 Visual Polish
+- [ ] **Gradient Background** - Subtle gradient in dock background
+- [ ] **Shadow/Elevation** - Depth with `box-shadow` to lift dock above content
+- [ ] **Hover Effects** - Tooltip labels appear above icons on hover
+- [ ] **Smooth Transitions** - All state changes use spring animations (stiffness: 300, damping: 30)
+- [ ] **Reduced Motion** - Respect `prefers-reduced-motion` for accessibility
 
 **Benefits:**
-- Better space usage on mobile (no horizontal overflow)
-- Consistent action location (all in top bar, not jumping to bottom)
-- Simpler mental model (selection mode is a toggle)
-- Unified "Add" concept (exercises + breaks in one place)
+- Modern, polished aesthetic matching contemporary mobile apps
+- Minimal space usage when inactive (just 2 icons)
+- Clear visual feedback for all interactions
+- Smooth, delightful animations
+- Better touch interaction on mobile
+- Consistent with platform conventions (iOS/macOS dock pattern)
 
 ---
 
