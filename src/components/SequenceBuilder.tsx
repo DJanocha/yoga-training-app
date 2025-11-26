@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -534,6 +534,10 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [pickerTargetValue, setPickerTargetValue] = useState(30);
   const [pickerMeasure, setPickerMeasure] = useState<MeasureType>("time");
 
+  // Hold-to-repeat refs
+  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Compute which exercises are grouped
   const groupedExerciseIds = useMemo(() => {
     return new Set(groups.flatMap((g) => g.exerciseIds));
@@ -681,6 +685,43 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     setExercises((prev) => [...prev, newItem]);
     setIsPickerOpen(false);
   }, [pickerMeasure, pickerTargetValue]);
+
+  // Hold-to-repeat increment/decrement
+  const startHoldRepeat = useCallback((callback: () => void) => {
+    // Clear any existing intervals
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+
+    // Initial click
+    callback();
+
+    // Start repeating after 500ms hold
+    holdTimeoutRef.current = setTimeout(() => {
+      holdIntervalRef.current = setInterval(() => {
+        callback();
+      }, 100); // Repeat every 100ms
+    }, 500);
+  }, []);
+
+  const stopHoldRepeat = useCallback(() => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Increment/decrement helpers
+  const incrementValue = useCallback(() => {
+    setPickerTargetValue(prev => prev + 1);
+  }, []);
+
+  const decrementValue = useCallback(() => {
+    setPickerTargetValue(prev => Math.max(1, prev - 1));
+  }, []);
 
   // Add break at specific index (or at end if not specified)
   const addBreak = useCallback((atIndex?: number) => {
@@ -1251,7 +1292,11 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                     type="button"
                     variant="outline"
                     size="icon"
-                    onClick={() => setPickerTargetValue(Math.max(1, pickerTargetValue - (pickerMeasure === 'time' ? 5 : 1)))}
+                    onMouseDown={() => startHoldRepeat(decrementValue)}
+                    onMouseUp={stopHoldRepeat}
+                    onMouseLeave={stopHoldRepeat}
+                    onTouchStart={() => startHoldRepeat(decrementValue)}
+                    onTouchEnd={stopHoldRepeat}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
@@ -1266,7 +1311,11 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                     type="button"
                     variant="outline"
                     size="icon"
-                    onClick={() => setPickerTargetValue(pickerTargetValue + (pickerMeasure === 'time' ? 5 : 1))}
+                    onMouseDown={() => startHoldRepeat(incrementValue)}
+                    onMouseUp={stopHoldRepeat}
+                    onMouseLeave={stopHoldRepeat}
+                    onTouchStart={() => startHoldRepeat(incrementValue)}
+                    onTouchEnd={stopHoldRepeat}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
