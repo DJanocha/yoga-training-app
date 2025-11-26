@@ -336,8 +336,8 @@ This document tracks what has been implemented and what still needs to be done.
 
 #### 10.2 Exercise Management
 - [x] **Duplicate Exercise Button** - Copy exercise with config, insert below
-- [ ] **Apply to Many** - Configure one exercise, apply config to multiple selected (skipped - complex, low priority)
-- [ ] **Multiply/Multi-Insert** - Insert exercise at multiple positions at once (skipped - complex, low priority)
+- [x] **Batch Configure (Apply to Many)** - Select any exercises, apply config to all (measure, target, modifiers)
+- [x] **Multiply/Multi-Insert** - Insert exercise multiple times at once with count input
 - [x] **Improved Break Insertion** - Show insertion points between exercises (not just append)
 
 #### 10.3 Sequence-Level Settings

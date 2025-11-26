@@ -267,6 +267,7 @@ export function ExerciseList() {
             title="No exercises yet"
             description="Create your first exercise to start building your workout library."
             actionLabel="+ Create Exercise"
+            className='w-full'
             onAction={() => setShowForm(true)}
           />
         )
