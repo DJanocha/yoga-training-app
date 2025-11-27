@@ -573,6 +573,302 @@ Selection Active (expanded, ~300px width):
 
 ---
 
+### Phase 17: UX Bug Fixes
+
+Collection of UX issues discovered during testing.
+
+#### 17.1 Exercise Form Issues
+- [ ] **Form not pre-filled** - When editing an exercise, form fields are empty instead of showing existing values (e.g., "Push up" name not displayed)
+- [ ] **Buttons overflow container** - Cancel/Save buttons stick out of the main page container on mobile
+- [ ] **Dark mode colors** - Form uses hardcoded light colors (`bg-white`, `text-gray-700`, `border-gray-300`) instead of theme-aware classes (`bg-card`, `text-foreground`, `border-border`)
+- [ ] **Body parts labels invisible** - Checkbox labels use `text-sm` without `text-foreground`, making them invisible in dark mode
+
+**Files**: `src/components/ExerciseForm.tsx`
+
+#### 17.2 ActionBar Search UX
+- [ ] **No auto-scroll on search open** - When clicking search icon, keyboard appears but viewport doesn't scroll to show the search input
+- [ ] **No auto-focus scroll** - User has to manually scroll to see the search input after clicking
+
+**Files**: `src/components/action-bar.tsx`
+
+#### 17.3 iOS Zoom on Input Focus
+- [ ] **Group rename input triggers zoom** - Input has `text-sm` (14px) which triggers iOS Safari auto-zoom on focus
+- [ ] **Zoom persists after editing** - After accepting rename, viewport stays zoomed in requiring manual zoom-out
+- [ ] **Fix**: Change input font-size to minimum 16px (`text-base`) to prevent iOS zoom
+
+**Files**: `src/components/SequenceBuilder.tsx` (SortableGroupItem component, line ~352)
+
+**iOS Zoom Prevention Rule**: All `<input>` and `<textarea>` elements must use `text-base` (16px) or larger font size to prevent Safari's auto-zoom behavior on focus.
+
+---
+
+### Phase 18: Execution Navigation & Runtime Editing
+
+Improve workout execution UX with visual navigation, undo capability, and runtime exercise configuration changes.
+
+**User Stories:**
+1. "I accidentally clicked 'Done' - let me go back and redo that exercise"
+2. "I want to change the rep count while doing the exercise using a wheel"
+3. "I misconfigured an exercise (10s instead of 10x) - let me fix all occurrences"
+
+#### 18.1 Segmented Progress Bar with Navigation
+
+Replace the simple progress bar with a tappable segmented indicator showing exercise status.
+
+**Visual Design:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  [←]  [🟢][🟢][🟢][⬜][🔵▼][⬜][⬜][⬜][⬜][⬜]  [→]        │
+│        1   2   3   4   5    6   7   8   9  10               │
+│             ↑ tappable segments                              │
+└─────────────────────────────────────────────────────────────┘
+
+Legend:
+🟢 = completed (green)
+⬜ = skipped (gray)
+🔵▼ = current position (blue with indicator arrow)
+○ = pending (outline only)
+```
+
+**New Component**: `SegmentedProgressBar`
+- [ ] **File**: `src/components/ui/segmented-progress.tsx`
+- [ ] **Props**: `exercises`, `completedExercises`, `currentIndex`, `onNavigate`
+- [ ] **Segment Rendering** - Map exercises to colored segments based on completion status
+- [ ] **Tappable Segments** - Click/tap any segment to navigate to that exercise
+- [ ] **Arrow Buttons** - Left/right arrows at ends for explicit navigation
+- [ ] **Current Position Marker** - Blue indicator arrow pointing at current exercise
+- [ ] **Responsive Sizing** - Segments shrink on mobile for long sequences (min 8px width)
+- [ ] **Overflow Handling** - Horizontal scroll for very long sequences (>20 exercises)
+
+**State Changes in `execute.tsx`**:
+- [ ] **Add `viewingIndex`** - Separate from `currentIndex` to allow reviewing past exercises
+- [ ] **Add `isReviewing` mode** - Boolean flag for review vs execution mode
+- [ ] **Review Mode Behavior**:
+  - Timer paused when reviewing
+  - Show exercise details but grayed out controls
+  - "Resume" button to return to `currentIndex`
+  - "Redo" button to reset exercise and continue from there
+- [ ] **Navigation Handler** - `handleNavigate(targetIndex)`:
+  - If `targetIndex < currentIndex`: Enter review mode
+  - If `targetIndex === currentIndex`: Exit review mode
+  - If `targetIndex > currentIndex`: Not allowed (can't skip ahead)
+
+**Review Mode UI**:
+- [ ] **Dimmed Overlay** - 50% opacity overlay on main content
+- [ ] **Review Banner** - "Reviewing Exercise 3 of 10" with Resume/Redo buttons
+- [ ] **Exercise Summary** - Show recorded value, time spent, modifiers used
+- [ ] **Redo Confirmation** - Dialog: "Redo this exercise? Previous result will be discarded."
+
+**Redo Logic**:
+- [ ] **Remove from completedExercises** - Pop all exercises from target index onwards
+- [ ] **Reset state** - `setCurrentIndex(targetIndex)`, `setTimeElapsed(0)`, `setActualValue(targetValue)`
+- [ ] **Exit review mode** - `setIsReviewing(false)`, `setViewingIndex(null)`
+
+---
+
+#### 18.2 Wheel for Runtime Value Changes
+
+Replace +/- buttons with wheel component during exercise execution.
+
+**Current Implementation** (lines 616-654 in execute.tsx):
+```tsx
+<Button onClick={() => setActualValue(Math.max(0, actualValue - 1))}>
+  <Minus />
+</Button>
+<div>{actualValue}</div>
+<Button onClick={() => setActualValue(actualValue + 1)}>
+  <Plus />
+</Button>
+```
+
+**New Implementation**:
+- [ ] **Import WheelNumberInput** - From `@/components/ui/wheel-number-input`
+- [ ] **Replace +/- buttons with wheel**:
+```tsx
+<WheelNumberInput
+  value={actualValue}
+  onChange={setActualValue}
+  min={1}
+  max={measure === 'time' ? 300 : 100}
+  step={measure === 'time' ? 5 : 1}
+/>
+```
+- [ ] **Conditional Step Size**:
+  - Time-based: step=5 (5s increments for easier scrolling)
+  - Rep-based: step=1 (precise rep counting)
+- [ ] **Larger Display** - Increase wheel height for execution context (h-48 vs h-32)
+- [ ] **Touch-Friendly Sizing** - Minimum 48px touch targets
+
+**Bonus: Measure Type Switcher**:
+- [ ] **Add WheelSelect for measure** - Allow switching time ↔ reps during exercise
+- [ ] **Side-by-side wheels layout**:
+```
+┌────────────────────────────────┐
+│   [value wheel] [measure wheel] │
+│       30           time          │
+│       31           reps   ←      │
+│       32                         │
+└────────────────────────────────┘
+```
+- [ ] **Confirmation on change** - "Change from 10 seconds to 10 reps?"
+
+---
+
+#### 18.3 Bulk Exercise Configuration Updates
+
+When changing exercise config during execution, offer options to apply to multiple occurrences.
+
+**Trigger Points**:
+1. User changes measure type (time ↔ reps) during execution
+2. User significantly changes target value (+/- 50% from original)
+3. User taps "Edit Config" button (new button to add)
+
+**New Component**: `ExerciseConfigUpdateDialog`
+- [ ] **File**: `src/components/exercise-config-update-dialog.tsx`
+- [ ] **Props**: `exercise`, `oldConfig`, `newConfig`, `sequence`, `onApply`, `onCancel`
+
+**Matching Logic** (find similar exercises):
+```typescript
+type UpdateScope =
+  | 'this-only'           // Just this occurrence
+  | 'same-group'          // All in same group (if grouped)
+  | 'all-in-sequence'     // All occurrences of this exercise in sequence
+  | 'same-config'         // All with identical config (e.g., all "10s push-ups")
+
+function findMatchingExercises(
+  exercises: SequenceExercise[],
+  targetExercise: SequenceExercise,
+  scope: UpdateScope,
+  groups?: ExerciseGroup[]
+): number[] // Returns indices to update
+```
+
+**Dialog UI**:
+```
+┌─────────────────────────────────────────────────────────┐
+│  Update Exercise Configuration                          │
+│                                                         │
+│  Changing: Push-up 10s → Push-up 10x                    │
+│                                                         │
+│  ○ This occurrence only                                 │
+│  ○ All in group "Morning Set" (3 matches)    ← if grouped│
+│  ○ All "Push-up" in sequence (5 total)                  │
+│  ○ All with same config "10s" (2 matches)               │
+│                                                         │
+│  ─────────────────────────────────────────────          │
+│  □ Save changes permanently to sequence                 │
+│                                                         │
+│  [Cancel]                              [Apply]          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Implementation Steps**:
+- [ ] **Match Counter** - Show count for each option (e.g., "3 matches")
+- [ ] **Preview List** - Expandable list showing which exercises will be affected
+- [ ] **Radio Selection** - Single choice from scope options
+- [ ] **Persistence Checkbox** - "Save changes permanently to sequence"
+- [ ] **Apply Handler**:
+  - Update `workoutExercises` state for session changes
+  - If persist checked: call `updateSequence.mutate()` with modified exercises
+  - Show toast: "Updated X exercises"
+
+**State Updates**:
+- [ ] **Add `pendingConfigChange`** - Track when config change is in progress
+- [ ] **Add `showConfigDialog`** - Boolean to show/hide dialog
+- [ ] **Update workoutExercises** - Modify multiple indices in array
+
+**Edge Cases**:
+- [ ] **Already completed exercises** - Only update future occurrences, not completed ones
+- [ ] **Group integrity** - If updating group members, maintain group structure
+- [ ] **Undo support** - Store previous state for potential undo
+
+---
+
+#### 18.4 Integration & Polish
+
+**Progress Bar Integration**:
+- [ ] **Replace Progress component** - Swap `<Progress>` with `<SegmentedProgressBar>`
+- [ ] **Header layout update** - Move progress bar below header, add arrow buttons
+- [ ] **Animation** - Smooth transitions when segments change color
+
+**Wheel Integration**:
+- [ ] **Conditional rendering** - Show wheel only for rep-based exercises (time uses countdown)
+- [ ] **Layout adjustment** - Center wheel in main content area
+- [ ] **Visual feedback** - Highlight wheel when value differs from target
+
+**Config Dialog Integration**:
+- [ ] **Trigger button** - Add "Edit" button near exercise name during execution
+- [ ] **Auto-trigger** - Optionally trigger when measure type changes
+- [ ] **Keyboard support** - Escape to cancel, Enter to apply
+
+**Accessibility**:
+- [ ] **ARIA labels** - All interactive elements have proper labels
+- [ ] **Focus management** - Focus moves logically through components
+- [ ] **Screen reader** - Announce navigation changes and config updates
+
+---
+
+#### 18.5 Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/routes/sequences/$id/execute.tsx` | Add viewingIndex, isReviewing state; replace Progress with SegmentedProgressBar; replace +/- with wheel; add config edit trigger |
+| `src/components/ui/segmented-progress.tsx` | NEW - Segmented progress bar component |
+| `src/components/exercise-config-update-dialog.tsx` | NEW - Bulk config update dialog |
+| `src/components/ui/wheel-number-input.tsx` | Add size variant prop for larger execution display |
+| `src/db/types.ts` | Add UpdateScope type if needed |
+
+---
+
+#### 18.7 Insert Position Choice
+
+Add a third wheel to the exercise picker during execution for choosing insert position.
+
+**UI Design:**
+```
+┌────────────────────────────────────────────────┐
+│  Add Exercise                              ✕   │
+│  Select an exercise to add                     │
+│                                                │
+│   [29]      [reps]      [before]               │
+│   [30]      [sec ]      [after ] ←             │
+│   [31]      [    ]      [      ]               │
+│                                                │
+│  Value      Unit       Position                │
+└────────────────────────────────────────────────┘
+```
+
+- [ ] **Add position wheel** - Third `WheelSelect` with options: "before", "after"
+- [ ] **Default to "after"** - Preserves existing behavior
+- [ ] **Dynamic description** - Update text: "Select an exercise to add {before/after} the current one"
+- [ ] **Update insert logic** - `insertIndex = position === 'before' ? currentIndex : currentIndex + 1`
+- [ ] **Pass position to handler** - Update `handleExerciseSelected` signature to include position
+
+**Files**: `src/components/exercise-picker-drawer.tsx`, `src/routes/sequences/$id/execute.tsx`
+
+---
+
+#### 18.8 Implementation Order
+
+1. **Segmented Progress Bar** (Feature 1)
+   - Create component with basic rendering
+   - Add tap navigation
+   - Add arrow buttons
+   - Integrate review mode
+
+2. **Wheel for Values** (Feature 2)
+   - Replace +/- buttons
+   - Add measure type switcher (optional)
+   - Polish touch interactions
+
+3. **Bulk Config Updates** (Feature 3)
+   - Create matching logic
+   - Build dialog component
+   - Add persistence option
+   - Integrate with execution flow
+
+---
+
 ## Notes
 
 - All user data is scoped by `userId` for privacy
