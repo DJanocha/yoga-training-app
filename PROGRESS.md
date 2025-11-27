@@ -869,6 +869,140 @@ Add a third wheel to the exercise picker during execution for choosing insert po
 
 ---
 
+### Phase 19: Unified Group & Exercise Selection
+
+Redesign selection system to treat groups and exercises uniformly, enabling more powerful batch operations.
+
+#### 19.1 Unified Selection Model
+
+**Core Concept:** All actions work on "effective selection" = all exercises (flattened from groups + standalone)
+
+```
+Select anything (groups, exercises, mix)
+     ↓
+Effective selection = selectedGroups.flatMap(g => g.exercises) + selectedExercises
+     ↓
+All actions apply to effective selection:
+- Configure → applies to all exercises
+- Merge → creates new group containing all
+- Delete → removes all (groups dissolve, exercises removed)
+- Clone → duplicates all
+```
+
+- [ ] **Enable group selection** - Allow selecting groups in addition to exercises
+- [ ] **Visual selection state** - Show selected state on group cards (border highlight, checkbox)
+- [ ] **Mixed selection** - Support selecting groups + standalone exercises together
+- [ ] **Selection count** - Badge shows total exercise count (flattened), not item count
+
+#### 19.2 Batch Operations on Groups
+
+- [ ] **Batch configure with groups** - Configure selection applies to all exercises inside selected groups
+- [ ] **Flatten logic** - `getEffectiveSelection(selectedIds, groups, exercises)` returns exercise IDs
+- [ ] **Merge mixed selection** - Merge groups + exercises into new group (name = first group name or first exercise name)
+- [ ] **Clone mixed selection** - Duplicate all selected (groups stay as groups, exercises stay as exercises)
+
+#### 19.3 Delete Group Action
+
+Currently missing - can only ungroup, not delete group with its exercises.
+
+- [ ] **Add delete group button** - Place next to clone/ungroup buttons in group header
+- [ ] **Confirmation dialog** - "Delete group and X exercises?"
+- [ ] **Batch delete** - When groups selected, delete removes groups + all their exercises
+
+#### 19.4 Group Header Actions
+
+Current: `[Clone] [Ungroup]`
+New: `[Clone] [Ungroup] [Delete]`
+
+```
+┌─────────────────────────────────────────────────────┐
+│  ⋮⋮  ∨  Morning Set    [3]    [📋] [⛓️‍💥] [🗑️]     │
+│         ↑ collapse      count  clone ungroup delete │
+└─────────────────────────────────────────────────────┘
+```
+
+- [ ] **Delete button** - Trash icon, red on hover
+- [ ] **Confirmation** - Alert dialog before deleting
+
+**Files**: `src/components/SequenceBuilder.tsx`
+
+---
+
+### Phase 20: Default Exercise Configuration
+
+Add sequence-level default config so new exercises inherit sensible defaults instead of always 30s.
+
+#### 20.1 Use Case
+
+| Sequence Type | Ideal Default |
+|---------------|---------------|
+| Yoga/Stretching | 60s (holds) |
+| Calisthenics | 10x (reps) |
+| HIIT/Cardio | 30s (intervals) |
+| Strength | 5x (heavy reps) |
+
+Currently all new exercises default to 30s regardless of sequence type.
+
+#### 20.2 Schema Changes
+
+Add to sequences table:
+```typescript
+defaultExerciseConfig: {
+  measure: 'time' | 'repetitions'
+  targetValue: number
+}
+```
+
+- [ ] **Add schema field** - `defaultExerciseConfig` JSONB column in sequences table
+- [ ] **Migration** - Generate and apply Drizzle migration
+- [ ] **Default value** - `{ measure: 'time', targetValue: 30 }` for backwards compatibility
+- [ ] **Zod schema** - Add to `refinedSequenceSchema`
+
+#### 20.3 UI in Sequence Details
+
+Place under Goal Type in Details tab:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Sequence Details                                   │
+│                                                     │
+│  Name: [Cali v1                    ]                │
+│  Description: [Optional description ]               │
+│                                                     │
+│  Goal Type                                          │
+│  [Strict (exact target)] [Elastic (flexible)]       │
+│                                                     │
+│  Default Exercise Config                            │
+│  New exercises will use these defaults              │
+│                                                     │
+│       [10]        [reps]                            │
+│       [  ]        [sec ]                            │
+│                                                     │
+│      Value         Unit                             │
+│                                                     │
+│  ▼ Available Modifiers                              │
+└─────────────────────────────────────────────────────┘
+```
+
+- [ ] **Add wheels to Details tab** - Value + Unit wheels under Goal Type
+- [ ] **Label** - "Default Exercise Config" with helper text
+- [ ] **Save with sequence** - Include in update mutation
+
+#### 20.4 Apply Defaults
+
+- [ ] **Exercise picker uses defaults** - Initialize wheels with `sequence.defaultExerciseConfig`
+- [ ] **Fallback** - If no default set, use `{ measure: 'time', targetValue: 30 }`
+- [ ] **Add Break exception** - Breaks always default to 30s time regardless of sequence default
+
+**Files**:
+- `src/db/schema.ts` - Add column
+- `src/db/types.ts` - Add type
+- `src/components/SequenceBuilder.tsx` - Details tab UI
+- `src/components/exercise-picker-drawer.tsx` - Use defaults
+- `src/validators/api/sequences.ts` - Update validators
+
+---
+
 ## Notes
 
 - All user data is scoped by `userId` for privacy
