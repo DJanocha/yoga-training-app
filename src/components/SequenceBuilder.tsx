@@ -37,7 +37,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +80,7 @@ import type {
 } from "@/db/types";
 import type { Modifier } from "@/validators/entities";
 import { cn } from "@/lib/utils";
-import { UnifiedModeDock, type DockMode } from "@/components/ui/unified-mode-dock";
+import { UnifiedModeDock, type DockMode, type BatchConfigValues } from "@/components/ui/unified-mode-dock";
 import { EmptyState } from "@/components/empty-state";
 
 type SequenceBuilderProps = {
@@ -618,16 +617,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [dockMode, setDockMode] = useState<DockMode>(null);
   const selectionMode = dockMode === "select";
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [isBatchConfigOpen, setIsBatchConfigOpen] = useState(false);
-
-  // Batch config values
-  const [batchMeasure, setBatchMeasure] = useState<MeasureType>("time");
-  const [batchTargetValue, setBatchTargetValue] = useState<number | undefined>(
-    30
-  );
-  const [batchModifiers, setBatchModifiers] = useState<
-    ExerciseModifierAssignment[]
-  >([]);
 
   // Collapsed groups state
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -920,38 +909,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     },
     []
   );
-
-  // Apply batch config to selected exercises (uses effective selection for groups)
-  const applyBatchConfig = useCallback(() => {
-    if (selectedItems.size === 0) return;
-
-    const effectiveIds = getEffectiveSelection();
-
-    setExercises((prev) =>
-      prev.map((item) =>
-        effectiveIds.has(item.id) && item.exerciseId !== "break"
-          ? {
-              ...item,
-              config: {
-                measure: batchMeasure,
-                targetValue: batchTargetValue,
-              },
-              modifiers:
-                batchModifiers.length > 0 ? [...batchModifiers] : undefined,
-            }
-          : item
-      )
-    );
-
-    // Clear selection and exit modes
-    setSelectedItems(new Set());
-    setDockMode(null);
-    setIsBatchConfigOpen(false);
-    // Reset batch config
-    setBatchMeasure("time");
-    setBatchTargetValue(30);
-    setBatchModifiers([]);
-  }, [selectedItems, batchMeasure, batchTargetValue, batchModifiers, getEffectiveSelection]);
 
   // Toggle item selection (groups or ungrouped exercises)
   const toggleItemSelection = useCallback(
@@ -1585,16 +1542,46 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
           activeMode={dockMode}
           onModeChange={(mode) => {
             setDockMode(mode);
-            if (mode !== "select") {
+            if (mode !== "select" && mode !== "configure") {
               setSelectedItems(new Set());
             }
           }}
           selectedCount={effectiveSelectionCount}
           onMerge={mergeSelectedIntoGroup}
           onClone={batchCloneSelected}
-          onConfigure={() => setIsBatchConfigOpen(true)}
           onDelete={batchDeleteSelected}
           canMerge={effectiveSelectionCount >= 2}
+          // Batch configure via dock content
+          availableModifiers={availableModifiers.map((modId) => {
+            const mod = allModifiers?.find((m) => m.id === modId);
+            return mod ? {
+              id: mod.id,
+              name: mod.name,
+              value: mod.value,
+              unit: mod.unit,
+            } : { id: modId, name: `Modifier #${modId}` };
+          })}
+          onBatchConfigure={(config: BatchConfigValues) => {
+            if (selectedItems.size === 0) return;
+            const effectiveIds = getEffectiveSelection();
+            setExercises((prev) =>
+              prev.map((item) =>
+                effectiveIds.has(item.id) && item.exerciseId !== "break"
+                  ? {
+                      ...item,
+                      config: {
+                        measure: config.measure,
+                        targetValue: config.targetValue,
+                      },
+                      modifiers: config.modifiers.length > 0 ? [...config.modifiers] : undefined,
+                    }
+                  : item
+              )
+            );
+            // Clear selection and exit modes
+            setSelectedItems(new Set());
+            setDockMode(null);
+          }}
           exercises={allExercises?.map((ex) => ({
             id: ex.id,
             name: ex.name,
@@ -1944,181 +1931,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         </SheetContent>
       </Sheet>
 
-      {/* Batch Configure sheet */}
-      <Sheet open={isBatchConfigOpen} onOpenChange={setIsBatchConfigOpen}>
-        <SheetContent side="bottom" className="h-auto">
-          <SheetHeader>
-            <SheetTitle>
-              Batch Configure {effectiveSelectionCount} Exercises
-            </SheetTitle>
-            <SheetDescription>
-              Set measure, target value, and modifiers for all selected
-              exercises
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-4 space-y-4">
-            <div>
-              <Label>Measure</Label>
-              <ToggleGroup
-                type="single"
-                value={batchMeasure}
-                onValueChange={(value: MeasureType) => {
-                  if (value) setBatchMeasure(value);
-                }}
-                className="mt-1.5 justify-start"
-              >
-                <ToggleGroupItem value="time" className="flex-1">
-                  Time
-                </ToggleGroupItem>
-                <ToggleGroupItem value="repetitions" className="flex-1">
-                  Reps
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            <div>
-              <Label>
-                Target Value ({batchMeasure === "time" ? "seconds" : "reps"})
-              </Label>
-              <Input
-                type="number"
-                min={1}
-                value={batchTargetValue || ""}
-                onChange={(e) =>
-                  setBatchTargetValue(parseInt(e.target.value, 10) || undefined)
-                }
-                className="mt-1.5"
-              />
-            </div>
-
-            {/* Batch modifiers assignment */}
-            {availableModifiers.length > 0 && (
-              <div className="border-t pt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Package2 className="h-4 w-4 text-muted-foreground" />
-                  <Label>Assign Modifiers</Label>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Tap each modifier to cycle: Off → Neutral (○) → Easier (↓) →
-                  Harder (↑) → Off
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {availableModifiers.map((modifierId) => {
-                    const modifier = getModifierById(modifierId);
-                    if (!modifier) return null;
-
-                    const assignment = batchModifiers.find(
-                      (m) => m.modifierId === modifierId
-                    );
-                    const isAssigned = !!assignment;
-                    const displayText = [
-                      modifier.name,
-                      modifier.value !== null && modifier.value !== undefined
-                        ? modifier.value
-                        : null,
-                      modifier.unit && modifier.unit !== "none"
-                        ? modifier.unit
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" ");
-
-                    // Cycle effect: off → neutral → easier → harder → off
-                    const cycleEffect = () => {
-                      if (!isAssigned) {
-                        // Off → Neutral
-                        setBatchModifiers([
-                          ...batchModifiers,
-                          { modifierId, effect: "neutral" },
-                        ]);
-                      } else if (assignment.effect === "neutral") {
-                        // Neutral → Easier
-                        setBatchModifiers(
-                          batchModifiers.map((m) =>
-                            m.modifierId === modifierId
-                              ? { ...m, effect: "easier" }
-                              : m
-                          )
-                        );
-                      } else if (assignment.effect === "easier") {
-                        // Easier → Harder
-                        setBatchModifiers(
-                          batchModifiers.map((m) =>
-                            m.modifierId === modifierId
-                              ? { ...m, effect: "harder" }
-                              : m
-                          )
-                        );
-                      } else {
-                        // Harder → Off
-                        setBatchModifiers(
-                          batchModifiers.filter(
-                            (m) => m.modifierId !== modifierId
-                          )
-                        );
-                      }
-                    };
-
-                    // Get badge styles based on state
-                    const getBadgeStyles = () => {
-                      if (!isAssigned) {
-                        return "ring-2 ring-gray-300 text-gray-600 bg-gray-50 hover:bg-gray-100";
-                      } else if (assignment.effect === "neutral") {
-                        return "ring-2 ring-blue-500 text-blue-700 bg-blue-50 hover:bg-blue-100";
-                      } else if (assignment.effect === "easier") {
-                        return "ring-2 ring-green-500 text-green-700 bg-green-50 hover:bg-green-100";
-                      } else {
-                        return "ring-2 ring-red-500 text-red-700 bg-red-50 hover:bg-red-100";
-                      }
-                    };
-
-                    // Get icon based on state
-                    const getIcon = () => {
-                      if (!isAssigned) return "";
-                      if (assignment.effect === "neutral") return " ○";
-                      if (assignment.effect === "easier") return " ↓";
-                      return " ↑";
-                    };
-
-                    return (
-                      <button
-                        key={modifierId}
-                        type="button"
-                        onClick={cycleEffect}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${getBadgeStyles()}`}
-                      >
-                        {displayText}
-                        {getIcon()}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2 pt-2">
-              <Button
-                className="flex-1"
-                onClick={applyBatchConfig}
-                disabled={effectiveSelectionCount === 0}
-              >
-                Apply to {effectiveSelectionCount} Selected
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsBatchConfigOpen(false);
-                  setBatchMeasure("time");
-                  setBatchTargetValue(30);
-                  setBatchModifiers([]);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Batch Configure - now handled via dock content */}
     </div>
   );
 }

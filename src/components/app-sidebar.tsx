@@ -124,9 +124,12 @@ function DesktopSidebar() {
 function MobileTabBar() {
   const location = useLocation()
 
-  // Hide tab bar during exercise execution to prevent accidental navigation
+  // Hide tab bar during focused task modes to prevent accidental navigation
+  // - /execute: workout execution
+  // - /edit: sequence builder (has its own dock)
   const isExecuting = location.pathname.includes('/execute')
-  if (isExecuting) return null
+  const isEditing = location.pathname.includes('/edit')
+  if (isExecuting || isEditing) return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t bg-background md:hidden">

@@ -1,14 +1,11 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-import { motion, useReducedMotion, AnimatePresence, type Variants } from "framer-motion"
-import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import {
   Square,
   CheckSquare,
   Plus,
   HelpCircle,
-  Menu,
   Link,
   Copy,
   Settings,
@@ -20,10 +17,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { WheelNumberInput } from "@/components/ui/wheel-number-input"
 import { WheelSelect } from "@/components/ui/wheel-select"
-import type { MeasureType } from "@/db/types"
+import { Dock, type DockPrimaryAction } from "./dock"
+import { Backpack, type BackpackItem, type ActiveItem } from "@/components/ui/backpack"
+import type { MeasureType, ModifierEffect } from "@/db/types"
 
 // Mode types for the dock
-export type DockMode = "select" | "add" | "help" | null
+export type DockMode = "select" | "add" | "help" | "configure" | null
 
 // Exercise item type for the picker
 export type ExerciseItem = {
@@ -32,10 +31,31 @@ export type ExerciseItem = {
   description?: string | null
 }
 
+// Modifier item for batch configure
+export type ModifierItem = {
+  id: number
+  name: string
+  value?: number | null
+  unit?: string | null
+}
+
+// Modifier assignment in batch config
+export type ModifierAssignment = {
+  modifierId: number
+  effect: ModifierEffect
+}
+
 // Add exercise callback config
 export type AddExerciseConfig = {
   targetValue: number
   measure: MeasureType
+}
+
+// Batch configure callback config
+export type BatchConfigValues = {
+  measure: MeasureType
+  targetValue: number
+  modifiers: ModifierAssignment[]
 }
 
 export type UnifiedModeDockProps = {
@@ -47,9 +67,12 @@ export type UnifiedModeDockProps = {
   selectedCount: number
   onMerge?: () => void
   onClone?: () => void
-  onConfigure?: () => void
   onDelete?: () => void
   canMerge?: boolean
+
+  // Batch configure props (replaces onConfigure callback)
+  availableModifiers?: ModifierItem[]
+  onBatchConfigure?: (config: BatchConfigValues) => void
 
   // Add mode props
   exercises?: ExerciseItem[]
@@ -65,56 +88,42 @@ export type UnifiedModeDockProps = {
     tips?: string[]
   }
 
-  // Menu mode (optional future expansion)
-  menuItems?: Array<{
-    id: string
-    label: string
-    icon: React.ReactNode
-    onClick: () => void
-  }>
-  showMenuButton?: boolean
-
   // Config
   className?: string
   enableAnimations?: boolean
 }
 
-export function UnifiedModeDock({
-  activeMode,
-  onModeChange,
-  selectedCount,
-  onMerge,
-  onClone,
-  onConfigure,
-  onDelete,
-  canMerge = false,
-  exercises = [],
+// ============================================================================
+// Content Components (rendered in dock's content area)
+// ============================================================================
+
+type AddContentProps = {
+  exercises: ExerciseItem[]
+  onExerciseAdd?: (exerciseId: number, config: AddExerciseConfig) => void
+  onBreakAdd?: (config: AddExerciseConfig) => void
+  showBreakOption: boolean
+  defaultConfig: AddExerciseConfig
+  onClose: () => void
+}
+
+function AddContent({
+  exercises,
   onExerciseAdd,
   onBreakAdd,
-  showBreakOption = true,
-  defaultConfig = { targetValue: 30, measure: "time" },
-  helpContent,
-  menuItems,
-  showMenuButton = false,
-  className,
-  enableAnimations = true,
-}: UnifiedModeDockProps) {
-  const shouldReduceMotion = useReducedMotion()
-  const dockRef = useRef<HTMLDivElement>(null)
-
-  // Add mode state
+  showBreakOption,
+  defaultConfig,
+  onClose,
+}: AddContentProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [targetValue, setTargetValue] = useState(defaultConfig.targetValue)
   const [measure, setMeasure] = useState<MeasureType>(defaultConfig.measure)
 
-  // Reset add mode state when mode changes
+  // Reset state when mounted
   useEffect(() => {
-    if (activeMode === "add") {
-      setSearchQuery("")
-      setTargetValue(defaultConfig.targetValue)
-      setMeasure(defaultConfig.measure)
-    }
-  }, [activeMode, defaultConfig.targetValue, defaultConfig.measure])
+    setSearchQuery("")
+    setTargetValue(defaultConfig.targetValue)
+    setMeasure(defaultConfig.measure)
+  }, [defaultConfig.targetValue, defaultConfig.measure])
 
   // Filter exercises by search
   const filteredExercises = useMemo(() => {
@@ -126,6 +135,285 @@ export function UnifiedModeDock({
     )
   }, [exercises, searchQuery])
 
+  const handleExerciseClick = (exerciseId: number) => {
+    if (onExerciseAdd) {
+      onExerciseAdd(exerciseId, { targetValue, measure })
+      onClose()
+    }
+  }
+
+  const handleBreakClick = () => {
+    if (onBreakAdd) {
+      onBreakAdd({ targetValue: 10, measure: "time" })
+      onClose()
+    }
+  }
+
+  return (
+    <>
+      {/* Search */}
+      <div className="p-3 border-b">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search exercises..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 text-base h-10"
+          />
+        </div>
+      </div>
+
+      {/* Wheels for config */}
+      <div className="flex items-center justify-center gap-4 p-3 border-b bg-muted/30">
+        <div className="flex flex-col items-center gap-1">
+          <WheelNumberInput
+            value={targetValue}
+            onChange={setTargetValue}
+            min={1}
+            max={999}
+            size="default"
+          />
+          <span className="text-xs text-muted-foreground">Value</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <WheelSelect
+            value={measure}
+            onChange={setMeasure}
+            options={["repetitions", "time"] as const}
+            formatOption={(opt) => (opt === "repetitions" ? "reps" : "sec")}
+            size="default"
+          />
+          <span className="text-xs text-muted-foreground">Unit</span>
+        </div>
+      </div>
+
+      {/* Exercise List */}
+      <div className="max-h-[240px] overflow-y-auto">
+        {/* Break option */}
+        {showBreakOption && onBreakAdd && !searchQuery && (
+          <button
+            type="button"
+            onClick={handleBreakClick}
+            className="w-full flex items-center gap-3 p-3 text-left bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors border-b border-blue-200 dark:border-blue-900"
+          >
+            <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <Coffee className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-blue-900 dark:text-blue-100">Break</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">10s rest</p>
+            </div>
+            <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+          </button>
+        )}
+
+        {/* Exercises */}
+        {filteredExercises.length > 0 ? (
+          filteredExercises.map((exercise) => (
+            <button
+              key={exercise.id}
+              type="button"
+              onClick={() => handleExerciseClick(exercise.id)}
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-b-0"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{exercise.name}</p>
+                {exercise.description && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {exercise.description}
+                  </p>
+                )}
+              </div>
+              <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+            </button>
+          ))
+        ) : (
+          <div className="p-6 text-center text-muted-foreground text-sm">
+            {searchQuery ? "No exercises found" : "No exercises available"}
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+type ConfigureContentProps = {
+  selectedCount: number
+  modifiers: ModifierItem[]
+  onApply: (config: BatchConfigValues) => void
+  onClose: () => void
+}
+
+function ConfigureContent({
+  selectedCount,
+  modifiers,
+  onApply,
+  onClose,
+}: ConfigureContentProps) {
+  const [measure, setMeasure] = useState<MeasureType>("time")
+  const [targetValue, setTargetValue] = useState(30)
+  const [activeModifiers, setActiveModifiers] = useState<ActiveItem[]>([])
+
+  // Reset state when mounted
+  useEffect(() => {
+    setMeasure("time")
+    setTargetValue(30)
+    setActiveModifiers([])
+  }, [])
+
+  const handleApply = () => {
+    // Convert BackpackEffect to ModifierEffect
+    const modifierAssignments: ModifierAssignment[] = activeModifiers
+      .filter((a) => a.effect !== null)
+      .map((a) => ({
+        modifierId: a.id as number,
+        effect: a.effect as ModifierEffect,
+      }))
+
+    onApply({ measure, targetValue, modifiers: modifierAssignments })
+    onClose()
+  }
+
+  // Convert ModifierItem[] to BackpackItem[]
+  const backpackItems: BackpackItem[] = modifiers.map((m) => {
+    const displayName = [
+      m.name,
+      m.value !== null && m.value !== undefined ? m.value : null,
+      m.unit && m.unit !== "none" ? m.unit : null,
+    ]
+      .filter(Boolean)
+      .join(" ")
+
+    return {
+      id: m.id,
+      name: displayName,
+    }
+  })
+
+  return (
+    <>
+      {/* Header */}
+      <div className="px-4 pt-3 pb-2 border-b">
+        <p className="font-medium text-sm">
+          Configure {selectedCount} exercise{selectedCount !== 1 ? "s" : ""}
+        </p>
+      </div>
+
+      {/* Wheels for measure & target */}
+      <div className="flex items-center justify-center gap-4 p-3 border-b bg-muted/30">
+        <div className="flex flex-col items-center gap-1">
+          <WheelNumberInput
+            value={targetValue}
+            onChange={setTargetValue}
+            min={1}
+            max={999}
+            size="default"
+          />
+          <span className="text-xs text-muted-foreground">Value</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <WheelSelect
+            value={measure}
+            onChange={setMeasure}
+            options={["repetitions", "time"] as const}
+            formatOption={(opt) => (opt === "repetitions" ? "reps" : "sec")}
+            size="default"
+          />
+          <span className="text-xs text-muted-foreground">Unit</span>
+        </div>
+      </div>
+
+      {/* Modifiers section using Backpack component */}
+      {modifiers.length > 0 && (
+        <div className="p-3 border-b">
+          <Backpack.Root
+            items={backpackItems}
+            value={activeModifiers}
+            onChange={setActiveModifiers}
+            cols={3}
+            rows={1}
+            editable
+          >
+            <Backpack.Label>Mods</Backpack.Label>
+            <Backpack.Container theme="dark">
+              <Backpack.Grid>
+                {backpackItems.map((item) => (
+                  <Backpack.Slot key={item.id} item={item} size="sm">
+                    <Backpack.ItemContent item={item} />
+                  </Backpack.Slot>
+                ))}
+              </Backpack.Grid>
+            </Backpack.Container>
+          </Backpack.Root>
+        </div>
+      )}
+
+      {/* Apply button */}
+      <div className="p-3">
+        <button
+          type="button"
+          onClick={handleApply}
+          disabled={selectedCount === 0}
+          className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Apply to {selectedCount} Selected
+        </button>
+      </div>
+    </>
+  )
+}
+
+type HelpContentProps = {
+  helpContent: {
+    title: string
+    description: string
+    tips?: string[]
+  }
+}
+
+function HelpContent({ helpContent }: HelpContentProps) {
+  return (
+    <div className="p-4">
+      <h3 className="font-semibold text-sm mb-2">{helpContent.title}</h3>
+      <p className="text-sm text-muted-foreground mb-3">{helpContent.description}</p>
+      {helpContent.tips && helpContent.tips.length > 0 && (
+        <ul className="space-y-1.5">
+          {helpContent.tips.map((tip, index) => (
+            <li key={index} className="text-xs text-muted-foreground flex gap-2">
+              <span className="text-primary">•</span>
+              {tip}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
+export function UnifiedModeDock({
+  activeMode,
+  onModeChange,
+  selectedCount,
+  onMerge,
+  onClone,
+  onDelete,
+  canMerge = false,
+  availableModifiers = [],
+  onBatchConfigure,
+  exercises = [],
+  onExerciseAdd,
+  onBreakAdd,
+  showBreakOption = true,
+  defaultConfig = { targetValue: 30, measure: "time" },
+  helpContent,
+  className,
+  enableAnimations = true,
+}: UnifiedModeDockProps) {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -141,405 +429,123 @@ export function UnifiedModeDock({
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [activeMode, selectedCount, onDelete, onModeChange])
 
-  // Haptic feedback
-  const triggerHaptic = useCallback(() => {
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(10)
-    }
-  }, [])
+  const handleClose = useCallback(() => {
+    onModeChange(null)
+  }, [onModeChange])
 
-  const handleButtonClick = useCallback(
-    (callback: () => void) => {
-      triggerHaptic()
-      callback()
-    },
-    [triggerHaptic]
-  )
+  // Build actions
+  const actions = useMemo((): DockPrimaryAction[] => {
+    // Whether actions should be disabled (no selection)
+    const noSelection = selectedCount === 0
 
-  const handleModeToggle = useCallback(
-    (mode: DockMode) => {
-      triggerHaptic()
-      onModeChange(activeMode === mode ? null : mode)
-    },
-    [activeMode, onModeChange, triggerHaptic]
-  )
+    // Build selection secondary actions - always show but disable when no selection
+    // Configure is a secondary action that opens content
+    const selectionSecondaryActions = [
+      onMerge && {
+        id: "merge",
+        icon: Link,
+        onClick: onMerge,
+        disabled: noSelection || !canMerge,
+      },
+      onClone && {
+        id: "clone",
+        icon: Copy,
+        onClick: onClone,
+        disabled: noSelection,
+      },
+      onBatchConfigure && {
+        id: "configure",
+        icon: Settings,
+        disabled: noSelection,
+        onClick: () => onModeChange("configure"),
+      },
+      onDelete && {
+        id: "delete",
+        icon: Trash2,
+        onClick: onDelete,
+        bgClassName: noSelection ? undefined : "bg-muted hover:bg-destructive/10 hover:text-destructive",
+        disabled: noSelection,
+      },
+    ].filter(Boolean) as DockPrimaryAction["secondaryActions"]
 
-  const handleExerciseClick = useCallback(
-    (exerciseId: number) => {
-      if (onExerciseAdd) {
-        triggerHaptic()
-        onExerciseAdd(exerciseId, { targetValue, measure })
-        onModeChange(null)
-      }
-    },
-    [onExerciseAdd, targetValue, measure, triggerHaptic, onModeChange]
-  )
+    return [
+      {
+        id: "select",
+        icon: activeMode === "select" || activeMode === "configure" ? CheckSquare : Square,
+        badge: selectedCount > 0 ? selectedCount : undefined,
+        bgClassName: activeMode === "select" || activeMode === "configure" ? "bg-primary text-primary-foreground hover:bg-primary/90" : undefined,
+        secondaryActions: selectionSecondaryActions,
+        // Configure content - only shown when in configure mode
+        content: activeMode === "configure" && onBatchConfigure ? (
+          <ConfigureContent
+            selectedCount={selectedCount}
+            modifiers={availableModifiers}
+            onApply={onBatchConfigure}
+            onClose={handleClose}
+          />
+        ) : undefined,
+        // Hide secondary actions when in configure mode (showing content instead)
+        shouldHideSecondaryActions: activeMode === "configure",
+      },
+      {
+        id: "add",
+        icon: activeMode === "add" ? X : Plus,
+        bgClassName: "bg-primary text-primary-foreground hover:bg-primary/90",
+        content: (
+          <AddContent
+            exercises={exercises}
+            onExerciseAdd={onExerciseAdd}
+            onBreakAdd={onBreakAdd}
+            showBreakOption={showBreakOption}
+            defaultConfig={defaultConfig}
+            onClose={handleClose}
+          />
+        ),
+        secondaryActions: [],
+      },
+      ...(helpContent ? [{
+        id: "help",
+        icon: HelpCircle,
+        bgClassName: activeMode === "help" ? "bg-primary text-primary-foreground hover:bg-primary/90" : undefined,
+        content: <HelpContent helpContent={helpContent} />,
+        secondaryActions: [],
+      }] : []),
+    ]
+  }, [
+    activeMode,
+    selectedCount,
+    canMerge,
+    onMerge,
+    onClone,
+    onBatchConfigure,
+    availableModifiers,
+    onDelete,
+    exercises,
+    onExerciseAdd,
+    onBreakAdd,
+    showBreakOption,
+    defaultConfig,
+    helpContent,
+    handleClose,
+  ])
 
-  const handleBreakClick = useCallback(() => {
-    if (onBreakAdd) {
-      triggerHaptic()
-      onBreakAdd({ targetValue: 10, measure: "time" })
-      onModeChange(null)
-    }
-  }, [onBreakAdd, triggerHaptic, onModeChange])
-
-  // Animation variants
-  const containerVariants: Variants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { type: "spring", stiffness: 400, damping: 30 },
-    },
-  }
-
-  const buttonVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: { type: "spring", stiffness: 500, damping: 30 },
-    },
-    exit: { opacity: 0, scale: 0.8, transition: { duration: 0.15 } },
-  }
-
-  const expandedContentVariants: Variants = {
-    hidden: { opacity: 0, height: 0, marginBottom: 0 },
-    visible: {
-      opacity: 1,
-      height: "auto",
-      marginBottom: 8,
-      transition: { type: "spring", stiffness: 300, damping: 30 },
-    },
-    exit: {
-      opacity: 0,
-      height: 0,
-      marginBottom: 0,
-      transition: { duration: 0.2 },
-    },
-  }
-
-  const hoverAnimation = shouldReduceMotion
-    ? {}
-    : {
-        scale: 1.1,
-        transition: { type: "spring" as const, stiffness: 400, damping: 25 },
-      }
-
-  const tapAnimation = { scale: 0.95 }
-
-  const hasSelectionActions = activeMode === "select" && selectedCount > 0
+  // Map "configure" mode to "select" for Dock (configure is a sub-mode of select)
+  const dockActiveId = activeMode === "configure" ? "select" : activeMode
 
   return (
-    <motion.div
-      ref={dockRef}
-      className={cn(
-        "fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center",
-        className
-      )}
-      initial={enableAnimations ? "hidden" : "visible"}
-      animate="visible"
-      variants={enableAnimations ? containerVariants : {}}
-    >
-      {/* Expanded Content Area (above dock) */}
-      <AnimatePresence mode="wait">
-        {activeMode === "add" && (
-          <motion.div
-            key="add-content"
-            variants={expandedContentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="w-[320px] rounded-2xl border border-border bg-background/95 backdrop-blur-md shadow-2xl overflow-hidden"
-          >
-            {/* Search */}
-            <div className="p-3 border-b">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search exercises..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 text-base h-10"
-                />
-              </div>
-            </div>
-
-            {/* Wheels for config */}
-            <div className="flex items-center justify-center gap-4 p-3 border-b bg-muted/30">
-              <div className="flex flex-col items-center gap-1">
-                <WheelNumberInput
-                  value={targetValue}
-                  onChange={setTargetValue}
-                  min={1}
-                  max={999}
-                  size="default"
-                />
-                <span className="text-xs text-muted-foreground">Value</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <WheelSelect
-                  value={measure}
-                  onChange={setMeasure}
-                  options={["repetitions", "time"] as const}
-                  formatOption={(opt) => (opt === "repetitions" ? "reps" : "sec")}
-                  size="default"
-                />
-                <span className="text-xs text-muted-foreground">Unit</span>
-              </div>
-            </div>
-
-            {/* Exercise List */}
-            <div className="max-h-[240px] overflow-y-auto">
-              {/* Break option */}
-              {showBreakOption && onBreakAdd && !searchQuery && (
-                <button
-                  type="button"
-                  onClick={handleBreakClick}
-                  className="w-full flex items-center gap-3 p-3 text-left bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors border-b border-blue-200 dark:border-blue-900"
-                >
-                  <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                    <Coffee className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-blue-900 dark:text-blue-100">Break</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">10s rest</p>
-                  </div>
-                  <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                </button>
-              )}
-
-              {/* Exercises */}
-              {filteredExercises.length > 0 ? (
-                filteredExercises.map((exercise) => (
-                  <button
-                    key={exercise.id}
-                    type="button"
-                    onClick={() => handleExerciseClick(exercise.id)}
-                    className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-b-0"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{exercise.name}</p>
-                      {exercise.description && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {exercise.description}
-                        </p>
-                      )}
-                    </div>
-                    <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </button>
-                ))
-              ) : (
-                <div className="p-6 text-center text-muted-foreground text-sm">
-                  {searchQuery ? "No exercises found" : "No exercises available"}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {activeMode === "help" && helpContent && (
-          <motion.div
-            key="help-content"
-            variants={expandedContentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="w-[320px] rounded-2xl border border-border bg-background/95 backdrop-blur-md shadow-2xl p-4"
-          >
-            <h3 className="font-semibold text-sm mb-2">{helpContent.title}</h3>
-            <p className="text-sm text-muted-foreground mb-3">{helpContent.description}</p>
-            {helpContent.tips && helpContent.tips.length > 0 && (
-              <ul className="space-y-1.5">
-                {helpContent.tips.map((tip, index) => (
-                  <li key={index} className="text-xs text-muted-foreground flex gap-2">
-                    <span className="text-primary">•</span>
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Dock Bar */}
-      <motion.div
-        className="rounded-full px-2 py-2 shadow-2xl border border-border bg-background/95 backdrop-blur-md flex items-center gap-1"
-        layout
-        transition={
-          enableAnimations
-            ? { type: "spring", stiffness: 400, damping: 35 }
-            : { duration: 0 }
+    <Dock
+      actions={actions}
+      activeActionId={dockActiveId}
+      onActionActivate={(id) => {
+        // If clicking on select while in configure mode, go back to select mode
+        if (id === "select" && activeMode === "configure") {
+          onModeChange("select")
+        } else {
+          onModeChange(id as DockMode)
         }
-      >
-        {/* Selection Actions (appear when in select mode with items selected) */}
-        <AnimatePresence mode="popLayout">
-          {hasSelectionActions && (
-            <>
-              {/* Merge */}
-              {canMerge && onMerge && (
-                <motion.button
-                  key="merge"
-                  variants={buttonVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  whileHover={hoverAnimation}
-                  whileTap={tapAnimation}
-                  onClick={() => handleButtonClick(onMerge)}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
-                  aria-label="Merge selected items"
-                >
-                  <Link className="h-4 w-4" />
-                </motion.button>
-              )}
-
-              {/* Clone */}
-              {onClone && (
-                <motion.button
-                  key="clone"
-                  variants={buttonVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  whileHover={hoverAnimation}
-                  whileTap={tapAnimation}
-                  onClick={() => handleButtonClick(onClone)}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
-                  aria-label="Clone selected items"
-                >
-                  <Copy className="h-4 w-4" />
-                </motion.button>
-              )}
-
-              {/* Configure */}
-              {onConfigure && (
-                <motion.button
-                  key="configure"
-                  variants={buttonVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  whileHover={hoverAnimation}
-                  whileTap={tapAnimation}
-                  onClick={() => handleButtonClick(onConfigure)}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 transition-colors relative"
-                  aria-label={`Configure ${selectedCount} selected items`}
-                >
-                  <Settings className="h-4 w-4" />
-                  {selectedCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-medium">
-                      {selectedCount}
-                    </span>
-                  )}
-                </motion.button>
-              )}
-
-              {/* Delete */}
-              {onDelete && (
-                <motion.button
-                  key="delete"
-                  variants={buttonVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  whileHover={hoverAnimation}
-                  whileTap={tapAnimation}
-                  onClick={() => handleButtonClick(onDelete)}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-muted hover:bg-destructive/10 hover:text-destructive transition-colors"
-                  aria-label="Delete selected items"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </motion.button>
-              )}
-
-              {/* Separator */}
-              <motion.div
-                key="separator"
-                initial={{ opacity: 0, scaleY: 0 }}
-                animate={{ opacity: 1, scaleY: 1 }}
-                exit={{ opacity: 0, scaleY: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="w-px h-6 bg-border mx-1"
-              />
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Mode Buttons */}
-        {/* Select Mode */}
-        <motion.button
-          whileHover={hoverAnimation}
-          whileTap={tapAnimation}
-          onClick={() => handleModeToggle("select")}
-          className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-            activeMode === "select"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : "bg-muted hover:bg-muted/80"
-          )}
-          aria-label={activeMode === "select" ? "Exit selection mode" : "Enter selection mode"}
-        >
-          {activeMode === "select" ? (
-            <CheckSquare className="h-4 w-4" />
-          ) : (
-            <Square className="h-4 w-4" />
-          )}
-        </motion.button>
-
-        {/* Add Mode */}
-        <motion.button
-          whileHover={hoverAnimation}
-          whileTap={tapAnimation}
-          onClick={() => handleModeToggle("add")}
-          className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-            activeMode === "add"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          )}
-          aria-label={activeMode === "add" ? "Close exercise picker" : "Add exercise"}
-        >
-          {activeMode === "add" ? (
-            <X className="h-4 w-4" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-        </motion.button>
-
-        {/* Help Mode */}
-        {helpContent && (
-          <motion.button
-            whileHover={hoverAnimation}
-            whileTap={tapAnimation}
-            onClick={() => handleModeToggle("help")}
-            className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-              activeMode === "help"
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "bg-muted hover:bg-muted/80"
-            )}
-            aria-label={activeMode === "help" ? "Close help" : "Show help"}
-          >
-            <HelpCircle className="h-4 w-4" />
-          </motion.button>
-        )}
-
-        {/* Menu Mode (optional) */}
-        {showMenuButton && menuItems && menuItems.length > 0 && (
-          <motion.button
-            whileHover={hoverAnimation}
-            whileTap={tapAnimation}
-            onClick={() => {/* TODO: Menu mode */}}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu className="h-4 w-4" />
-          </motion.button>
-        )}
-      </motion.div>
-    </motion.div>
+      }}
+      className={className}
+      enableAnimations={enableAnimations}
+    />
   )
 }

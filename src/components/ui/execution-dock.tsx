@@ -1,8 +1,6 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-import { motion, useReducedMotion, AnimatePresence, type Variants } from "framer-motion"
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useMemo, useState, type ReactNode } from "react"
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +13,7 @@ import {
   Pencil,
   X,
 } from "lucide-react"
+import { Dock, type DockPrimaryAction } from "./dock"
 
 export type ExecutionDockProps = {
   // Navigation state
@@ -43,12 +42,19 @@ export type ExecutionDockProps = {
   onTogglePause: () => void
   onComplete: () => void
   onSkip: () => void
-  onAdd: () => void
   onResume: () => void // Exit review mode, go back to active exercise
   onRedo: () => void // Restart from current viewing position
   onStartEditing: () => void // Enter edit mode
   onSaveEditing: () => void // Save changes and exit edit mode
   onCancelEditing: () => void // Discard changes and exit edit mode
+
+  // Content panels (Phase 30.6)
+  /** Content to show when "add exercise" action is active */
+  addExerciseContent?: ReactNode
+  /** Content to show when "skip exercise" action is active (confirmation) */
+  skipConfirmContent?: ReactNode
+  /** Called when skip is confirmed (from skip content) */
+  onSkipConfirmed?: () => void
 
   // Config
   className?: string
@@ -73,16 +79,19 @@ export function ExecutionDock({
   onTogglePause,
   onComplete,
   onSkip,
-  onAdd,
   onResume,
   onRedo,
   onStartEditing,
   onSaveEditing,
   onCancelEditing,
+  addExerciseContent,
+  skipConfirmContent,
+  onSkipConfirmed,
   className,
   enableAnimations = true,
 }: ExecutionDockProps) {
-  const shouldReduceMotion = useReducedMotion()
+  // Track which action is active (for content panels)
+  const [activeMode, setActiveMode] = useState<"add" | "skip" | null>(null)
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -90,6 +99,14 @@ export function ExecutionDock({
       // Don't trigger if user is typing in an input
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return
+      }
+
+      // If a content panel is open, Escape closes it
+      if (activeMode !== null) {
+        if (event.key === "Escape") {
+          setActiveMode(null)
+        }
+        return // Block other shortcuts when content is open
       }
 
       // Edit mode shortcuts
@@ -149,13 +166,18 @@ export function ExecutionDock({
         case "s":
         case "S":
           if (!isReviewing) {
-            onSkip()
+            // If we have skip content, open it; otherwise skip directly
+            if (skipConfirmContent) {
+              setActiveMode("skip")
+            } else {
+              onSkip()
+            }
           }
           break
         case "a":
         case "A":
-          if (!isReviewing) {
-            onAdd()
+          if (!isReviewing && addExerciseContent) {
+            setActiveMode("add")
           }
           break
       }
@@ -163,381 +185,243 @@ export function ExecutionDock({
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [isFirstExercise, isLastExercise, isTimeBased, goalType, isReviewing, isEditing, canEdit, onPrevious, onNext, onTogglePause, onComplete, onSkip, onAdd, onResume, onRedo, onStartEditing, onSaveEditing, onCancelEditing])
-
-  // Haptic feedback
-  const triggerHaptic = useCallback(() => {
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(10)
-    }
-  }, [])
-
-  const handleButtonClick = useCallback(
-    (callback: () => void) => {
-      triggerHaptic()
-      callback()
-    },
-    [triggerHaptic]
-  )
-
-  // Animation variants
-  const containerVariants: Variants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { type: "spring" as const, stiffness: 400, damping: 30 },
-    },
-  }
-
-  const hoverAnimation = shouldReduceMotion
-    ? {}
-    : {
-        scale: 1.1,
-        transition: { type: "spring" as const, stiffness: 400, damping: 25 },
-      }
-
-  const tapAnimation = { scale: 0.95 }
+  }, [isFirstExercise, isLastExercise, isTimeBased, goalType, isReviewing, isEditing, canEdit, activeMode, addExerciseContent, skipConfirmContent, onPrevious, onNext, onTogglePause, onComplete, onSkip, onResume, onRedo, onStartEditing, onSaveEditing, onCancelEditing])
 
   // Calculate display index based on review mode
   const displayIndex = isReviewing && viewingIndex !== null ? viewingIndex : currentIndex
 
-  // Spring transition for animations
-  const springTransition = enableAnimations
-    ? { type: "spring" as const, stiffness: 400, damping: 30 }
-    : { duration: 0 }
+  // Handle skip confirmation
+  const handleSkipConfirmed = useCallback(() => {
+    setActiveMode(null)
+    if (onSkipConfirmed) {
+      onSkipConfirmed()
+    } else {
+      onSkip()
+    }
+  }, [onSkip, onSkipConfirmed])
 
-  // Determine the main action button content based on mode
-  const renderMainAction = () => {
-    // In review mode: show Resume button (green, prominent)
+  // Build actions based on current state
+  const actions = useMemo((): DockPrimaryAction[] => {
+    // Review mode actions
     if (isReviewing) {
-      return (
-        <motion.button
-          whileHover={hoverAnimation}
-          whileTap={tapAnimation}
-          onClick={() => handleButtonClick(onResume)}
-          className="w-14 h-14 rounded-full flex items-center justify-center bg-green-600 text-white hover:bg-green-700 transition-colors"
-          aria-label="Resume workout"
-        >
-          <Play className="h-6 w-6 ml-0.5" />
-        </motion.button>
-      )
+      return [
+        {
+          id: "prev",
+          icon: ChevronLeft,
+          secondaryActions: [],
+          onClick: onPrevious,
+          disabled: isFirstExercise,
+        },
+        {
+          id: "edit",
+          icon: Pencil,
+          bgClassName: "bg-blue-500 text-white hover:bg-blue-600",
+          secondaryActions: [
+            {
+              id: "cancel",
+              icon: X,
+              label: "Cancel",
+              onClick: onCancelEditing,
+              bgClassName: "bg-background border-2 border-muted-foreground/30 hover:border-muted-foreground/50 hover:bg-muted/50",
+            },
+            {
+              id: "save",
+              icon: Check,
+              label: "Save",
+              onClick: onSaveEditing,
+              bgClassName: "bg-green-600 text-white hover:bg-green-700",
+            },
+          ],
+          hidden: !canEdit,
+        },
+        {
+          id: "resume",
+          icon: Play,
+          bgClassName: "bg-green-600 text-white hover:bg-green-700",
+          secondaryActions: [],
+          onClick: onResume,
+        },
+        {
+          id: "redo",
+          icon: RotateCcw,
+          bgClassName: "bg-orange-500 text-white hover:bg-orange-600",
+          secondaryActions: [],
+          onClick: onRedo,
+        },
+        {
+          id: "next",
+          icon: ChevronRight,
+          secondaryActions: [],
+          onClick: onNext,
+          disabled: isLastExercise,
+        },
+      ]
     }
 
-    // For strict goal time-based exercises, show pause/play
-    if (isTimeBased && goalType === "strict") {
-      return (
-        <motion.button
-          whileHover={hoverAnimation}
-          whileTap={tapAnimation}
-          onClick={() => handleButtonClick(onTogglePause)}
-          className={cn(
-            "w-14 h-14 rounded-full flex items-center justify-center transition-colors",
-            isPaused
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : "bg-muted hover:bg-muted/80"
-          )}
-          aria-label={isPaused ? "Resume" : "Pause"}
-        >
-          {isPaused ? (
-            <Play className="h-6 w-6 ml-0.5" />
-          ) : (
-            <Pause className="h-6 w-6" />
-          )}
-        </motion.button>
-      )
-    }
-
-    // For elastic goal or rep-based exercises, show complete/done button
-    return (
-      <motion.button
-        whileHover={hoverAnimation}
-        whileTap={tapAnimation}
-        onClick={() => handleButtonClick(onComplete)}
-        className="w-14 h-14 rounded-full flex items-center justify-center bg-green-600 text-white hover:bg-green-700 transition-colors"
-        aria-label="Complete exercise"
-      >
-        <Check className="h-6 w-6" />
-      </motion.button>
-    )
-  }
-
-  // Determine the secondary action button (Skip, Redo, or Edit)
-  const renderSecondaryAction = () => {
-    // In review mode: show Edit button (if can edit) or Redo button
-    if (isReviewing) {
-      if (canEdit) {
-        return (
-          <motion.button
-            whileHover={hoverAnimation}
-            whileTap={tapAnimation}
-            onClick={() => handleButtonClick(onStartEditing)}
-            className="w-11 h-11 rounded-full flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-            aria-label="Edit this exercise"
-          >
-            <Pencil className="h-5 w-5" />
-          </motion.button>
-        )
+    // Normal mode actions
+    const mainAction = (() => {
+      // For strict goal time-based exercises, show pause/play
+      if (isTimeBased && goalType === "strict") {
+        return {
+          id: "pause",
+          icon: isPaused ? Play : Pause,
+          bgClassName: isPaused
+            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+            : "bg-muted hover:bg-muted/80",
+          secondaryActions: [],
+          onClick: onTogglePause,
+        }
       }
-      // For skipped exercises, show redo instead
-      return (
-        <motion.button
-          whileHover={hoverAnimation}
-          whileTap={tapAnimation}
-          onClick={() => handleButtonClick(onRedo)}
-          className="w-11 h-11 rounded-full flex items-center justify-center bg-orange-500 text-white hover:bg-orange-600 transition-colors"
-          aria-label="Redo from here"
-        >
-          <RotateCcw className="h-5 w-5" />
-        </motion.button>
-      )
-    }
 
-    // Normal mode: Skip button
-    return (
-      <motion.button
-        whileHover={hoverAnimation}
-        whileTap={tapAnimation}
-        onClick={() => handleButtonClick(onSkip)}
-        className="w-11 h-11 rounded-full flex items-center justify-center bg-muted hover:bg-muted/80 transition-colors"
-        aria-label="Skip exercise"
-      >
-        <SkipForward className="h-5 w-5" />
-      </motion.button>
-    )
-  }
-
-  // Determine if Add button should be shown (hidden in review mode)
-  const renderAddButton = () => {
-    if (isReviewing) {
-      // In review mode, show Redo button if we showed Edit as secondary
-      if (canEdit) {
-        return (
-          <motion.button
-            whileHover={hoverAnimation}
-            whileTap={tapAnimation}
-            onClick={() => handleButtonClick(onRedo)}
-            className="w-11 h-11 rounded-full flex items-center justify-center bg-orange-500/80 text-white hover:bg-orange-600 transition-colors"
-            aria-label="Redo from here"
-          >
-            <RotateCcw className="h-5 w-5" />
-          </motion.button>
-        )
+      // For elastic goal or rep-based exercises, show complete/done button
+      return {
+        id: "complete",
+        icon: Check,
+        bgClassName: "bg-green-600 text-white hover:bg-green-700",
+        secondaryActions: [],
+        onClick: onComplete,
       }
-      // Otherwise show disabled placeholder
+    })()
+
+    return [
+      {
+        id: "prev",
+        icon: ChevronLeft,
+        secondaryActions: [],
+        onClick: onPrevious,
+        disabled: isFirstExercise,
+      },
+      {
+        id: "skip",
+        icon: SkipForward,
+        secondaryActions: [],
+        // If we have skip content, it will show via content prop; otherwise skip directly
+        content: skipConfirmContent ? (
+          <SkipConfirmWrapper onConfirm={handleSkipConfirmed} onCancel={() => setActiveMode(null)}>
+            {skipConfirmContent}
+          </SkipConfirmWrapper>
+        ) : undefined,
+        onClick: skipConfirmContent ? undefined : onSkip,
+      },
+      mainAction as DockPrimaryAction,
+      {
+        id: "add",
+        icon: activeMode === "add" ? X : Plus,
+        bgClassName: "bg-primary text-primary-foreground hover:bg-primary/90",
+        secondaryActions: [],
+        content: addExerciseContent,
+      },
+      {
+        id: "next",
+        icon: ChevronRight,
+        secondaryActions: [],
+        onClick: onNext,
+        disabled: isLastExercise,
+      },
+    ]
+  }, [
+    isReviewing,
+    isFirstExercise,
+    isLastExercise,
+    canEdit,
+    isTimeBased,
+    goalType,
+    isPaused,
+    activeMode,
+    addExerciseContent,
+    skipConfirmContent,
+    onPrevious,
+    onNext,
+    onSkip,
+    onComplete,
+    onResume,
+    onRedo,
+    onTogglePause,
+    onCancelEditing,
+    onSaveEditing,
+    handleSkipConfirmed,
+  ])
+
+  // Determine active action ID
+  const activeActionId = useMemo(() => {
+    if (isEditing) return "edit"
+    if (activeMode) return activeMode
+    return null
+  }, [isEditing, activeMode])
+
+  const handleActionActivate = useCallback(
+    (id: string | null) => {
+      if (id === "edit") {
+        onStartEditing()
+      } else if (id === null && isEditing) {
+        onCancelEditing()
+      } else if (id === "add" || id === "skip") {
+        setActiveMode(id)
+      } else {
+        setActiveMode(null)
+      }
+    },
+    [isEditing, onStartEditing, onCancelEditing]
+  )
+
+  // Build status label
+  const statusLabel = useMemo(() => {
+    if (isEditing) {
       return (
-        <div className="w-11 h-11 rounded-full flex items-center justify-center bg-muted/30 text-muted-foreground/30">
-          <Plus className="h-5 w-5" />
-        </div>
+        <span className="text-blue-700 dark:text-blue-300">
+          Editing {displayIndex + 1} / {totalExercises}
+        </span>
       )
     }
-
-    return (
-      <motion.button
-        whileHover={hoverAnimation}
-        whileTap={tapAnimation}
-        onClick={() => handleButtonClick(onAdd)}
-        className="w-11 h-11 rounded-full flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        aria-label="Add exercise"
-      >
-        <Plus className="h-5 w-5" />
-      </motion.button>
-    )
-  }
+    if (isReviewing) {
+      return (
+        <span className="text-amber-700 dark:text-amber-300">
+          Reviewing {displayIndex + 1} / {totalExercises}
+        </span>
+      )
+    }
+    return `${displayIndex + 1} / ${totalExercises}`
+  }, [isEditing, isReviewing, displayIndex, totalExercises])
 
   return (
-    <motion.div
-      className={cn(
-        "fixed bottom-6 left-1/2 -translate-x-1/2 z-50",
-        className
-      )}
-      initial={enableAnimations ? "hidden" : "visible"}
-      animate="visible"
-      variants={enableAnimations ? containerVariants : {}}
-    >
-      <motion.div
-        className={cn(
-          "rounded-full px-3 py-3 shadow-2xl border backdrop-blur-md flex items-center gap-2",
-          isEditing
-            ? "bg-blue-50/95 dark:bg-blue-950/95 border-blue-400 dark:border-blue-600"
-            : isReviewing
-              ? "bg-amber-50/95 dark:bg-amber-950/95 border-amber-200 dark:border-amber-800"
-              : "bg-background/95 border-border"
-        )}
-        layout
-        transition={springTransition}
-      >
-        {/* Previous Button - hidden in edit mode */}
-        <motion.button
-          whileHover={!isFirstExercise && !isEditing ? hoverAnimation : {}}
-          whileTap={!isFirstExercise && !isEditing ? tapAnimation : {}}
-          onClick={() => !isFirstExercise && !isEditing && handleButtonClick(onPrevious)}
-          disabled={isFirstExercise || isEditing}
-          animate={{
-            opacity: isEditing ? 0 : 1,
-            scale: isEditing ? 0.5 : 1,
-            width: isEditing ? 0 : 44,
-            marginRight: isEditing ? -8 : 0,
-          }}
-          transition={springTransition}
-          className={cn(
-            "h-11 rounded-full flex items-center justify-center transition-colors overflow-hidden",
-            isFirstExercise || isEditing
-              ? "bg-muted/50 text-muted-foreground/50 cursor-not-allowed"
-              : "bg-muted hover:bg-muted/80"
-          )}
-          aria-label="Previous exercise"
-          style={{ minWidth: isEditing ? 0 : 44 }}
+    <Dock
+      actions={actions}
+      activeActionId={activeActionId}
+      onActionActivate={handleActionActivate}
+      statusLabel={statusLabel}
+      className={className}
+      enableAnimations={enableAnimations}
+    />
+  )
+}
+
+// Helper wrapper for skip confirmation content
+type SkipConfirmWrapperProps = {
+  children: ReactNode
+  onConfirm: () => void
+  onCancel: () => void
+}
+
+function SkipConfirmWrapper({ children, onConfirm, onCancel }: SkipConfirmWrapperProps) {
+  return (
+    <div className="p-4">
+      {children}
+      <div className="flex gap-2 mt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
         >
-          <ChevronLeft className="h-5 w-5 flex-shrink-0" />
-        </motion.button>
-
-        {/* Edit Mode Indicator - shows selected primary action on the left */}
-        <AnimatePresence>
-          {isEditing && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5, width: 0 }}
-              animate={{ opacity: 1, scale: 1, width: "auto" }}
-              exit={{ opacity: 0, scale: 0.5, width: 0 }}
-              transition={springTransition}
-              className="flex items-center gap-2 overflow-hidden"
-            >
-              {/* Edit indicator (not a button, just shows active mode) */}
-              <div className="w-11 h-11 rounded-full flex items-center justify-center bg-blue-500 text-white">
-                <Pencil className="h-5 w-5" />
-              </div>
-
-              {/* Separator */}
-              <div className="w-px h-6 bg-blue-300 dark:bg-blue-600" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Secondary Action (Skip, Edit, or Redo) - hidden in edit mode */}
-        <motion.div
-          animate={{
-            opacity: isEditing ? 0 : 1,
-            scale: isEditing ? 0.5 : 1,
-            width: isEditing ? 0 : "auto",
-          }}
-          transition={springTransition}
-          className="overflow-hidden"
-          style={{ minWidth: isEditing ? 0 : 44 }}
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="flex-1 px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors"
         >
-          {renderSecondaryAction()}
-        </motion.div>
-
-        {/* Main Action (Resume/Pause/Play or Complete) - hidden in edit mode */}
-        <motion.div
-          animate={{
-            opacity: isEditing ? 0 : 1,
-            scale: isEditing ? 0.5 : 1,
-            width: isEditing ? 0 : "auto",
-          }}
-          transition={springTransition}
-          className="overflow-hidden"
-          style={{ minWidth: isEditing ? 0 : 56 }}
-        >
-          {renderMainAction()}
-        </motion.div>
-
-        {/* Edit mode secondary actions: Cancel and Save */}
-        <AnimatePresence>
-          {isEditing && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5, width: 0 }}
-              animate={{ opacity: 1, scale: 1, width: "auto" }}
-              exit={{ opacity: 0, scale: 0.5, width: 0 }}
-              transition={springTransition}
-              className="flex items-center gap-2 overflow-hidden"
-            >
-              {/* Cancel Button */}
-              <motion.button
-                whileHover={hoverAnimation}
-                whileTap={tapAnimation}
-                onClick={() => handleButtonClick(onCancelEditing)}
-                className="h-11 px-4 rounded-full flex items-center justify-center gap-2 bg-background border-2 border-muted-foreground/30 hover:border-muted-foreground/50 hover:bg-muted/50 transition-colors"
-                aria-label="Cancel editing"
-              >
-                <X className="h-4 w-4 shrink-0" />
-                <span className="text-sm font-medium whitespace-nowrap">Cancel</span>
-              </motion.button>
-
-              {/* Save Button */}
-              <motion.button
-                whileHover={hoverAnimation}
-                whileTap={tapAnimation}
-                onClick={() => handleButtonClick(onSaveEditing)}
-                className="h-11 px-4 rounded-full flex items-center justify-center gap-2 bg-green-600 text-white hover:bg-green-700 transition-colors"
-                aria-label="Save changes"
-              >
-                <Check className="h-4 w-4 shrink-0" />
-                <span className="text-sm font-medium whitespace-nowrap">Save</span>
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Tertiary Action (Add or Redo) - hidden in edit mode */}
-        <motion.div
-          animate={{
-            opacity: isEditing ? 0 : 1,
-            scale: isEditing ? 0.5 : 1,
-            width: isEditing ? 0 : "auto",
-          }}
-          transition={springTransition}
-          className="overflow-hidden"
-          style={{ minWidth: isEditing ? 0 : 44 }}
-        >
-          {renderAddButton()}
-        </motion.div>
-
-        {/* Next Button - hidden in edit mode */}
-        <motion.button
-          whileHover={!isLastExercise && !isEditing ? hoverAnimation : {}}
-          whileTap={!isLastExercise && !isEditing ? tapAnimation : {}}
-          onClick={() => !isLastExercise && !isEditing && handleButtonClick(onNext)}
-          disabled={isLastExercise || isEditing}
-          animate={{
-            opacity: isEditing ? 0 : 1,
-            scale: isEditing ? 0.5 : 1,
-            width: isEditing ? 0 : 44,
-            marginLeft: isEditing ? -8 : 0,
-          }}
-          transition={springTransition}
-          className={cn(
-            "h-11 rounded-full flex items-center justify-center transition-colors overflow-hidden",
-            isLastExercise || isEditing
-              ? "bg-muted/50 text-muted-foreground/50 cursor-not-allowed"
-              : "bg-muted hover:bg-muted/80"
-          )}
-          aria-label="Next exercise"
-          style={{ minWidth: isEditing ? 0 : 44 }}
-        >
-          <ChevronRight className="h-5 w-5 flex-shrink-0" />
-        </motion.button>
-      </motion.div>
-
-      {/* Exercise counter below dock */}
-      <div className="text-center mt-2">
-        <span className={cn(
-          "text-xs bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full",
-          isEditing
-            ? "text-blue-700 dark:text-blue-300"
-            : isReviewing
-              ? "text-amber-700 dark:text-amber-300"
-              : "text-muted-foreground"
-        )}>
-          {isEditing ? (
-            <>Editing {displayIndex + 1} / {totalExercises}</>
-          ) : isReviewing ? (
-            <>Reviewing {displayIndex + 1} / {totalExercises}</>
-          ) : (
-            <>{displayIndex + 1} / {totalExercises}</>
-          )}
-        </span>
+          Skip Exercise
+        </button>
       </div>
-    </motion.div>
+    </div>
   )
 }

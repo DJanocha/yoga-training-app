@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, type ReactNode } from "react"
 import { Search, Filter, Plus, Copy, X, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
@@ -181,19 +180,22 @@ export function ActionBar({
   }
 
   return (
-    <div className="bg-background px-4 pb-4 pt-2" ref={containerRef}>
+    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50" ref={containerRef}>
       <div
         className={cn(
-          "bg-card border border-border rounded-3xl shadow-lg overflow-hidden",
+          "bg-background/95 backdrop-blur-md border border-border shadow-2xl overflow-hidden",
           "grid transition-all duration-300 ease-out",
-          state === "base" && "grid-rows-[0fr_56px]",
-          state === "search" && "grid-rows-[1fr_56px]",
-          state === "filters" && "grid-rows-[1fr_56px]",
-          state === "create" && "grid-rows-[1fr_56px]",
+          state === "base" && "grid-rows-[0fr_52px] rounded-full",
+          state === "search" && "grid-rows-[1fr_52px] rounded-2xl",
+          state === "filters" && "grid-rows-[1fr_52px] rounded-2xl",
+          state === "create" && "grid-rows-[1fr_52px] rounded-2xl",
         )}
       >
         {/* Expanded Content Area */}
-        <div className="overflow-hidden">
+        <div className={cn(
+          "overflow-hidden",
+          state !== "base" && "w-[320px]",
+        )}>
           <div
             className={cn(
               "px-4 pt-4 pb-2 transition-opacity duration-200",
@@ -296,89 +298,82 @@ export function ActionBar({
         </div>
 
         {/* Icon Bar */}
-        <div className="px-3 h-14 flex items-center justify-around gap-2">
+        <div className={cn(
+          "px-3 py-3 flex items-center justify-center gap-2",
+          state !== "base" && "border-t border-border",
+        )}>
           {/* Search Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             onClick={() => handleStateChange(state === "search" ? "base" : "search")}
             className={cn(
-              "relative h-10 w-10 rounded-full transition-colors duration-200",
+              "relative w-11 h-11 rounded-full flex items-center justify-center transition-colors",
               state === "search"
-                ? "text-foreground hover:bg-muted"
-                : state !== "base"
-                  ? "text-muted-foreground hover:bg-muted"
-                  : "text-foreground hover:bg-muted",
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-muted hover:bg-muted/80",
             )}
           >
             <Search className="h-5 w-5" />
             {searchQuery && state === "base" && (
-              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] px-1.5 h-4 rounded-full max-w-[70px] truncate">
-                {searchQuery.length > 8 ? searchQuery.slice(0, 8) + "..." : searchQuery}
-              </Badge>
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-medium">
+                !
+              </span>
             )}
-          </Button>
+          </button>
 
           {/* Filter Icon - only show if filters are configured */}
           {hasFilters && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleStateChange(state === "filters" ? "base" : "filters")}
-              className={cn(
-                "relative h-10 w-10 rounded-full transition-colors duration-200",
-                state === "filters"
-                  ? "text-foreground hover:bg-muted"
-                  : state !== "base"
-                    ? "text-muted-foreground hover:bg-muted"
-                    : "text-foreground hover:bg-muted",
-              )}
-            >
-              <Filter className="h-5 w-5" />
+            <div className="relative overflow-visible">
+              <button
+                type="button"
+                onClick={() => handleStateChange(state === "filters" ? "base" : "filters")}
+                className={cn(
+                  "w-11 h-11 rounded-full flex items-center justify-center transition-colors",
+                  state === "filters"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "bg-muted hover:bg-muted/80",
+                )}
+              >
+                <Filter className="h-5 w-5" />
+              </button>
               {filterCount > 0 && state === "base" && (
-                <Badge className="absolute -top-0.5 -right-0.5 h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full">
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-medium">
                   {filterCount}
-                </Badge>
+                </span>
               )}
-            </Button>
+            </div>
           )}
 
           {/* Plus/Create Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             onClick={() => handleStateChange(state === "create" ? "base" : "create")}
             className={cn(
-              "h-10 w-10 rounded-full transition-colors duration-200",
+              "w-11 h-11 rounded-full flex items-center justify-center transition-colors",
               state === "create"
-                ? "text-foreground hover:bg-muted"
-                : state !== "base"
-                  ? "text-muted-foreground hover:bg-muted"
-                  : "text-foreground hover:bg-muted",
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-primary text-primary-foreground hover:bg-primary/90",
             )}
           >
-            <Plus className="h-5 w-5" />
-          </Button>
+            {state === "create" ? <X className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+          </button>
 
           {/* Copy/Clone Icon - only show if copy is configured */}
           {hasCopy && (
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
+              type="button"
               onClick={handleCopy}
               disabled={!selectedItemId}
               title={!selectedItemId ? copyDisabledMessage : "Clone item"}
               className={cn(
-                "h-10 w-10 rounded-full transition-colors duration-200",
+                "w-11 h-11 rounded-full flex items-center justify-center transition-colors",
                 !selectedItemId
-                  ? "text-muted-foreground/50 cursor-not-allowed"
-                  : state !== "base"
-                    ? "text-muted-foreground hover:bg-muted"
-                    : "text-foreground hover:bg-muted",
+                  ? "bg-muted/50 text-muted-foreground/50 cursor-not-allowed"
+                  : "bg-muted hover:bg-muted/80",
               )}
             >
               <Copy className="h-5 w-5" />
-            </Button>
+            </button>
           )}
         </div>
       </div>

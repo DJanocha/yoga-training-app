@@ -11,7 +11,7 @@ import {
   CardContent,
 } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { ExercisePickerDrawer } from '@/components/exercise-picker-drawer'
+// ExercisePickerDrawer now embedded in dock content (Phase 30.6)
 import { ExerciseConfigUpdateDialog, type UpdateScope } from '@/components/exercise-config-update-dialog'
 import { GameTimer } from '@/components/ui/game-timer'
 import { GameCounter } from '@/components/ui/game-counter'
@@ -39,7 +39,11 @@ import {
   Plus,
   Eye,
   Pencil,
+  Search,
 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { WheelNumberInput } from '@/components/ui/wheel-number-input'
+import { WheelSelect } from '@/components/ui/wheel-select'
 import type { SequenceExercise, CompletedExercise, ActiveModifier, ModifierEffect } from '@/db/types'
 import { toast } from 'sonner'
 
@@ -80,6 +84,189 @@ function ExecuteSequence() {
     </>
   )
 }
+
+// ============================================================================
+// Dock Content Components
+// ============================================================================
+
+type AddExerciseDockContentProps = {
+  exercises: Array<{ id: number; name: string; description?: string | null }>
+  onExerciseSelected: (exerciseId: number, config: ExercisePickerConfig) => void
+  onBreakSelected?: (config: ExercisePickerConfig) => void
+  onClose: () => void
+  showPositionOption?: boolean
+}
+
+function AddExerciseDockContent({
+  exercises,
+  onExerciseSelected,
+  onBreakSelected,
+  onClose,
+  showPositionOption = false,
+}: AddExerciseDockContentProps) {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [targetValue, setTargetValue] = useState(30)
+  const [measure, setMeasure] = useState<MeasureType>("time")
+  const [position, setPosition] = useState<"before" | "after">("after")
+
+  // Reset state when mounted
+  useEffect(() => {
+    setSearchQuery("")
+    setTargetValue(30)
+    setMeasure("time")
+    setPosition("after")
+  }, [])
+
+  // Filter exercises by search
+  const filteredExercises = exercises.filter((ex) => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      ex.name.toLowerCase().includes(query) ||
+      ex.description?.toLowerCase().includes(query)
+    )
+  })
+
+  const handleExerciseClick = (exerciseId: number) => {
+    onExerciseSelected(exerciseId, {
+      targetValue,
+      measure,
+      position: showPositionOption ? position : undefined,
+    })
+    onClose()
+  }
+
+  const handleBreakClick = () => {
+    if (onBreakSelected) {
+      onBreakSelected({
+        targetValue: 10,
+        measure: "time",
+        position: showPositionOption ? position : undefined,
+      })
+      onClose()
+    }
+  }
+
+  return (
+    <>
+      {/* Search */}
+      <div className="p-3 border-b">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search exercises..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 text-base h-10"
+          />
+        </div>
+      </div>
+
+      {/* Wheels for config */}
+      <div className="flex items-center justify-center gap-4 p-3 border-b bg-muted/30">
+        <div className="flex flex-col items-center gap-1">
+          <WheelNumberInput
+            value={targetValue}
+            onChange={setTargetValue}
+            min={1}
+            max={999}
+            size="default"
+          />
+          <span className="text-xs text-muted-foreground">Value</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <WheelSelect
+            value={measure}
+            onChange={setMeasure}
+            options={["repetitions", "time"] as const}
+            formatOption={(opt) => (opt === "repetitions" ? "reps" : "sec")}
+            size="default"
+          />
+          <span className="text-xs text-muted-foreground">Unit</span>
+        </div>
+        {/* Position wheel */}
+        {showPositionOption && (
+          <div className="flex flex-col items-center gap-1">
+            <WheelSelect
+              value={position}
+              onChange={setPosition}
+              options={["before", "after"] as const}
+              formatOption={(opt) => opt}
+              size="default"
+            />
+            <span className="text-xs text-muted-foreground">Position</span>
+          </div>
+        )}
+      </div>
+
+      {/* Exercise List */}
+      <div className="max-h-[240px] overflow-y-auto">
+        {/* Break option */}
+        {onBreakSelected && !searchQuery && (
+          <button
+            type="button"
+            onClick={handleBreakClick}
+            className="w-full flex items-center gap-3 p-3 text-left bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors border-b border-blue-200 dark:border-blue-900"
+          >
+            <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <Coffee className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-blue-900 dark:text-blue-100">Break</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">10s rest</p>
+            </div>
+            <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+          </button>
+        )}
+
+        {/* Exercises */}
+        {filteredExercises.length > 0 ? (
+          filteredExercises.map((exercise) => (
+            <button
+              key={exercise.id}
+              type="button"
+              onClick={() => handleExerciseClick(exercise.id)}
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-b-0"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{exercise.name}</p>
+                {exercise.description && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {exercise.description}
+                  </p>
+                )}
+              </div>
+              <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+            </button>
+          ))
+        ) : (
+          <div className="p-6 text-center text-muted-foreground text-sm">
+            {searchQuery ? "No exercises found" : "No exercises available"}
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+type SkipConfirmDockContentProps = {
+  exerciseName: string
+}
+
+function SkipConfirmDockContent({ exerciseName }: SkipConfirmDockContentProps) {
+  return (
+    <div className="p-4 text-center">
+      <p className="font-medium mb-2">Skip this exercise?</p>
+      <p className="text-sm text-muted-foreground">
+        "{exerciseName}" will be marked as skipped.
+      </p>
+    </div>
+  )
+}
+
+// ============================================================================
+// Main Execute Component
+// ============================================================================
 
 function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   const trpc = useTRPC()
@@ -137,7 +324,6 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
   // Add Exercise during workout state
   const [workoutExercises, setWorkoutExercises] = useState<SequenceExercise[] | null>(null)
-  const [exercisePickerOpen, setExercisePickerOpen] = useState(false)
   const [showSavePrompt, setShowSavePrompt] = useState(false)
   const [pendingExerciseToAdd, setPendingExerciseToAdd] = useState<{ exerciseId: number, config: ExercisePickerConfig } | null>(null)
 
@@ -157,8 +343,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     newConfig: { measure: MeasureType; targetValue?: number }
   } | null>(null)
 
-  // Skip confirmation dialog state (Phase 22.3)
-  const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
+  // Skip confirmation now handled via dock content (Phase 30.6)
 
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -544,15 +729,12 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       return
     }
 
-    // Not in review mode: show skip confirmation for normal workflow
-    if (currentIndex < exercises.length - 1) {
-      setShowSkipConfirmation(true)
-    }
+    // Not in review mode: next is disabled on last exercise (handled by dock)
+    // Skip is now handled via separate skip action in dock
   }, [exercises, currentIndex, viewingIndex, triggerHaptic])
 
-  // Confirm skip from dialog (Phase 22.3)
+  // Confirm skip from dock content (Phase 30.6)
   const handleConfirmSkip = useCallback(() => {
-    setShowSkipConfirmation(false)
     handleSkip()
   }, [handleSkip])
 
@@ -856,14 +1038,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             })()}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setExercisePickerOpen(true)}
-          className="h-12 w-12 md:h-14 md:w-14"
-        >
-          <Plus className="h-5 w-5 md:h-6 md:w-6" />
-        </Button>
+        {/* Add button removed - now in dock (Phase 30.6) */}
       </header>
 
       {/* Segmented Progress Bar with Navigation */}
@@ -1093,6 +1268,11 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           viewingIndex < completedExercises.length &&
           !completedExercises[viewingIndex]?.skipped
 
+        // Current exercise name for skip confirmation
+        const currentExerciseName = exercises?.[currentIndex]
+          ? getExerciseName(exercises[currentIndex].exerciseId)
+          : 'this exercise'
+
         return (
           <ExecutionDock
             currentIndex={displayIndex}
@@ -1112,30 +1292,57 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             onTogglePause={togglePause}
             onComplete={handleNextExercise}
             onSkip={handleSkip}
-            onAdd={() => setExercisePickerOpen(true)}
             onResume={handleResumeWorkout}
             onRedo={handleRedo}
             onStartEditing={handleStartEditing}
             onSaveEditing={handleSaveEditing}
             onCancelEditing={handleCancelEditing}
+            // Content panels (Phase 30.6)
+            addExerciseContent={
+              <AddExerciseDockContent
+                exercises={allExercises ?? []}
+                onExerciseSelected={(exerciseId, config) => {
+                  setPendingExerciseToAdd({ exerciseId, config })
+                  setShowSavePrompt(true)
+                }}
+                onBreakSelected={(config) => {
+                  // Breaks are added for this workout only, no save prompt needed
+                  const breakExercise: SequenceExercise = {
+                    id: `break-${Date.now()}`,
+                    exerciseId: -1, // Special ID for breaks
+                    config: {
+                      measure: config.measure,
+                      targetValue: config.targetValue,
+                    },
+                  }
+                  const currentExercises = workoutExercises ?? [...(sequence?.exercises as SequenceExercise[])]
+                  const insertIndex = config.position === 'before' ? currentIndex : currentIndex + 1
+                  const updatedExercises = [
+                    ...currentExercises.slice(0, insertIndex),
+                    breakExercise,
+                    ...currentExercises.slice(insertIndex),
+                  ]
+                  setWorkoutExercises(updatedExercises)
+                  if (config.position === 'before') {
+                    setCurrentIndex(prev => prev + 1)
+                  }
+                  toast.success('Break added')
+                }}
+                onClose={() => {
+                  // Dock will handle closing via toggle
+                }}
+                showPositionOption
+              />
+            }
+            skipConfirmContent={
+              <SkipConfirmDockContent exerciseName={currentExerciseName} />
+            }
+            onSkipConfirmed={handleConfirmSkip}
           />
         )
       })()}
 
-      {/* Exercise Picker Drawer */}
-      <ExercisePickerDrawer
-        open={exercisePickerOpen}
-        onOpenChange={setExercisePickerOpen}
-        onExerciseSelected={(exerciseId, config) => {
-          setPendingExerciseToAdd({ exerciseId, config })
-          setShowSavePrompt(true)
-        }}
-        showPositionOption
-        title="Add Exercise"
-        description="Select an exercise to add"
-      />
-
-      {/* Save to Sequence Prompt */}
+      {/* Save to Sequence Prompt (shown after selecting from dock content) */}
       <AlertDialog open={showSavePrompt} onOpenChange={setShowSavePrompt}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1195,23 +1402,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         />
       )}
 
-      {/* Skip Confirmation Dialog (Phase 22.3) */}
-      <AlertDialog open={showSkipConfirmation} onOpenChange={setShowSkipConfirmation}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Skip this exercise?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to skip to the next exercise? This exercise will be marked as skipped.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmSkip}>
-              Skip Exercise
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Skip confirmation is now handled by dock content (Phase 30.6) */}
     </div>
   )
 }

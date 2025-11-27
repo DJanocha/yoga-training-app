@@ -1446,23 +1446,61 @@ const builderActions: PrimaryAction[] = [
 />
 ```
 
-#### 30.5 Implementation Tasks
+#### 30.5 Implementation Tasks (Initial)
 
-- [ ] **Create `src/components/ui/dock.tsx`** - Unified dock component
-- [ ] **Type definitions** - Action, PrimaryAction, DockProps types
-- [ ] **Render logic** - Handle all states (inactive, active, hidden)
-- [ ] **Animation system** - Framer Motion for expand/collapse/fade
-- [ ] **Separator component** - Animated vertical divider
-- [ ] **Content positioning** - Support "above" and "inline" content
-- [ ] **Badge rendering** - Count badges on action buttons
-- [ ] **Migrate ExecutionDock** - Refactor to use unified Dock
-- [ ] **Migrate UnifiedModeDock** - Refactor to use unified Dock
-- [ ] **Delete old components** - Remove redundant dock implementations
+- [x] **Create `src/components/ui/dock.tsx`** - Unified dock component
+- [x] **Type definitions** - Action, PrimaryAction, DockProps types
+- [x] **Render logic** - Handle all states (inactive, active, hidden)
+- [x] **Animation system** - Framer Motion for expand/collapse/fade
+- [x] **Separator component** - Animated vertical divider
+- [x] **Content positioning** - Support "above" and "inline" content
+- [x] **Badge rendering** - Count badges on action buttons
+- [x] **Migrate ExecutionDock** - Refactor to use unified Dock
+- [x] **Migrate UnifiedModeDock** - Refactor to use unified Dock
+- [ ] **Delete old components** - Remove redundant dock implementations (N/A - both docks still provide domain-specific wrappers)
 
-**Files to Create/Modify:**
-- `src/components/ui/dock.tsx` - NEW unified component
-- `src/components/ui/execution-dock.tsx` - Migrate to use Dock
-- `src/components/ui/unified-mode-dock.tsx` - Migrate to use Dock
+**Files Created/Modified:**
+- `src/components/ui/dock.tsx` - NEW unified component with DockAction, DockPrimaryAction, DockProps types
+- `src/components/ui/execution-dock.tsx` - Now wraps Dock with execution-specific action configuration
+- `src/components/ui/unified-mode-dock.tsx` - Now wraps Dock with builder-specific action configuration and content panels
+
+#### 30.6 Dock UX Improvements ✅
+
+Based on user feedback, the unified dock needs several UX fixes:
+
+**Visual Issues:**
+- [x] **Content inside dock container** - Content panel should be visually part of the dock (single rounded container), not floating above as separate element
+- [x] **Unified content position** - Always show content/children ABOVE the dock bar, never inline. Hierarchy: `action → content ABOVE`
+
+**Interaction Issues:**
+- [x] **Fix toggle to close** - Clicking active action button should deactivate it (close content)
+- [x] **Add backdrop/mask** - When dock has active content:
+  - Dim/blur background
+  - Prevent clicks on elements behind dock
+  - Clicking backdrop closes active action
+- [x] **Z-index / nav overlap** - In edit sequence screen, dock is hidden behind bottom navigation. Options:
+  - Hide bottom nav in edit sequence screen (preferred - focused task mode)
+  - Or adjust dock z-index/position
+
+**Missing Features:**
+- [x] **ExecutionDock: Add exercise content** - Add exercise picker as `content` for the add action (reuse AddContent from UnifiedModeDock)
+- [x] **ExecutionDock: Skip confirmation as content** - Show "Skip this exercise?" as content panel instead of dialog
+
+**Visual Layout (Updated):**
+```
+┌─────────────────────────────┐
+│      Content Panel          │  ← inside dock container
+├─────────────────────────────┤
+│  [indicator] | [actions]    │  ← dock bar
+└─────────────────────────────┘
+         ↑
+    backdrop/mask behind
+```
+
+**Files to Modify:**
+- `src/components/ui/dock.tsx` - Content inside container, backdrop, toggle fix
+- `src/components/ui/execution-dock.tsx` - Add exercise picker content, skip confirmation content
+- `src/routes/sequences/$id/edit.tsx` or layout - Hide bottom nav in edit mode
 
 ---
 
