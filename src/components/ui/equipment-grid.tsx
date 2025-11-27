@@ -32,6 +32,8 @@ type EquipmentGridProps = {
   onAddNew?: () => void
   /** Show the "+" button in the last slot */
   showAddButton?: boolean
+  /** Scale factor (default 1.0, e.g., 1.5 for 150% size) */
+  scale?: number
 }
 
 /**
@@ -47,6 +49,7 @@ export function EquipmentGrid({
   editable = true,
   onAddNew,
   showAddButton = false,
+  scale = 1.0,
 }: EquipmentGridProps) {
   const maxDisplay = cols * rows
   const reserveSlotForAdd = showAddButton && onAddNew
@@ -122,7 +125,10 @@ export function EquipmentGrid({
   if (items.length === 0) return null
 
   return (
-    <div className="flex flex-col items-center">
+    <div
+      className="flex flex-col items-center origin-center"
+      style={{ transform: `scale(${scale})` }}
+    >
       <div
         className="p-3 rounded-xl bg-amber-950 border-4 border-amber-800 shadow-lg"
         style={{
@@ -209,8 +215,8 @@ export function EquipmentGrid({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground mt-2">
-        {editable ? "Tap to cycle: off → easier → harder" : "Equipment"}
+      <p className="text-xs text-muted-foreground mt-2 whitespace-pre-line">
+        {editable ? "Tap to cycle: \noff → easier → harder" : "Equipment"}
       </p>
     </div>
   )

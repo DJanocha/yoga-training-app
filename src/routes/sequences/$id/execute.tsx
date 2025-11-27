@@ -1038,6 +1038,10 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             })()}
           </p>
         </div>
+        {/* Goal type indicator */}
+        <div className="px-3 py-1 rounded-full bg-muted text-xs font-medium capitalize">
+          {sequence?.goal === 'strict' ? 'Target' : 'Flow'}
+        </div>
         {/* Add button removed - now in dock (Phase 30.6) */}
       </header>
 
@@ -1087,7 +1091,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       {/* Main content */}
       <main className={`flex-1 flex flex-col items-center justify-center p-2 md:p-6 min-h-0 ${isReviewing && !isEditing ? 'opacity-60' : ''}`}>
         {/* Exercise name with icon and edit button */}
-        <div className="flex items-center gap-2 mb-2 md:mb-4">
+        <div className="flex items-center gap-2 mb-8 md:mb-12">
           {isBreak ? (
             <Coffee className="h-6 w-6 md:h-10 md:w-10 text-muted-foreground" />
           ) : isTimeBased ? (
@@ -1181,11 +1185,38 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           // Equipment is editable in normal mode OR when in edit mode (but NOT when just reviewing)
           const equipmentEditable = isEditing || !isReviewing
 
-          return (
-            <div className={`flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 w-full max-w-4xl ${!hasEquipment ? 'md:justify-center' : ''}`}>
-              {/* Equipment Grid (left side) - only show if there are modifiers */}
+          // Layout changes based on measure type:
+          // TIME MODE: Vertical stack (timer on top, backpack below)
+          // REPS MODE: Horizontal layout (backpack left, counter right)
+          return isTimeBased ? (
+            // TIME MODE: Vertical layout
+            <div className="flex flex-col items-center justify-center gap-4 w-full max-w-md">
+              {/* Timer on top */}
+              <div>
+                {isReviewing ? (
+                  <GameTimer
+                    seconds={displayValue}
+                    onChange={isEditing ? setEditingValue : undefined}
+                    editable={isEditing}
+                    label={isEditing ? 'Edit Time' : 'Recorded Time'}
+                    theme={isEditing ? 'blue' : 'emerald'}
+                  />
+                ) : (
+                  <GameTimer
+                    seconds={timeElapsed <= targetValue
+                      ? Math.max(0, targetValue - timeElapsed)
+                      : timeElapsed - targetValue
+                    }
+                    editable={false}
+                    label={timeElapsed > targetValue ? 'Over Target' : 'Remaining'}
+                    theme={timeElapsed > targetValue ? 'orange' : 'emerald'}
+                  />
+                )}
+              </div>
+
+              {/* Equipment Grid below - horizontal orientation */}
               {hasEquipment && !isBreak && (
-                <div className="order-2 md:order-1">
+                <div className="w-full max-w-sm">
                   <EquipmentGrid
                     items={equipmentItems}
                     activeItems={activeEquipment}
@@ -1196,45 +1227,37 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                   />
                 </div>
               )}
-
-              {/* Timer/Counter (right side or center if no equipment) */}
-              <div className="order-1 md:order-2">
-                {isTimeBased ? (
-                  // Time-based: GameTimer
-                  // When editing or reviewing, show the recorded time (editable in edit mode)
-                  // During normal execution, show countdown
-                  isReviewing ? (
-                    <GameTimer
-                      seconds={displayValue}
-                      onChange={isEditing ? setEditingValue : undefined}
-                      editable={isEditing}
-                      label={isEditing ? 'Edit Time' : 'Recorded Time'}
-                      theme={isEditing ? 'blue' : 'emerald'}
-                    />
-                  ) : (
-                    <GameTimer
-                      seconds={timeElapsed <= targetValue
-                        ? Math.max(0, targetValue - timeElapsed)
-                        : timeElapsed - targetValue
-                      }
-                      editable={false}
-                      label={timeElapsed > targetValue ? 'Over Target' : 'Remaining'}
-                      theme={timeElapsed > targetValue ? 'orange' : 'emerald'}
-                    />
-                  )
-                ) : (
-                  // Rep-based: GameCounter
-                  <GameCounter
-                    value={displayValue}
-                    onChange={isEditing ? setEditingValue : (isReviewing ? undefined : setActualValue)}
-                    target={targetValue > 0 ? targetValue : undefined}
-                    label={isEditing ? 'Edit Reps' : 'Reps'}
-                    theme={displayValue >= targetValue && targetValue > 0 ? 'cyan' : 'lime'}
-                    min={0}
-                    max={999}
-                    disabled={isReviewing && !isEditing}
+            </div>
+          ) : (
+            // REPS MODE: Horizontal layout
+            <div className={`flex items-center justify-center gap-4 w-full max-w-4xl ${!hasEquipment ? 'justify-center' : ''}`}>
+              {/* Equipment Grid (left side) - vertical orientation, scaled up to match counter */}
+              {hasEquipment && !isBreak && (
+                <div className="flex-shrink-0">
+                  <EquipmentGrid
+                    items={equipmentItems}
+                    activeItems={activeEquipment}
+                    onToggle={handleEquipmentToggle}
+                    cols={1}
+                    rows={3}
+                    editable={equipmentEditable}
+                    scale={1.15}
                   />
-                )}
+                </div>
+              )}
+
+              {/* Counter (right side or center if no equipment) */}
+              <div className="flex-shrink-0">
+                <GameCounter
+                  value={displayValue}
+                  onChange={isEditing ? setEditingValue : (isReviewing ? undefined : setActualValue)}
+                  target={targetValue > 0 ? targetValue : undefined}
+                  label={isEditing ? 'Edit Reps' : 'Reps'}
+                  theme={displayValue >= targetValue && targetValue > 0 ? 'cyan' : 'lime'}
+                  min={0}
+                  max={999}
+                  disabled={isReviewing && !isEditing}
+                />
               </div>
             </div>
           )
@@ -1246,11 +1269,6 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             <Progress value={Math.min(progress, 100)} className="h-2 md:h-3" />
           </div>
         )}
-
-        {/* Goal type indicator */}
-        <p className="text-xs md:text-base text-muted-foreground capitalize mt-2 md:mt-4">
-          {sequence?.goal || 'elastic'} goal
-        </p>
       </main>
 
       {/* ExecutionDock - Floating control dock */}
@@ -1297,6 +1315,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             onStartEditing={handleStartEditing}
             onSaveEditing={handleSaveEditing}
             onCancelEditing={handleCancelEditing}
+            className="!bottom-6"
             // Content panels (Phase 30.6)
             addExerciseContent={
               <AddExerciseDockContent
