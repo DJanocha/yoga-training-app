@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback, useEffect, useMemo, forwardRef } from "react"
 import { cn } from "@/lib/utils"
 
-export type WheelSelectSize = "default" | "lg"
+export type WheelSelectSize = "compact" | "default" | "lg"
+export type WheelSelectVariant = "default" | "dark"
 
 export type WheelSelectProps<T extends string | number = string> = {
   value: T
@@ -11,13 +12,17 @@ export type WheelSelectProps<T extends string | number = string> = {
   formatOption?: (option: T) => string
   /** Size variant - lg for execution screen */
   size?: WheelSelectSize
+  /** Color variant - dark for game-style dark backgrounds */
+  variant?: WheelSelectVariant
 }
 
 export const WheelSelect = forwardRef(function WheelSelect<T extends string | number = string>(
-  { value, onChange, options, className, formatOption = (opt) => String(opt), size = "default" }: WheelSelectProps<T>,
+  { value, onChange, options, className, formatOption = (opt) => String(opt), size = "default", variant = "default" }: WheelSelectProps<T>,
   ref: React.ForwardedRef<HTMLDivElement>
 ) {
   const isLarge = size === "lg"
+  const isCompact = size === "compact"
+  const isDark = variant === "dark"
   const internalRef = useRef<HTMLDivElement>(null)
   const containerRef = (ref as React.RefObject<HTMLDivElement>) || internalRef
   const [isDragging, setIsDragging] = useState(false)
@@ -156,10 +161,10 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
   }, [isDragging, handleDragMove, handleDragEnd])
 
   // Size-dependent values
-  const itemHeight = isLarge ? 48 : 32
-  const containerHeight = isLarge ? 192 : 128 // h-48 vs h-32
-  const containerWidth = isLarge ? 96 : 80 // w-24 vs w-20
-  const centerOffset = isLarge ? 168 : 112 // 3 * itemHeight + itemHeight/2
+  const itemHeight = isCompact ? 24 : isLarge ? 48 : 32
+  const containerHeight = isCompact ? 96 : isLarge ? 192 : 128 // h-24 vs h-48 vs h-32
+  const containerWidth = isCompact ? 64 : isLarge ? 96 : 80 // w-16 vs w-24 vs w-20
+  const centerOffset = isCompact ? 84 : isLarge ? 168 : 112 // 3 * itemHeight + itemHeight/2
 
   return (
     <div
@@ -174,7 +179,10 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
       aria-label="Option picker"
     >
       <div
-        className="relative rounded-lg border bg-background overflow-hidden"
+        className={cn(
+          "relative rounded-lg overflow-hidden",
+          isDark ? "bg-transparent" : "border bg-background"
+        )}
         style={{ height: containerHeight, width: containerWidth }}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
@@ -199,8 +207,8 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
                 key={`${option}-${index}`}
                 className={cn(
                   "flex items-center justify-center transition-opacity duration-150 pointer-events-none",
-                  isLarge ? "h-12 text-2xl font-medium" : "h-8 text-lg font-medium",
-                  isSelected && (isLarge ? "text-4xl font-bold" : "text-2xl font-bold")
+                  isCompact ? "h-6 text-sm font-medium" : isLarge ? "h-12 text-2xl font-medium" : "h-8 text-lg font-medium",
+                  isSelected && (isCompact ? "text-base font-bold" : isLarge ? "text-4xl font-bold" : "text-2xl font-bold")
                 )}
                 style={{ opacity: option === null ? 0 : opacity }}
               >
@@ -212,18 +220,23 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
 
         {/* Selection indicator */}
         <div
-          className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-primary/20 bg-primary/5 pointer-events-none"
+          className={cn(
+            "absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none",
+            isDark ? "border-y border-white/20" : "border-y-2 border-primary/20 bg-primary/5"
+          )}
           style={{ height: itemHeight }}
         />
 
         {/* Fade edges */}
         <div className={cn(
-          "absolute inset-x-0 top-0 bg-linear-to-b from-background to-transparent pointer-events-none",
-          isLarge ? "h-16" : "h-12"
+          "absolute inset-x-0 top-0 pointer-events-none",
+          isDark ? "bg-linear-to-b from-zinc-800 to-transparent" : "bg-linear-to-b from-background to-transparent",
+          isCompact ? "h-8" : isLarge ? "h-16" : "h-12"
         )} />
         <div className={cn(
-          "absolute inset-x-0 bottom-0 bg-linear-to-t from-background to-transparent pointer-events-none",
-          isLarge ? "h-16" : "h-12"
+          "absolute inset-x-0 bottom-0 pointer-events-none",
+          isDark ? "bg-linear-to-t from-zinc-800 to-transparent" : "bg-linear-to-t from-background to-transparent",
+          isCompact ? "h-8" : isLarge ? "h-16" : "h-12"
         )} />
       </div>
     </div>

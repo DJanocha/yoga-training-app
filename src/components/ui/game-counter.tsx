@@ -17,6 +17,8 @@ type GameCounterProps = {
   min?: number
   /** Max value */
   max?: number
+  /** Disabled state - makes the component read-only with visual indication */
+  disabled?: boolean
 }
 
 /**
@@ -31,6 +33,7 @@ export function GameCounter({
   theme = "lime",
   min = 0,
   max = 999,
+  disabled = false,
 }: GameCounterProps) {
   // Theme colors
   const colors = {
@@ -64,15 +67,15 @@ export function GameCounter({
   const progressColor = atTarget ? "text-green-400" : c.text
 
   return (
-    <div className="flex flex-col items-center">
+    <div className={`flex flex-col items-center ${disabled ? 'pointer-events-none' : ''}`}>
       <div
-        className={`flex flex-col items-center p-4 rounded-2xl bg-linear-to-br from-gray-900 to-black ${c.border} border-4 ${c.glow}`}
+        className={`flex flex-col items-center p-4 rounded-2xl bg-linear-to-br from-gray-900 to-black ${c.border} border-4 ${disabled ? 'opacity-50 grayscale' : c.glow}`}
       >
         {/* Counter wheel */}
         <div className={`relative p-3 rounded-xl bg-gray-800 border-2 border-gray-600`}>
           <WheelNumberInput
             value={value}
-            onChange={onChange ?? (() => {})}
+            onChange={disabled ? () => {} : (onChange ?? (() => {}))}
             min={min}
             max={max}
             step={1}

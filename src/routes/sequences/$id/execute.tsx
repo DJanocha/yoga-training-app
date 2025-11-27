@@ -16,6 +16,7 @@ import { ExerciseConfigUpdateDialog, type UpdateScope } from '@/components/exerc
 import { GameTimer } from '@/components/ui/game-timer'
 import { GameCounter } from '@/components/ui/game-counter'
 import { EquipmentGrid } from '@/components/ui/equipment-grid'
+import { ExecutionDock } from '@/components/ui/execution-dock'
 import type { ExercisePickerConfig } from '@/components/exercise-picker-drawer'
 import type { MeasureType, ExerciseGroup } from '@/db/types'
 import {
@@ -30,16 +31,12 @@ import {
 } from '@/components/ui/alert-dialog'
 import {
   ArrowLeft,
-  Play,
-  Pause,
-  SkipForward,
   CheckCircle,
   Coffee,
   Clock,
   Repeat,
   Star,
   Plus,
-  RotateCcw,
   Eye,
   Pencil,
 } from 'lucide-react'
@@ -148,12 +145,20 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   const [viewingIndex, setViewingIndex] = useState<number | null>(null)
   const isReviewing = viewingIndex !== null
 
+  // Edit mode state - for editing completed exercises
+  const [isEditing, setIsEditing] = useState(false)
+  const [editingValue, setEditingValue] = useState<number>(0)
+  const [editingModifiers, setEditingModifiers] = useState<ActiveModifier[]>([])
+
   // Config update dialog state (Phase 18.3)
   const [showConfigDialog, setShowConfigDialog] = useState(false)
   const [pendingConfigChange, setPendingConfigChange] = useState<{
     oldConfig: { measure: MeasureType; targetValue?: number }
     newConfig: { measure: MeasureType; targetValue?: number }
   } | null>(null)
+
+  // Skip confirmation dialog state (Phase 22.3)
+  const [showSkipConfirmation, setShowSkipConfirmation] = useState(false)
 
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -499,6 +504,106 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
   }, [exercises, currentIndex, executionId, completedExercises, updateExecution])
 
+  // Handle previous exercise - enters review mode (Phase 22.3)
+  const handlePrevExercise = useCallback(() => {
+    if (!exercises) return
+
+    // If already in review mode, go to previous reviewed exercise
+    if (viewingIndex !== null && viewingIndex > 0) {
+      setViewingIndex(viewingIndex - 1)
+      triggerHaptic(50)
+      return
+    }
+
+    // If not in review mode and there are completed exercises, enter review mode
+    if (currentIndex > 0 || completedExercises.length > 0) {
+      // Enter review mode at the previous exercise
+      const targetIndex = viewingIndex !== null ? viewingIndex - 1 : currentIndex - 1
+      if (targetIndex >= 0) {
+        setViewingIndex(targetIndex)
+        triggerHaptic(50)
+      }
+    }
+  }, [exercises, currentIndex, completedExercises, viewingIndex, triggerHaptic])
+
+  // Handle navigate to next - behavior depends on review mode
+  const handleNavigateNext = useCallback(() => {
+    if (!exercises) return
+
+    // In review mode: navigate through history without confirmation
+    if (viewingIndex !== null) {
+      // If we're at a completed exercise, just move to next viewed exercise
+      if (viewingIndex < currentIndex - 1) {
+        setViewingIndex(viewingIndex + 1)
+        triggerHaptic(50)
+      } else if (viewingIndex === currentIndex - 1) {
+        // At last completed exercise, exit review mode
+        setViewingIndex(null)
+        triggerHaptic(50)
+      }
+      return
+    }
+
+    // Not in review mode: show skip confirmation for normal workflow
+    if (currentIndex < exercises.length - 1) {
+      setShowSkipConfirmation(true)
+    }
+  }, [exercises, currentIndex, viewingIndex, triggerHaptic])
+
+  // Confirm skip from dialog (Phase 22.3)
+  const handleConfirmSkip = useCallback(() => {
+    setShowSkipConfirmation(false)
+    handleSkip()
+  }, [handleSkip])
+
+  // Handle resume - exit review mode and go back to active exercise
+  const handleResumeWorkout = useCallback(() => {
+    setViewingIndex(null)
+    setIsEditing(false)
+    triggerHaptic(50)
+  }, [triggerHaptic])
+
+  // Handle entering edit mode for a completed exercise
+  const handleStartEditing = useCallback(() => {
+    if (viewingIndex === null || viewingIndex >= completedExercises.length) return
+
+    const completedExercise = completedExercises[viewingIndex]
+    // Initialize editing state with current values
+    setEditingValue(completedExercise.value ?? 0)
+    setEditingModifiers(completedExercise.activeModifiers ?? [])
+    setIsEditing(true)
+    triggerHaptic(50)
+  }, [viewingIndex, completedExercises, triggerHaptic])
+
+  // Handle saving edits to a completed exercise
+  const handleSaveEditing = useCallback(() => {
+    if (viewingIndex === null || viewingIndex >= completedExercises.length) return
+
+    // Update the completed exercise with new values
+    setCompletedExercises(prev => {
+      const updated = [...prev]
+      updated[viewingIndex] = {
+        ...updated[viewingIndex],
+        value: editingValue,
+        activeModifiers: editingModifiers.length > 0 ? editingModifiers : undefined,
+      }
+      return updated
+    })
+
+    setIsEditing(false)
+    triggerHaptic([50, 30, 50]) // Double tap feedback for save
+    toast.success('Exercise updated')
+  }, [viewingIndex, completedExercises.length, editingValue, editingModifiers, triggerHaptic])
+
+  // Handle canceling edits
+  const handleCancelEditing = useCallback(() => {
+    setIsEditing(false)
+    // Reset editing state (will be re-initialized if user enters edit mode again)
+    setEditingValue(0)
+    setEditingModifiers([])
+    triggerHaptic(50)
+  }, [triggerHaptic])
+
   // Handle pause/resume
   const togglePause = () => {
     setIsPaused((prev) => !prev)
@@ -714,11 +819,20 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   const targetValue = displayExercise.config.targetValue || 0
   const progress = isTimeBased ? (timeElapsed / targetValue) * 100 : 0
 
-  // When reviewing, get modifiers from completed exercise record
+  // When reviewing, get modifiers from completed exercise record or editing state
   const reviewedExercise = isReviewing && viewingIndex !== null ? completedExercises[viewingIndex] : null
-  const displayModifiers = isReviewing && reviewedExercise?.activeModifiers
-    ? reviewedExercise.activeModifiers
-    : activeModifiers
+  const displayModifiers = isEditing
+    ? editingModifiers
+    : isReviewing && reviewedExercise?.activeModifiers
+      ? reviewedExercise.activeModifiers
+      : activeModifiers
+
+  // When reviewing, get value from completed exercise or editing state
+  const displayValue = isEditing
+    ? editingValue
+    : isReviewing && reviewedExercise?.value !== undefined
+      ? reviewedExercise.value
+      : actualValue
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -762,41 +876,41 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         className="border-b"
       />
 
-      {/* Review Mode Banner */}
+      {/* Review/Edit Mode Banner */}
       {isReviewing && viewingIndex !== null && (
-        <div className="bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-800 px-4 py-3">
-          <div className="flex items-center justify-between max-w-lg mx-auto">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                Reviewing Exercise {viewingIndex + 1} of {exercises.length}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewingIndex(null)}
-                className="h-8"
-              >
-                Resume
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleRedo}
-                className="h-8 bg-blue-600 hover:bg-blue-700"
-              >
-                <RotateCcw className="h-3 w-3 mr-1" />
-                Redo
-              </Button>
-            </div>
+        <div className={`border-b px-4 py-2 ${
+          isEditing
+            ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
+            : 'bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800'
+        }`}>
+          <div className="flex items-center justify-center gap-2 max-w-lg mx-auto">
+            {isEditing ? (
+              <>
+                <Pencil className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  Editing exercise {viewingIndex + 1}
+                </span>
+                <span className="text-xs text-blue-600 dark:text-blue-400">
+                  (modifying values)
+                </span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                  Reviewing exercise {viewingIndex + 1}
+                </span>
+                <span className="text-xs text-amber-600 dark:text-amber-400">
+                  (read-only)
+                </span>
+              </>
+            )}
           </div>
         </div>
       )}
 
       {/* Main content */}
-      <main className={`flex-1 flex flex-col items-center justify-center p-2 md:p-6 min-h-0 ${isReviewing ? 'opacity-60' : ''}`}>
+      <main className={`flex-1 flex flex-col items-center justify-center p-2 md:p-6 min-h-0 ${isReviewing && !isEditing ? 'opacity-60' : ''}`}>
         {/* Exercise name with icon and edit button */}
         <div className="flex items-center gap-2 mb-2 md:mb-4">
           {isBreak ? (
@@ -853,14 +967,13 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             const modifier = allModifiers?.find((m) => m.id === itemId)
             if (!modifier) return
 
+            // Determine which state setter to use based on mode
             const updateModifiers = (updater: (prev: ActiveModifier[]) => ActiveModifier[]) => {
-              if (isReviewing && viewingIndex !== null) {
-                setCompletedExercises(prev => prev.map((ex, i) =>
-                  i === viewingIndex
-                    ? { ...ex, activeModifiers: updater(ex.activeModifiers || []) }
-                    : ex
-                ))
+              if (isEditing) {
+                // When editing, update the editing state
+                setEditingModifiers(updater)
               } else {
+                // Normal mode: update active modifiers
                 setActiveModifiers(updater)
               }
             }
@@ -890,6 +1003,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             }
           }
 
+          // Equipment is editable in normal mode OR when in edit mode (but NOT when just reviewing)
+          const equipmentEditable = isEditing || !isReviewing
+
           return (
             <div className={`flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 w-full max-w-4xl ${!hasEquipment ? 'md:justify-center' : ''}`}>
               {/* Equipment Grid (left side) - only show if there are modifiers */}
@@ -901,7 +1017,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
                     onToggle={handleEquipmentToggle}
                     cols={3}
                     rows={1}
-                    editable={true}
+                    editable={equipmentEditable}
                   />
                 </div>
               )}
@@ -910,25 +1026,38 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
               <div className="order-1 md:order-2">
                 {isTimeBased ? (
                   // Time-based: GameTimer
-                  <GameTimer
-                    seconds={timeElapsed <= targetValue
-                      ? Math.max(0, targetValue - timeElapsed)
-                      : timeElapsed - targetValue
-                    }
-                    editable={false}
-                    label={timeElapsed > targetValue ? 'Over Target' : 'Remaining'}
-                    theme={timeElapsed > targetValue ? 'orange' : 'emerald'}
-                  />
+                  // When editing or reviewing, show the recorded time (editable in edit mode)
+                  // During normal execution, show countdown
+                  isReviewing ? (
+                    <GameTimer
+                      seconds={displayValue}
+                      onChange={isEditing ? setEditingValue : undefined}
+                      editable={isEditing}
+                      label={isEditing ? 'Edit Time' : 'Recorded Time'}
+                      theme={isEditing ? 'blue' : 'emerald'}
+                    />
+                  ) : (
+                    <GameTimer
+                      seconds={timeElapsed <= targetValue
+                        ? Math.max(0, targetValue - timeElapsed)
+                        : timeElapsed - targetValue
+                      }
+                      editable={false}
+                      label={timeElapsed > targetValue ? 'Over Target' : 'Remaining'}
+                      theme={timeElapsed > targetValue ? 'orange' : 'emerald'}
+                    />
+                  )
                 ) : (
                   // Rep-based: GameCounter
                   <GameCounter
-                    value={actualValue}
-                    onChange={setActualValue}
+                    value={displayValue}
+                    onChange={isEditing ? setEditingValue : (isReviewing ? undefined : setActualValue)}
                     target={targetValue > 0 ? targetValue : undefined}
-                    label="Reps"
-                    theme={actualValue >= targetValue && targetValue > 0 ? 'cyan' : 'lime'}
+                    label={isEditing ? 'Edit Reps' : 'Reps'}
+                    theme={displayValue >= targetValue && targetValue > 0 ? 'cyan' : 'lime'}
                     min={0}
                     max={999}
+                    disabled={isReviewing && !isEditing}
                   />
                 )}
               </div>
@@ -949,61 +1078,49 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         </p>
       </main>
 
-      {/* Controls */}
-      <div className="p-3 md:p-6 border-t shrink-0">
-        <div className="flex gap-3 md:gap-4 max-w-sm md:max-w-lg mx-auto">
-          <Button
-            variant="outline"
-            size="lg"
-            className="flex-1 h-12 md:h-14 text-base md:text-lg"
-            onClick={handleSkip}
-          >
-            <SkipForward className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-            Skip
-          </Button>
+      {/* ExecutionDock - Floating control dock */}
+      {(() => {
+        // In review mode, navigation bounds are based on viewingIndex
+        const displayIndex = isReviewing && viewingIndex !== null ? viewingIndex : currentIndex
+        const isFirstExercise = displayIndex === 0
+        // In review mode, "last" means the exercise before the active one
+        const isLastExercise = isReviewing
+          ? viewingIndex !== null && viewingIndex >= currentIndex - 1
+          : currentIndex >= (exercises?.length || 1) - 1
 
-          {isTimeBased ? (
-            ((sequence as any)?.goal || 'elastic') === 'strict' ? (
-              <Button
-                variant={isPaused ? 'default' : 'secondary'}
-                size="lg"
-                className="flex-1 h-12 md:h-14 text-base md:text-lg"
-                onClick={togglePause}
-              >
-                {isPaused ? (
-                  <>
-                    <Play className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-                    Resume
-                  </>
-                ) : (
-                  <>
-                    <Pause className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-                    Pause
-                  </>
-                )}
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                className="flex-1 h-12 md:h-14 text-base md:text-lg"
-                onClick={handleNextExercise}
-              >
-                <CheckCircle className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-                Done
-              </Button>
-            )
-          ) : (
-            <Button
-              size="lg"
-              className="flex-1 h-12 md:h-14 text-base md:text-lg"
-              onClick={handleNextExercise}
-            >
-              <CheckCircle className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-              Done
-            </Button>
-          )}
-        </div>
-      </div>
+        // Determine if user can edit this exercise (completed, not skipped)
+        const canEdit = viewingIndex !== null &&
+          viewingIndex < completedExercises.length &&
+          !completedExercises[viewingIndex]?.skipped
+
+        return (
+          <ExecutionDock
+            currentIndex={displayIndex}
+            totalExercises={exercises?.length || 0}
+            isFirstExercise={isFirstExercise}
+            isLastExercise={isLastExercise}
+            isReviewing={isReviewing}
+            viewingIndex={viewingIndex}
+            activeExerciseIndex={currentIndex}
+            isEditing={isEditing}
+            canEdit={canEdit}
+            isPaused={isPaused}
+            isTimeBased={isTimeBased}
+            goalType={((sequence as any)?.goal || 'elastic') as 'strict' | 'elastic'}
+            onPrevious={handlePrevExercise}
+            onNext={handleNavigateNext}
+            onTogglePause={togglePause}
+            onComplete={handleNextExercise}
+            onSkip={handleSkip}
+            onAdd={() => setExercisePickerOpen(true)}
+            onResume={handleResumeWorkout}
+            onRedo={handleRedo}
+            onStartEditing={handleStartEditing}
+            onSaveEditing={handleSaveEditing}
+            onCancelEditing={handleCancelEditing}
+          />
+        )
+      })()}
 
       {/* Exercise Picker Drawer */}
       <ExercisePickerDrawer
@@ -1077,6 +1194,24 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           onCancel={handleCancelConfigUpdate}
         />
       )}
+
+      {/* Skip Confirmation Dialog (Phase 22.3) */}
+      <AlertDialog open={showSkipConfirmation} onOpenChange={setShowSkipConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Skip this exercise?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to skip to the next exercise? This exercise will be marked as skipped.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSkip}>
+              Skip Exercise
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

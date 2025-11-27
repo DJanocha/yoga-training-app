@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTRPC } from "@/lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ExercisePickerDrawer } from "@/components/exercise-picker-drawer";
 import type { ExercisePickerConfig } from "@/components/exercise-picker-drawer";
 import { WheelNumberInput } from "@/components/ui/wheel-number-input";
 import { WheelSelect } from "@/components/ui/wheel-select";
@@ -82,7 +81,7 @@ import type {
 } from "@/db/types";
 import type { Modifier } from "@/validators/entities";
 import { cn } from "@/lib/utils";
-import { FloatingActionDock } from "@/components/ui/floating-action-dock";
+import { UnifiedModeDock, type DockMode } from "@/components/ui/unified-mode-dock";
 import { EmptyState } from "@/components/empty-state";
 
 type SequenceBuilderProps = {
@@ -615,8 +614,9 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isModifierPickerOpen, setIsModifierPickerOpen] = useState(false);
 
-  // Selection mode for batch operations
-  const [selectionMode, setSelectionMode] = useState(false);
+  // Dock mode for unified mode dock
+  const [dockMode, setDockMode] = useState<DockMode>(null);
+  const selectionMode = dockMode === "select";
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isBatchConfigOpen, setIsBatchConfigOpen] = useState(false);
 
@@ -633,7 +633,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   // Exercise picker drawer state
-  const [exercisePickerOpen, setExercisePickerOpen] = useState(false);
+  // Removed: exercisePickerOpen state - now using inline picker in UnifiedModeDock
 
   // Compute which exercises are grouped
   const groupedExerciseIds = useMemo(() => {
@@ -945,7 +945,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
 
     // Clear selection and exit modes
     setSelectedItems(new Set());
-    setSelectionMode(false);
+    setDockMode(null);
     setIsBatchConfigOpen(false);
     // Reset batch config
     setBatchMeasure("time");
@@ -1141,7 +1141,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
 
     // Clear selection and exit mode
     setSelectedItems(new Set());
-    setSelectionMode(false);
+    setDockMode(null);
   }, [selectedItems, groups, exercises]);
 
   // Batch delete selected items (handles both groups and exercises)
@@ -1168,7 +1168,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
 
     // Clear selection and exit mode
     setSelectedItems(new Set());
-    setSelectionMode(false);
+    setDockMode(null);
   }, [selectedItems, getEffectiveSelection]);
 
   // Merge selected exercises into a group (supports mixed selection)
@@ -1209,7 +1209,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       newGroup,
     ]);
     setSelectedItems(new Set());
-    setSelectionMode(false);
+    setDockMode(null);
   }, [selectedItems, exercises, renderItems, getEffectiveSelection]);
 
   // Ungroup exercises (dissolve group)
@@ -1510,17 +1510,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
 
         {/* Exercises Tab */}
         <TabsContent value="exercises" className={cn("flex-1 p-1 mt-0 flex flex-col min-h-0", "pb-24")}>
-          {/* Exercise Picker Drawer - always mounted, controlled by open state */}
-          <ExercisePickerDrawer
-            open={exercisePickerOpen}
-            onOpenChange={setExercisePickerOpen}
-            onExerciseSelected={handleExerciseSelected}
-            onBreakSelected={() => addBreak()}
-            showBreakOption={true}
-            title="Add to Sequence"
-            description="Select an exercise or break to add"
-            initialConfig={{ targetValue: defaultTargetValue, measure: defaultMeasure }}
-          />
+          {/* Exercise picker now inline in UnifiedModeDock */}
 
           {/* Scrollable exercise list */}
           <div className="flex-1 overflow-y-auto mt-3 min-h-0">
@@ -1581,7 +1571,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         ) : (
           <EmptyState
           actionLabel="Add Exercise"
-          onAction={() => setExercisePickerOpen(true)}
+          onAction={() => setDockMode("add")}
           icon={Plus}
           title="No exercises yet"
           description="Add exercises to build your sequence"
@@ -1590,22 +1580,47 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         )}
           </div>
 
-        {/* Floating Action Dock */}
-        <FloatingActionDock
-          selectionMode={selectionMode}
-          onToggleSelectionMode={() => {
-            setSelectionMode((v) => !v);
-            if (selectionMode) {
+        {/* Unified Mode Dock */}
+        <UnifiedModeDock
+          activeMode={dockMode}
+          onModeChange={(mode) => {
+            setDockMode(mode);
+            if (mode !== "select") {
               setSelectedItems(new Set());
             }
           }}
           selectedCount={effectiveSelectionCount}
-          onAdd={() => setExercisePickerOpen(true)}
           onMerge={mergeSelectedIntoGroup}
           onClone={batchCloneSelected}
           onConfigure={() => setIsBatchConfigOpen(true)}
           onDelete={batchDeleteSelected}
           canMerge={effectiveSelectionCount >= 2}
+          exercises={allExercises?.map((ex) => ({
+            id: ex.id,
+            name: ex.name,
+            description: ex.description,
+          })) ?? []}
+          onExerciseAdd={(exerciseId, config) => {
+            handleExerciseSelected(exerciseId, config);
+          }}
+          onBreakAdd={() => {
+            addBreak();
+          }}
+          showBreakOption
+          defaultConfig={{
+            targetValue: defaultTargetValue,
+            measure: defaultMeasure,
+          }}
+          helpContent={{
+            title: "Sequence Builder",
+            description: "Build your workout sequence by adding and organizing exercises.",
+            tips: [
+              "Tap Select to enable multi-select mode",
+              "Drag exercises to reorder them",
+              "Groups let you organize related exercises",
+              "Configure multiple exercises at once with batch edit",
+            ],
+          }}
         />
         </TabsContent>
       </Tabs>

@@ -1,5 +1,5 @@
 import { forwardRef, useMemo } from "react"
-import { WheelSelect, type WheelSelectSize } from "./wheel-select"
+import { WheelSelect, type WheelSelectSize, type WheelSelectVariant } from "./wheel-select"
 
 export type WheelNumberInputProps = {
   value: number
@@ -10,6 +10,8 @@ export type WheelNumberInputProps = {
   className?: string
   /** Size variant - lg for execution screen */
   size?: WheelSelectSize
+  /** Color variant - dark for game-style dark backgrounds */
+  variant?: WheelSelectVariant
 }
 
 /**
@@ -26,7 +28,7 @@ export function rangeToOptions(min: number, max: number, step: number): number[]
 
 export const WheelNumberInput = forwardRef<HTMLDivElement, WheelNumberInputProps>(
   function WheelNumberInput(
-    { value, onChange, min = 1, max = 999, step = 1, className, size },
+    { value, onChange, min = 1, max = 999, step = 1, className, size, variant },
     ref
   ) {
     // Generate number options from range
@@ -44,6 +46,7 @@ export const WheelNumberInput = forwardRef<HTMLDivElement, WheelNumberInputProps
         formatOption={formatNumber}
         className={className}
         size={size}
+        variant={variant}
       />
     )
   }

@@ -1151,58 +1151,58 @@ Expanded (Add mode active - vertical expansion):
 └─────────────────────────────────────────┘
 ```
 
-- [ ] **Mode Icons** - Square (select), Plus (add), HelpCircle (help), Menu (options)
-- [ ] **Active State Indicator** - Highlighted background, filled icon variant
-- [ ] **Mode Switching** - Click inactive mode to switch, click active mode to collapse
-- [ ] **Smooth Transitions** - Spring animations for expand/collapse
+- [x] **Mode Icons** - Square (select), Plus (add), HelpCircle (help), Menu (options)
+- [x] **Active State Indicator** - Highlighted background, filled icon variant
+- [x] **Mode Switching** - Click inactive mode to switch, click active mode to collapse
+- [x] **Smooth Transitions** - Spring animations for expand/collapse
 
 #### 21.2 Selection Mode Content
 
 When Selection mode is active:
 
-- [ ] **Checkbox Icon States** - `Square` when off, `CheckSquare` when on (not Check/X)
-- [ ] **Selection Actions Row** - Merge, Clone, Configure, Delete buttons
-- [ ] **Badge Counts** - Show selected count on Configure button
-- [ ] **Disabled States** - Gray out Merge when < 2 selected
-- [ ] **Visual Differentiation** - Actions use distinct colors/styles (not all same)
+- [x] **Checkbox Icon States** - `Square` when off, `CheckSquare` when on (not Check/X)
+- [x] **Selection Actions Row** - Merge, Clone, Configure, Delete buttons
+- [x] **Badge Counts** - Show selected count on Configure button
+- [x] **Disabled States** - Gray out Merge when < 2 selected
+- [x] **Visual Differentiation** - Actions use distinct colors/styles (not all same)
 
 #### 21.3 Add Exercise Mode Content
 
 When Add mode is active, dock expands vertically (like action-bar pattern):
 
-- [ ] **Inline Exercise Picker** - No separate drawer, content in expanded dock
-- [ ] **Search Input** - Filter exercises by name
-- [ ] **Break at Top** - Special "Break" item with Coffee icon, blue styling
-- [ ] **Scrollable Exercise List** - Max height with overflow scroll
-- [ ] **Compact Wheel Variant** - Smaller wheel components for constrained space
-- [ ] **Quick Add** - Tap exercise to add with current config
-- [ ] **Config Wheels** - Value and Unit wheels at bottom of expanded area
+- [x] **Inline Exercise Picker** - No separate drawer, content in expanded dock
+- [x] **Search Input** - Filter exercises by name
+- [x] **Break at Top** - Special "Break" item with Coffee icon, blue styling
+- [x] **Scrollable Exercise List** - Max height with overflow scroll
+- [x] **Compact Wheel Variant** - Smaller wheel components for constrained space
+- [x] **Quick Add** - Tap exercise to add with current config
+- [x] **Config Wheels** - Value and Unit wheels at bottom of expanded area
 
 #### 21.4 Help Mode Content
 
 When Help mode is active:
 
-- [ ] **Contextual Tips** - 2-3 sentences about current screen
-- [ ] **Feature Hints** - Explain what each mode does
-- [ ] **Expandable Sections** - "What are groups?", "What are modifiers?"
-- [ ] **Dismiss** - Tap outside or click Help again to close
+- [x] **Contextual Tips** - 2-3 sentences about current screen
+- [x] **Feature Hints** - Explain what each mode does
+- [x] **Expandable Sections** - "What are groups?", "What are modifiers?"
+- [x] **Dismiss** - Tap outside or click Help again to close
 
 #### 21.5 Compact Wheel Component Variant
 
 New size variant for wheels to fit in constrained dock space:
 
-- [ ] **Size Prop** - `size="compact" | "default" | "large"`
-- [ ] **Compact Dimensions** - Reduced height (h-24 vs h-32)
-- [ ] **Smaller Font** - Proportionally scaled text
-- [ ] **Touch Targets** - Maintain 44px minimum despite smaller visuals
+- [x] **Size Prop** - `size="compact" | "default" | "large"`
+- [x] **Compact Dimensions** - Reduced height (h-24 vs h-32)
+- [x] **Smaller Font** - Proportionally scaled text
+- [x] **Touch Targets** - Maintain 44px minimum despite smaller visuals
 
 #### 21.6 Technical Implementation
 
-- [ ] **Refactor FloatingActionDock** - Support multiple modes with expandable content
-- [ ] **Mode State Management** - `activeMode: 'select' | 'add' | 'help' | null`
-- [ ] **Content Slots** - Pass mode-specific content as children/props
-- [ ] **Height Animation** - Animate max-height for vertical expansion
-- [ ] **Keyboard Support** - Tab between modes, Escape to collapse
+- [x] **Refactor FloatingActionDock** - Support multiple modes with expandable content
+- [x] **Mode State Management** - `activeMode: 'select' | 'add' | 'help' | null`
+- [x] **Content Slots** - Pass mode-specific content as children/props
+- [x] **Height Animation** - Animate max-height for vertical expansion
+- [x] **Keyboard Support** - Tab between modes, Escape to collapse
 
 **Files to Modify/Create:**
 
@@ -1232,44 +1232,237 @@ Add a floating dock to the workout execution screen for unified navigation and c
 └─────────────────────────────────────────────────────┘
 ```
 
-- [ ] **Previous Button** - Navigate to previous exercise (enter review mode)
-- [ ] **Pause/Play Toggle** - Pause timer, show paused state
-- [ ] **Done/Complete Button** - Mark current exercise as complete
-- [ ] **Add Exercise Button** - Insert exercise after current (existing feature)
-- [ ] **Next Button** - Skip to next exercise (with confirmation if not completed)
+- [x] **Previous Button** - Navigate to previous exercise (enter review mode)
+- [x] **Pause/Play Toggle** - Pause timer, show paused state
+- [x] **Done/Complete Button** - Mark current exercise as complete
+- [x] **Add Exercise Button** - Insert exercise after current (existing feature)
+- [x] **Next Button** - Skip to next exercise (with confirmation if not completed)
 
 #### 22.2 Button States & Feedback
 
-- [ ] **Previous Disabled** - Gray out when at first exercise
-- [ ] **Next Disabled** - Gray out when at last exercise
+- [x] **Previous Disabled** - Gray out when at first exercise
+- [x] **Next Disabled** - Gray out when at last exercise
 - [ ] **Done Highlight** - Pulse/glow when timer complete (time-based exercises)
-- [ ] **Pause State** - Visual indicator when paused (icon change, color shift)
-- [ ] **Haptic Feedback** - Vibration on button press
+- [x] **Pause State** - Visual indicator when paused (icon change, color shift)
+- [x] **Haptic Feedback** - Vibration on button press
 
 #### 22.3 Navigation Confirmation
 
-- [ ] **Skip Confirmation** - "Skip this exercise?" dialog when pressing Next without completing
-- [ ] **Review Mode Integration** - Previous button enters review mode (from Phase 18.1)
+- [x] **Skip Confirmation** - "Skip this exercise?" dialog when pressing Next without completing
+- [x] **Review Mode Integration** - Previous button enters review mode (from Phase 18.1)
 - [ ] **Quick Redo** - Long-press Previous to redo current exercise
 
 #### 22.4 Dock Position & Styling
 
-- [ ] **Fixed Bottom** - Always visible above safe area
-- [ ] **Backdrop Blur** - Semi-transparent with blur
-- [ ] **Shadow/Elevation** - Lifted above content
-- [ ] **Responsive Width** - Full width on mobile, centered max-width on tablet
+- [x] **Fixed Bottom** - Always visible above safe area
+- [x] **Backdrop Blur** - Semi-transparent with blur
+- [x] **Shadow/Elevation** - Lifted above content
+- [x] **Responsive Width** - Full width on mobile, centered max-width on tablet
 
 #### 22.5 Integration with Existing Controls
 
-- [ ] **Remove Scattered Buttons** - Consolidate existing prev/next/done buttons into dock
-- [ ] **Timer Display** - Keep timer prominent in main content area
-- [ ] **Exercise Info** - Keep exercise name/details in main area
-- [ ] **Segmented Progress** - Progress bar sits above dock (from Phase 18.1)
+- [x] **Remove Scattered Buttons** - Consolidate existing prev/next/done buttons into dock
+- [x] **Timer Display** - Keep timer prominent in main content area
+- [x] **Exercise Info** - Keep exercise name/details in main area
+- [x] **Segmented Progress** - Progress bar sits above dock (from Phase 18.1)
 
-**Files to Modify/Create:**
+#### 22.6 Review & Edit Mode for Completed Exercises
 
-- `src/components/ui/execution-dock.tsx` - New component
-- `src/routes/sequences/$id/execute.tsx` - Integrate dock, remove old controls
+**Problem**: User at exercise 15 realizes they forgot to set a modifier on exercise 2. Without edit mode, they'd have to redo 13 exercises.
+
+**Solution**: Add edit mode for completed exercises during review.
+
+- [x] **Review Mode** - Navigate to past exercises, see recorded values (read-only by default)
+- [x] **Edit Mode Activation** - Click Edit (pencil) button to enter edit mode
+- [x] **Editable Values** - GameTimer and GameCounter become editable when in edit mode
+- [x] **Editable Modifiers** - EquipmentGrid becomes editable when in edit mode
+- [x] **Edit Mode Dock Layout** - `[Edit (indicator)] | [Cancel] [Save]` with separator
+- [x] **Save/Cancel** - Save updates `completedExercises` array, Cancel discards changes
+- [x] **Keyboard Shortcuts** - E to edit, Enter to save, Escape to cancel
+- [x] **Visual States** - Blue styling for edit mode, amber for review mode
+- [x] **Disabled States** - Edit button only shown for completed (not skipped) exercises
+
+**ExecutionDock Layouts** (current implementation, screen-specific):
+```
+Active exercise:    [←] [Skip] [✓ Complete] [+] [→]
+Reviewing past:     [←] [Edit] [▶ Resume] [Redo] [→]
+Editing past:       [Edit] | [Cancel] [Save]
+```
+
+Note: These are screen-specific states in ExecutionDock, not part of the unified Dock component design.
+
+**Files**:
+- `src/components/ui/execution-dock.tsx` - Edit mode dock layout with separator pattern
+- `src/routes/sequences/$id/execute.tsx` - Edit state, handlers, value/modifier wiring
+- `src/components/ui/game-timer.tsx` - Dark variant for editable wheels
+- `src/components/ui/game-counter.tsx` - Disabled prop for read-only state
+- `src/components/ui/wheel-select.tsx` - Dark variant for game-style backgrounds
+- `src/components/ui/wheel-number-input.tsx` - Variant prop passthrough
+
+---
+
+### Phase 30: Unified Dock Component
+
+Unify `ExecutionDock` and `UnifiedModeDock` into a single reusable `Dock` component with declarative action-based API.
+
+**Design Goal**: Single dock component that handles all current use cases with clean, composable API.
+
+#### 30.1 Type System
+
+```typescript
+type Action = {
+  id: string
+  icon: LucideIcon
+  label?: string                      // Text label (e.g., "Cancel", "Save")
+  content?: ReactNode                 // Expanded content (panel above or inline)
+  contentPosition?: "above" | "inline" // Where content renders, default "inline"
+  bgClassName?: string                // Button background styling
+  badge?: ReactNode | number          // Count indicator
+  onClick?: () => void                // For instant actions
+  disabled?: boolean
+  hidden?: boolean
+}
+
+type PrimaryAction = Action & {
+  secondaryActions: Action[]          // Always array, possibly empty
+  shouldHideSecondaryActions?: boolean // Conditional hiding (e.g., nothing selected)
+}
+
+type DockProps = {
+  actions: PrimaryAction[]
+  activeActionId: string | null
+  onActionActivate: (id: string | null) => void
+  statusLabel?: ReactNode             // Text below dock ("Editing 10 / 41")
+  className?: string
+  enableAnimations?: boolean
+}
+```
+
+#### 30.2 Behavior Rules
+
+**Inactive state** (`activeActionId === null`):
+- Show all primary actions (respecting `hidden` prop)
+- No secondary actions visible
+
+**Active state** (`activeActionId === "someId"`):
+- Show active primary action as mode indicator (with its `bgClassName`)
+- Show separator
+- Show its `secondaryActions` (unless `shouldHideSecondaryActions`)
+- Hide sibling primary actions (animate out)
+- Show `content` if provided (positioned by `contentPosition`)
+- Dock container tints based on active action's `bgClassName`
+
+**Clicking a primary action**:
+- If not active: Calls `onActionActivate(action.id)` + `action.onClick?.()`
+- If already active: Calls `onActionActivate(null)` to deactivate
+
+**Clicking a secondary action**:
+- Calls `action.onClick?.()`
+- Does NOT auto-deactivate (parent controls via `onActionActivate`)
+
+#### 30.3 Example: ExecutionDock as Unified Dock
+
+```typescript
+const executionActions: PrimaryAction[] = [
+  {
+    id: "prev",
+    icon: ChevronLeft,
+    secondaryActions: [],
+    onClick: onPrevious,
+    disabled: isFirstExercise,
+  },
+  {
+    id: "edit",
+    icon: Pencil,
+    bgClassName: "bg-blue-500 text-white",
+    secondaryActions: [
+      { id: "cancel", icon: X, label: "Cancel", onClick: onCancelEditing, bgClassName: "bg-background border-2 border-muted-foreground/30" },
+      { id: "save", icon: Check, label: "Save", bgClassName: "bg-green-600 text-white", onClick: onSaveEditing },
+    ],
+    hidden: !isReviewing || !canEdit,
+  },
+  {
+    id: "skip",
+    icon: SkipForward,
+    secondaryActions: [],
+    onClick: onSkip,
+    hidden: isReviewing,
+  },
+  {
+    id: "complete",
+    icon: Check,
+    bgClassName: "bg-green-600 text-white",
+    secondaryActions: [],
+    onClick: onComplete,
+    hidden: isReviewing,
+  },
+  // ... etc
+]
+
+<Dock
+  actions={executionActions}
+  activeActionId={isEditing ? "edit" : null}
+  onActionActivate={(id) => id === "edit" ? handleStartEditing() : handleCancelEditing()}
+  statusLabel={`${isEditing ? "Editing" : "Exercise"} ${currentIndex + 1} / ${total}`}
+/>
+```
+
+#### 30.4 Example: UnifiedModeDock as Unified Dock
+
+```typescript
+const builderActions: PrimaryAction[] = [
+  {
+    id: "select",
+    icon: selectedCount > 0 ? CheckSquare : Square,
+    secondaryActions: [
+      { id: "merge", icon: Link, onClick: onMerge, disabled: selectedCount < 2 },
+      { id: "clone", icon: Copy, onClick: onClone },
+      { id: "configure", icon: Settings, badge: selectedCount, onClick: onConfigure },
+      { id: "delete", icon: Trash2, onClick: onDelete },
+    ],
+    shouldHideSecondaryActions: selectedCount === 0,
+  },
+  {
+    id: "add",
+    icon: Plus,
+    bgClassName: "bg-primary text-primary-foreground",
+    content: <ExercisePickerContent />,
+    contentPosition: "above",
+    secondaryActions: [],
+  },
+  {
+    id: "help",
+    icon: HelpCircle,
+    content: <HelpContent />,
+    contentPosition: "above",
+    secondaryActions: [],
+  },
+]
+
+<Dock
+  actions={builderActions}
+  activeActionId={activeMode}
+  onActionActivate={setActiveMode}
+/>
+```
+
+#### 30.5 Implementation Tasks
+
+- [ ] **Create `src/components/ui/dock.tsx`** - Unified dock component
+- [ ] **Type definitions** - Action, PrimaryAction, DockProps types
+- [ ] **Render logic** - Handle all states (inactive, active, hidden)
+- [ ] **Animation system** - Framer Motion for expand/collapse/fade
+- [ ] **Separator component** - Animated vertical divider
+- [ ] **Content positioning** - Support "above" and "inline" content
+- [ ] **Badge rendering** - Count badges on action buttons
+- [ ] **Migrate ExecutionDock** - Refactor to use unified Dock
+- [ ] **Migrate UnifiedModeDock** - Refactor to use unified Dock
+- [ ] **Delete old components** - Remove redundant dock implementations
+
+**Files to Create/Modify:**
+- `src/components/ui/dock.tsx` - NEW unified component
+- `src/components/ui/execution-dock.tsx` - Migrate to use Dock
+- `src/components/ui/unified-mode-dock.tsx` - Migrate to use Dock
 
 ---
 

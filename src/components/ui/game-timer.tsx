@@ -69,60 +69,57 @@ export function GameTimer({
       <div
         className={`flex items-center justify-center gap-1 p-3 rounded-xl bg-black ${c.border} border-2 ${c.glow}`}
       >
-        {editable ? (
-          <>
-            {/* Minutes Wheel */}
-            <div className="relative">
-              <WheelNumberInput
-                value={minutes}
-                onChange={handleMinutesChange}
-                min={0}
-                max={59}
-                step={1}
-              />
-            </div>
-
-            <span className={`text-5xl font-bold ${c.text} mx-1`}>:</span>
-
-            {/* Seconds Wheel */}
-            <div className="relative">
-              <WheelNumberInput
-                value={secs}
-                onChange={handleSecondsChange}
-                min={0}
-                max={59}
-                step={1}
-              />
-            </div>
-          </>
-        ) : (
-          /* Display-only mode - static numbers */
-          <div className={`flex items-center ${c.text}`}>
-            <div className="relative">
-              <div
-                className={`relative rounded-lg bg-zinc-800 overflow-hidden flex items-center justify-center`}
-                style={{ height: "96px", width: "56px" }}
-              >
+        <div className={`flex items-center ${c.text}`}>
+          {/* Minutes */}
+          <div className="relative">
+            <div
+              className={`relative rounded-lg bg-zinc-800 overflow-hidden flex items-center justify-center`}
+              style={{ height: "96px", width: "56px" }}
+            >
+              {editable ? (
+                <WheelNumberInput
+                  value={minutes}
+                  onChange={handleMinutesChange}
+                  min={0}
+                  max={59}
+                  step={1}
+                  className={c.text}
+                  variant="dark"
+                />
+              ) : (
                 <span className="text-5xl font-bold font-mono">
                   {formatTime(minutes)}
                 </span>
-              </div>
+              )}
             </div>
+          </div>
 
-            <span className="text-5xl font-bold mx-2">:</span>
+          <span className="text-5xl font-bold mx-2">:</span>
 
-            <div className="relative">
-              <div
-                className={`relative rounded-lg bg-zinc-800 overflow-hidden flex items-center justify-center`}
-                style={{ height: "96px", width: "56px" }}
-              >
+          {/* Seconds */}
+          <div className="relative">
+            <div
+              className={`relative rounded-lg bg-zinc-800 overflow-hidden flex items-center justify-center`}
+              style={{ height: "96px", width: "56px" }}
+            >
+              {editable ? (
+                <WheelNumberInput
+                  value={secs}
+                  onChange={handleSecondsChange}
+                  min={0}
+                  max={59}
+                  step={1}
+                  className={c.text}
+                  variant="dark"
+                />
+              ) : (
                 <span className="text-5xl font-bold font-mono">
                   {formatTime(secs)}
                 </span>
-              </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
       <p className={`text-sm ${c.text} mt-3 font-medium`}>{label}</p>
     </div>
