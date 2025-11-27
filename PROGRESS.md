@@ -476,8 +476,32 @@ Allow users to merge exercises into named groups within sequences. Groups can be
 - [x] **Group Header** - Name, collapse toggle, clone/ungroup actions
 
 #### 14.6 Execution UI
-- [x] **Group Progress Tracking** - Track position within current group
-- [x] **Group Name Display** - Show "(Group: 2/4)" during execution
+- [ ] **Group Progress Tracking** - Track position within current group
+- [ ] **Group Name Display** - Show group name and position during execution (e.g., "first (1/2)")
+
+**Current state:** Not implemented. Execution screen shows "Exercise 1 of 41" but no group context.
+
+**Expected UI:**
+```
+┌─────────────────────────────────────────────┐
+│  ←  Cali v1                            [+]  │
+│      Exercise 1 of 41 · first (1/2)         │
+│  ═══════════════════════════════════════    │
+│                                             │
+│                  ⟳                          │
+│              Pull up                        │
+│            [-] 5 [+]                        │
+│            repetitions                      │
+└─────────────────────────────────────────────┘
+```
+
+**Implementation:**
+- [ ] Find which group (if any) contains current exercise by ID
+- [ ] Calculate position within group (e.g., 1/2)
+- [ ] Display in header: "Exercise X of Y · groupName (pos/total)"
+- [ ] Handle ungrouped exercises (no group info shown)
+
+**Files:** `src/routes/sequences/$id/execute.tsx`
 
 #### 14.7 API Updates
 - [x] **sequences.update** - Accept groups field
