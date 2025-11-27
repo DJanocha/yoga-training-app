@@ -1,18 +1,23 @@
 import { useRef, useState, useCallback, useEffect, useMemo, forwardRef } from "react"
 import { cn } from "@/lib/utils"
 
+export type WheelSelectSize = "default" | "lg"
+
 export type WheelSelectProps<T extends string | number = string> = {
   value: T
   onChange: (value: T) => void
   options: readonly T[]
   className?: string
   formatOption?: (option: T) => string
+  /** Size variant - lg for execution screen */
+  size?: WheelSelectSize
 }
 
 export const WheelSelect = forwardRef(function WheelSelect<T extends string | number = string>(
-  { value, onChange, options, className, formatOption = (opt) => String(opt) }: WheelSelectProps<T>,
+  { value, onChange, options, className, formatOption = (opt) => String(opt), size = "default" }: WheelSelectProps<T>,
   ref: React.ForwardedRef<HTMLDivElement>
 ) {
+  const isLarge = size === "lg"
   const internalRef = useRef<HTMLDivElement>(null)
   const containerRef = (ref as React.RefObject<HTMLDivElement>) || internalRef
   const [isDragging, setIsDragging] = useState(false)
@@ -150,7 +155,11 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
     }
   }, [isDragging, handleDragMove, handleDragEnd])
 
-  const itemHeight = 32 // h-8 = 32px
+  // Size-dependent values
+  const itemHeight = isLarge ? 48 : 32
+  const containerHeight = isLarge ? 192 : 128 // h-48 vs h-32
+  const containerWidth = isLarge ? 96 : 80 // w-24 vs w-20
+  const centerOffset = isLarge ? 168 : 112 // 3 * itemHeight + itemHeight/2
 
   return (
     <div
@@ -165,7 +174,8 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
       aria-label="Option picker"
     >
       <div
-        className="relative h-32 w-20 rounded-lg border bg-background overflow-hidden"
+        className="relative rounded-lg border bg-background overflow-hidden"
+        style={{ height: containerHeight, width: containerWidth }}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -175,8 +185,7 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
         <div
           className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
           style={{
-            // Position so that index 3 (4th item) is centered
-            top: 'calc(50% - 112px)', // 50% - (3 * 32px + 16px)
+            top: `calc(50% - ${centerOffset}px)`,
             transform: `translateY(${offset * itemHeight}px)`
           }}
         >
@@ -189,9 +198,9 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
               <div
                 key={`${option}-${index}`}
                 className={cn(
-                  "h-8 flex items-center justify-center transition-opacity duration-150",
-                  "text-lg font-medium pointer-events-none",
-                  isSelected && "text-2xl font-bold"
+                  "flex items-center justify-center transition-opacity duration-150 pointer-events-none",
+                  isLarge ? "h-12 text-2xl font-medium" : "h-8 text-lg font-medium",
+                  isSelected && (isLarge ? "text-4xl font-bold" : "text-2xl font-bold")
                 )}
                 style={{ opacity: option === null ? 0 : opacity }}
               >
@@ -202,11 +211,20 @@ export const WheelSelect = forwardRef(function WheelSelect<T extends string | nu
         </div>
 
         {/* Selection indicator */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-8 border-y-2 border-primary/20 bg-primary/5 pointer-events-none" />
+        <div
+          className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-primary/20 bg-primary/5 pointer-events-none"
+          style={{ height: itemHeight }}
+        />
 
         {/* Fade edges */}
-        <div className="absolute inset-x-0 top-0 h-12 bg-linear-to-b from-background to-transparent pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-background to-transparent pointer-events-none" />
+        <div className={cn(
+          "absolute inset-x-0 top-0 bg-linear-to-b from-background to-transparent pointer-events-none",
+          isLarge ? "h-16" : "h-12"
+        )} />
+        <div className={cn(
+          "absolute inset-x-0 bottom-0 bg-linear-to-t from-background to-transparent pointer-events-none",
+          isLarge ? "h-16" : "h-12"
+        )} />
       </div>
     </div>
   )

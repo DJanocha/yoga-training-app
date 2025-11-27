@@ -90,6 +90,7 @@ export type ExerciseGroup = z.infer<typeof ExerciseGroup>
 export const ActiveModifier = z.object({
   modifierId: z.number(),
   value: z.string().optional(), // The actual value used (e.g., "5kg", "heavy")
+  effect: ModifierEffect.default('neutral'), // easier/harder/neutral - same equipment can have different effects per exercise
 })
 export type ActiveModifier = z.infer<typeof ActiveModifier>
 

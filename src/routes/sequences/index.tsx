@@ -9,15 +9,21 @@ import { ActionBar } from '@/components/action-bar'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAppForm } from '@/hooks/form'
-import { sequenceLabelOverrides, sequenceRequiredDefaults, getFieldLabel } from '@/lib/form-utils'
+import { sequenceLabelOverrides, getFieldLabel } from '@/lib/form-utils'
 import { z } from 'zod'
 import { ListPageSkeleton } from '@/components/skeletons'
+import { ConfigWheels } from '@/components/ui/config-wheels'
+import { SequenceTypeSelector } from '@/components/ui/sequence-type-selector'
+import type { MeasureType } from '@/db/types'
 
 type SortOption = 'lastUsed' | 'newest' | 'name' | 'favorite'
 
-// Simple validator for quick create form (only name field)
-const quickCreateValidator = z.object({
+// Validator for create form with name, goal, and default config
+const createSequenceValidator = z.object({
   name: z.string().min(1, 'Name is required'),
+  goal: z.enum(['strict', 'elastic']),
+  defaultMeasure: z.enum(['time', 'repetitions']),
+  defaultTargetValue: z.number().min(1),
 })
 
 
@@ -76,11 +82,16 @@ function SequencesContent() {
     },
   }))
 
-  // Quick create form using TanStack Form
+  // Create form using TanStack Form
   const form = useAppForm({
-    defaultValues: sequenceRequiredDefaults,
+    defaultValues: {
+      name: '',
+      goal: 'elastic' as 'strict' | 'elastic',
+      defaultMeasure: 'time' as MeasureType,
+      defaultTargetValue: 30,
+    },
     validators: {
-      onSubmit: quickCreateValidator,
+      onSubmit: createSequenceValidator,
     },
   })
 
@@ -133,43 +144,49 @@ function SequencesContent() {
     duplicateSequence.mutate({ id: parseInt(itemId) })
   }
 
-  // Handle quick create - creates sequence with just name
-  // Note: Sequences require exercises, so this will create with empty array
-  // which may fail - user should use "Add details" for full creation
+  // Handle quick create - creates sequence with name, goal, and default config
   const handleQuickCreate = async () => {
     // Validate the form first
     await form.validate('submit')
     if (!form.state.isValid) return
 
-    const name = form.state.values.name
+    const { name, goal, defaultMeasure, defaultTargetValue } = form.state.values
     if (!name.trim()) return
 
     try {
       await createSequence.mutateAsync({
         name,
-        exercises: [], // Empty - API may reject this
+        exercises: [],
+        goal,
+        defaultExerciseConfig: {
+          measure: defaultMeasure,
+          targetValue: defaultTargetValue,
+        },
       })
       form.reset()
     } catch (error) {
-      // If creation fails due to empty exercises, the error will be shown
       console.error('Failed to create sequence:', error)
     }
   }
 
-  // Handle add details - for sequences, this is the preferred flow
-  // since sequences require exercises
+  // Handle add details - creates and navigates to editor
   const handleAddDetails = async () => {
     // Validate the form first
     await form.validate('submit')
     if (!form.state.isValid) return
 
-    const name = form.state.values.name
+    const { name, goal, defaultMeasure, defaultTargetValue } = form.state.values
     if (!name.trim()) return
 
     try {
       const newSequence = await createSequence.mutateAsync({
         name,
-        exercises: [], // Empty initially
+        exercises: [],
+        goal,
+        defaultExerciseConfig: {
+          measure: defaultMeasure,
+          targetValue: defaultTargetValue,
+        },
       })
       form.reset()
       if (newSequence) {
@@ -233,14 +250,57 @@ function SequencesContent() {
   // Create content for ActionBar using TanStack Form
   const createContent = (
     <form.AppForm>
-      <form.AppField name="name">
-        {(field) => (
-          <field.TextField
-            label={getFieldLabel('name', sequenceLabelOverrides)}
-            placeholder="Enter sequence name"
-          />
-        )}
-      </form.AppField>
+      <div className="space-y-4">
+        {/* Name field */}
+        <form.AppField name="name">
+          {(field) => (
+            <field.TextField
+              label={getFieldLabel('name', sequenceLabelOverrides)}
+              placeholder="Enter sequence name"
+            />
+          )}
+        </form.AppField>
+
+        {/* Sequence Type - Flow/Track cards */}
+        <div>
+          <Label className="text-sm font-medium">Sequence Type</Label>
+          <form.AppField name="goal">
+            {(field) => (
+              <SequenceTypeSelector
+                value={field.state.value}
+                onChange={field.handleChange}
+                size="sm"
+                className="mt-2"
+              />
+            )}
+          </form.AppField>
+        </div>
+
+        {/* Default Exercise Config */}
+        <div>
+          <Label className="text-sm font-medium">Default Config</Label>
+          <p className="text-xs text-muted-foreground mb-2">
+            New exercises will use these defaults
+          </p>
+          <div className="flex justify-center">
+            <form.Subscribe selector={(state) => ({
+              measure: state.values.defaultMeasure,
+              value: state.values.defaultTargetValue,
+            })}>
+              {({ measure, value }) => (
+                <ConfigWheels
+                  value={value}
+                  onValueChange={(v) => form.setFieldValue('defaultTargetValue', v)}
+                  measure={measure}
+                  onMeasureChange={(m) => form.setFieldValue('defaultMeasure', m)}
+                  label=""
+                  theme="amber"
+                />
+              )}
+            </form.Subscribe>
+          </div>
+        </div>
+      </div>
     </form.AppForm>
   )
 

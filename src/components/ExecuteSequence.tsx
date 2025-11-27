@@ -214,6 +214,7 @@ export function ExecuteSequence({ sequenceId, onExit }: ExecuteSequenceProps) {
       const modifier = allModifiers?.find(m => m.id === modifierId);
       return {
         modifierId,
+        effect: 'neutral' as const,
         value: modifier ? [modifier.name, modifier.value, modifier.unit !== 'none' ? modifier.unit : null].filter(Boolean).join(' ') : undefined,
       };
     });

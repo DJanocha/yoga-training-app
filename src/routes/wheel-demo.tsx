@@ -4,6 +4,9 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { WheelNumberInput } from '@/components/ui/wheel-number-input'
 import { WheelSelect } from '@/components/ui/wheel-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { GameCounter } from '@/components/ui/game-counter'
+import { GameTimer } from '@/components/ui/game-timer'
+import { EquipmentGrid } from '@/components/ui/equipment-grid'
 
 export const Route = createFileRoute('/wheel-demo')({
   component: WheelDemo,
@@ -442,7 +445,6 @@ function WheelDemo() {
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-8">Wheel Picker Components</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
         {/* WheelNumberInput */}
         <Card>
           <CardHeader>
@@ -467,7 +469,7 @@ function WheelDemo() {
             </div>
           </CardContent>
         </Card>
-
+<GameLikeUIExamples/>
         {/* WheelSelect */}
         <Card>
           <CardHeader>
@@ -491,9 +493,7 @@ function WheelDemo() {
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      <Card className="mt-8">
+<Card className="mt-8">
         <CardHeader>
           <CardTitle>Usage Instructions</CardTitle>
         </CardHeader>
@@ -560,6 +560,842 @@ const [color, setColor] = useState('red')
           </div>
         </CardContent>
       </Card>
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>CUSTOM: GameCounter</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+
+<GameCounter value={10} onChange={console.log}/>
+
+
+        </CardContent>
+      </Card>
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>CUSTOM: GameTimer</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+
+<GameTimer seconds={10} onChange={console.log}/>
+
+
+        </CardContent>
+      </Card>
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>CUSTOM: Equipment grid</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+
+<EquipmentGrid items={[{id: 1, name: 'Guma 15 kg', value: 15, unit: 'kg'}]} activeItems={[]} onToggle={() => {}}/>
+
+
+        </CardContent>
+      </Card>
     </div>
   )
+}
+
+
+
+
+
+function GameLikeUIExamples() {
+  return (
+    <div className="flex flex-row flex-wrap gap-6 p-6 md:p-12">
+      {/* 1. Equipment: Basic 3x3 Backpack Grid */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>1. Basic 3x3 Backpack</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            className="w-full flex flex-col items-center justify-start p-4 rounded-lg bg-yellow-900 shadow-xl border-4 border-yellow-950 relative overflow-hidden"
+            style={{
+              backgroundImage:
+                "url('https://via.placeholder.com/300x400/8B4513/FFFFFF?text=Backpack+Texture')",
+              backgroundSize: "cover",
+            }}
+          >
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-8 bg-yellow-700 rounded-b-lg border-x-2 border-b-2 border-yellow-950"></div>
+            <h3 className="text-white text-lg font-bold mb-4 mt-6 z-10">
+              Inventory
+            </h3>
+            <div className="grid grid-cols-3 gap-2 p-3 bg-black/30 rounded-md border border-white/20 z-10">
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-1 py-1 rounded-full border-2 border-green-500 bg-green-700 text-white text-sm"
+                >
+                  <span>Guma 15 kg</span>
+                </button>
+              </div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-1 py-1 rounded-full border-2 border-transparent bg-muted text-muted-foreground opacity-50 text-sm"
+                >
+                  <span>Guma 25 kg</span>
+                </button>
+              </div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+            </div>
+            <p className="text-sm text-gray-300 mt-4 z-10">
+              Drag items here to equip
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 2. Equipment: Stylized Backpack with Top Flap */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>2. Backpack with Top Flap</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            className="w-full flex flex-col items-center justify-start p-4 rounded-lg bg-amber-800 shadow-xl border-4 border-amber-950 relative overflow-hidden"
+            style={{
+              backgroundImage:
+                "url('https://via.placeholder.com/300x400/7C3B0E/FFFFFF?text=Leather+Texture')",
+              backgroundSize: "cover",
+            }}
+          >
+            <div className="absolute top-0 w-full h-16 bg-amber-900 rounded-t-lg border-b-2 border-amber-950 flex items-center justify-center">
+              <span className="text-white text-lg font-bold">Equipment</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 p-3 bg-black/40 rounded-md border border-white/30 z-10 mt-20">
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs">
+                Guma 15 kg
+              </div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs">
+                Guma 25 kg
+              </div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. Equipment: Backpack with "Equipped" Status */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>3. Backpack with "Equipped"</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full flex flex-col items-center justify-start p-4 rounded-lg bg-amber-800 shadow-xl border-4 border-amber-950 relative">
+            <h3 className="text-white text-lg font-bold mb-4">Inventory</h3>
+            <div className="grid grid-cols-3 gap-2 p-3 bg-black/40 rounded-md border border-white/30">
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs relative">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-1 py-1 rounded-full border-2 border-green-500 bg-green-700 text-white text-sm"
+                >
+                  <span>Guma 15 kg</span>
+                </button>
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1 rounded-full">
+                  E
+                </span>
+              </div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-1 py-1 rounded-full border-2 border-transparent bg-muted text-muted-foreground opacity-50 text-sm"
+                >
+                  <span>Guma 25 kg</span>
+                </button>
+              </div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+              <div className="w-16 h-16 bg-gray-700/50 border border-gray-500 rounded flex items-center justify-center text-white text-xs"></div>
+            </div>
+            <p className="text-sm text-gray-300 mt-4">E = Equipped</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. Timer: Classic Digital Clock with Wheels (Conceptual) */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>4. Classic Digital Clock</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full flex flex-col items-center justify-start p-4 rounded-lg bg-gray-800 shadow-xl border-4 border-gray-900">
+            <div
+              className="flex items-center justify-center gap-1 p-4 rounded-xl bg-gray-900 border-4 border-orange-400 shadow-inner"
+              style={{
+                backgroundImage:
+                  "url('https://via.placeholder.com/200x100/333333/FFFFFF?text=Metal+Texture')",
+                backgroundSize: "cover",
+              }}
+            >
+              {/* Minutes Wheel */}
+              <div
+                className="relative"
+                data-tsd-source="/src/routes/sequences/$id/execute.tsx:747:13"
+              >
+                <div
+                  className="relative select-none touch-none cursor-grab"
+                  tabIndex={0}
+                  role="listbox"
+                  aria-label="Minutes picker"
+                >
+                  <div
+                    className="relative rounded-lg border-2 border-orange-500 bg-gray-700 overflow-hidden"
+                    style={{ height: "120px", width: "60px" }}
+                  >
+                    <div
+                      className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                      style={{ top: "calc(50% - 72px)", transform: "translateY(0px)" }}
+                    >
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-bold text-white"
+                        style={{ opacity: 0.75 }}
+                      >
+                        0
+                      </div>
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-4xl font-bold text-white"
+                        style={{ opacity: 1 }}
+                      >
+                        5
+                      </div>
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-bold text-white"
+                        style={{ opacity: 0.75 }}
+                      >
+                        6
+                      </div>
+                    </div>
+                    <div
+                      className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-orange-400 bg-orange-700/20 pointer-events-none"
+                      style={{ height: "48px" }}
+                    ></div>
+                    <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-gray-700 to-transparent pointer-events-none h-16"></div>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-700 to-transparent pointer-events-none h-16"></div>
+                  </div>
+                </div>
+              </div>
+
+              <span className="text-6xl font-extrabold text-orange-400">:</span>
+
+              {/* Seconds Wheel */}
+              <div
+                className="relative"
+                data-tsd-source="/src/routes/sequences/$id/execute.tsx:747:13"
+              >
+                <div
+                  className="relative select-none touch-none cursor-grab"
+                  tabIndex={0}
+                  role="listbox"
+                  aria-label="Seconds picker"
+                >
+                  <div
+                    className="relative rounded-lg border-2 border-orange-500 bg-gray-700 overflow-hidden"
+                    style={{ height: "120px", width: "60px" }}
+                  >
+                    <div
+                      className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                      style={{ top: "calc(50% - 72px)", transform: "translateY(0px)" }}
+                    >
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-bold text-white"
+                        style={{ opacity: 0.75 }}
+                      >
+                        5
+                      </div>
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-4xl font-bold text-white"
+                        style={{ opacity: 1 }}
+                      >
+                        0
+                      </div>
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-bold text-white"
+                        style={{ opacity: 0.75 }}
+                      >
+                        1
+                      </div>
+                    </div>
+                    <div
+                      className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-orange-400 bg-orange-700/20 pointer-events-none"
+                      style={{ height: "48px" }}
+                    ></div>
+                    <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-gray-700 to-transparent pointer-events-none h-16"></div>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-700 to-transparent pointer-events-none h-16"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-300 mt-4">Time Remaining</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 5. Timer: Steampunk-inspired Clock Face */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>5. Steampunk Clock</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full flex flex-col items-center justify-start p-4 rounded-lg bg-gray-800 shadow-xl border-4 border-gray-900">
+            <div
+              className="flex items-center justify-center gap-1 p-6 rounded-full bg-gray-900 border-8 border-amber-600 shadow-2xl relative"
+              style={{
+                backgroundImage:
+                  "url('https://via.placeholder.com/200x200/444444/FFFFFF?text=Gear+Texture')",
+                backgroundSize: "cover",
+                width: "250px",
+                height: "250px",
+              }}
+            >
+              <div className="absolute inset-4 rounded-full border-4 border-amber-400 bg-black/30"></div>
+
+              {/* Minutes Wheel */}
+              <div
+                className="relative z-10"
+                data-tsd-source="/src/routes/sequences/$id/execute.tsx:747:13"
+              >
+                <div
+                  className="relative select-none touch-none cursor-grab"
+                  tabIndex={0}
+                  role="listbox"
+                  aria-label="Minutes picker"
+                >
+                  <div
+                    className="relative rounded-lg border-2 border-amber-500 bg-gray-700 overflow-hidden"
+                    style={{ height: "80px", width: "40px" }}
+                  >
+                    <div
+                      className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                      style={{ top: "calc(50% - 48px)", transform: "translateY(0px)" }}
+                    >
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-xl font-bold text-white"
+                        style={{ opacity: 0.75 }}
+                      >
+                        0
+                      </div>
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-bold text-white"
+                        style={{ opacity: 1 }}
+                      >
+                        5
+                      </div>
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-xl font-bold text-white"
+                        style={{ opacity: 0.75 }}
+                      >
+                        6
+                      </div>
+                    </div>
+                    <div
+                      className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-amber-400 bg-amber-700/20 pointer-events-none"
+                      style={{ height: "48px" }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <span className="text-4xl font-extrabold text-amber-400 z-10">
+                :
+              </span>
+
+              {/* Seconds Wheel */}
+              <div
+                className="relative z-10"
+                data-tsd-source="/src/routes/sequences/$id/execute.tsx:747:13"
+              >
+                <div
+                  className="relative select-none touch-none cursor-grab"
+                  tabIndex={0}
+                  role="listbox"
+                  aria-label="Seconds picker"
+                >
+                  <div
+                    className="relative rounded-lg border-2 border-amber-500 bg-gray-700 overflow-hidden"
+                    style={{ height: "80px", width: "40px" }}
+                  >
+                    <div
+                      className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                      style={{ top: "calc(50% - 48px)", transform: "translateY(0px)" }}
+                    >
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-xl font-bold text-white"
+                        style={{ opacity: 0.75 }}
+                      >
+                        5
+                      </div>
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-bold text-white"
+                        style={{ opacity: 1 }}
+                      >
+                        0
+                      </div>
+                      <div
+                        className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-xl font-bold text-white"
+                        style={{ opacity: 0.75 }}
+                      >
+                        1
+                      </div>
+                    </div>
+                    <div
+                      className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-amber-400 bg-amber-700/20 pointer-events-none"
+                      style={{ height: "48px" }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-300 mt-4">Time Capsule</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 6. Timer: Minimalist Digital Timer */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>6. Minimalist Digital Timer</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full flex flex-col items-center justify-start p-4 rounded-lg bg-black shadow-lg border-2 border-emerald-500">
+            <div className="flex items-center justify-center gap-1 p-3 rounded-md bg-zinc-900 border border-emerald-700">
+              {/* Minutes Wheel (simplified) */}
+              <div
+                className="relative"
+                data-tsd-source="/src/routes/sequences/$id/execute.tsx:747:13"
+              >
+                <div
+                  className="relative rounded-lg bg-zinc-800 overflow-hidden"
+                  style={{ height: "96px", width: "48px" }}
+                >
+                  <div
+                    className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                    style={{ top: "calc(50% - 60px)", transform: "translateY(0px)" }}
+                  >
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-bold text-emerald-400"
+                      style={{ opacity: 0.5 }}
+                    >
+                      0
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-4xl font-bold text-emerald-400"
+                      style={{ opacity: 1 }}
+                    >
+                      5
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-bold text-emerald-400"
+                      style={{ opacity: 0.5 }}
+                    >
+                      6
+                    </div>
+                  </div>
+                  <div
+                    className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-emerald-500 bg-emerald-900/20 pointer-events-none"
+                    style={{ height: "48px" }}
+                  ></div>
+                </div>
+              </div>
+
+              <span className="text-5xl font-bold text-emerald-400">:</span>
+
+              {/* Seconds Wheel (simplified) */}
+              <div
+                className="relative"
+                data-tsd-source="/src/routes/sequences/$id/execute.tsx:747:13"
+              >
+                <div
+                  className="relative rounded-lg bg-zinc-800 overflow-hidden"
+                  style={{ height: "96px", width: "48px" }}
+                >
+                  <div
+                    className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                    style={{ top: "calc(50% - 60px)", transform: "translateY(0px)" }}
+                  >
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-bold text-emerald-400"
+                      style={{ opacity: 0.5 }}
+                    >
+                      5
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-4xl font-bold text-emerald-400"
+                      style={{ opacity: 1 }}
+                    >
+                      0
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-bold text-emerald-400"
+                      style={{ opacity: 0.5 }}
+                    >
+                      1
+                    </div>
+                  </div>
+                  <div
+                    className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-emerald-500 bg-emerald-900/20 pointer-events-none"
+                    style={{ height: "48px" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-400 mt-4">Time Left</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 7. Counter: Scrollwheel on a Wooden Plaque */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>7. Wooden Plaque Counter</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center p-6 rounded-xl bg-amber-950 border-4 border-amber-700 shadow-lg">
+            <h2 className="text-2xl md:text-4xl font-bold text-center mb-2 md:mb-4 text-white">
+              Pull up
+            </h2>
+            <div className="relative p-2 rounded-lg bg-amber-800 border-4 border-amber-900 shadow-inner">
+              <div
+                className="relative select-none touch-none cursor-grab"
+                tabIndex={0}
+                role="listbox"
+                aria-label="Repetition picker"
+              >
+                <div
+                  className="relative rounded-lg bg-amber-900 overflow-hidden"
+                  style={{ height: "192px", width: "96px" }}
+                >
+                  <div
+                    className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                    style={{ top: "calc(50% - 168px)", transform: "translateY(0px)" }}
+                  >
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-white"
+                      style={{ opacity: 0.25 }}
+                    >
+                      2
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-white"
+                      style={{ opacity: 0.5 }}
+                    >
+                      3
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-white"
+                      style={{ opacity: 0.75 }}
+                    >
+                      4
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-4xl font-bold text-white"
+                      style={{ opacity: 1 }}
+                    >
+                      5
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-white"
+                      style={{ opacity: 0.75 }}
+                    >
+                      6
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-white"
+                      style={{ opacity: 0.5 }}
+                    >
+                      7
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-white"
+                      style={{ opacity: 0.25 }}
+                    >
+                      8
+                    </div>
+                  </div>
+                  <div
+                    className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-yellow-600 bg-yellow-800/20 pointer-events-none"
+                    style={{ height: "48px" }}
+                  ></div>
+                  <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-amber-900 to-transparent pointer-events-none h-16"></div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-amber-900 to-transparent pointer-events-none h-16"></div>
+                </div>
+              </div>
+            </div>
+            <p className="text-white md:text-lg mt-4 font-semibold">
+              Repetitions
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 8. Counter: "Scoreboard" Style Wheel */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>8. Scoreboard Style Counter</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center p-6 rounded-2xl bg-gradient-to-br from-gray-900 to-black border-4 border-gray-700 shadow-2xl">
+            <h2 className="text-2xl md:text-4xl font-bold text-center mb-2 md:mb-4 text-orange-400 uppercase tracking-wide">
+              Current Goal
+            </h2>
+            <div className="relative p-4 rounded-xl bg-gray-800 border-4 border-gray-600 shadow-inner">
+              <div
+                className="relative select-none touch-none cursor-grab"
+                tabIndex={0}
+                role="listbox"
+                aria-label="Repetition picker"
+              >
+                <div
+                  className="relative rounded-lg bg-gray-900 overflow-hidden"
+                  style={{ height: "192px", width: "96px" }}
+                >
+                  <div
+                    className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                    style={{ top: "calc(50% - 168px)", transform: "translateY(0px)" }}
+                  >
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-lime-400"
+                      style={{ opacity: 0.25 }}
+                    >
+                      2
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-lime-400"
+                      style={{ opacity: 0.5 }}
+                    >
+                      3
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-lime-400"
+                      style={{ opacity: 0.75 }}
+                    >
+                      4
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-4xl font-bold text-lime-400"
+                      style={{ opacity: 1 }}
+                    >
+                      5
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-lime-400"
+                      style={{ opacity: 0.75 }}
+                    >
+                      6
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-lime-400"
+                      style={{ opacity: 0.5 }}
+                    >
+                      7
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-2xl font-medium text-lime-400"
+                      style={{ opacity: 0.25 }}
+                    >
+                      8
+                    </div>
+                  </div>
+                  <div
+                    className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-lime-500 bg-lime-900/20 pointer-events-none"
+                    style={{ height: "48px" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <p className="text-lime-300 md:text-lg mt-4 font-semibold">
+              Target Reps
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 9. Equipment: RPG Inventory Grid with Item Icons */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>9. RPG Inventory Grid</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full flex flex-col items-center justify-start p-4 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-700 shadow-xl border-4 border-neutral-950 relative">
+            <h3 className="text-white text-xl font-bold tracking-wider mb-4">
+              Inventory
+            </h3>
+            <div className="grid grid-cols-3 gap-2 p-3 bg-black/50 rounded-md border-2 border-gray-600">
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center relative group">
+                <img
+                  src="https://via.placeholder.com/48/green?text=G15"
+                  alt="Guma 15 kg"
+                  className="w-12 h-12"
+                />
+                <div className="absolute inset-0 bg-green-700/50 border-2 border-green-500 rounded opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">Equipped</span>
+                </div>
+              </div>
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center">
+                <img
+                  src="https://via.placeholder.com/48/gray?text=G25"
+                  alt="Guma 25 kg"
+                  className="w-12 h-12 opacity-50"
+                />
+              </div>
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center">
+                <img
+                  src="https://via.placeholder.com/48/lightgray?text=BW"
+                  alt="Bodyweight"
+                  className="w-12 h-12"
+                />
+              </div>
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center"></div>
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center"></div>
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center"></div>
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center"></div>
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center"></div>
+              <div className="w-20 h-20 bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center"></div>
+            </div>
+            <p className="text-sm text-gray-400 mt-4">
+              Selected equipment shines green.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 10. Counter: Retro Arcade Game Score Display */}
+      <Card className="w-full md:w-[45%] lg:w-[30%]">
+        <CardHeader>
+          <CardTitle>10. Retro Arcade Counter</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            className="flex flex-col items-center p-8 rounded-2xl bg-gradient-to-br from-indigo-900 to-purple-900 border-8 border-indigo-700 shadow-neon"
+            style={{
+              "--shadow-neon": "0 0 15px #a78bfa, 0 0 25px #c084fc",
+            }}
+          >
+            <h2
+              className="text-4xl md:text-5xl font-arcade text-yellow-300 mb-4 tracking-wide uppercase"
+              style={{ fontFamily: "'Press Start 2P', cursive" }}
+            >
+              Reps
+            </h2>
+            <div
+              className="relative p-3 rounded-lg bg-black border-4 border-yellow-500 shadow-inner-lg"
+              style={{
+                boxShadow:
+                  "inset 0 0 10px rgba(255, 255, 0, 0.5), 0 0 10px rgba(255, 255, 0, 0.3)",
+              }}
+            >
+              <div
+                className="relative select-none touch-none cursor-grab"
+                tabIndex={0}
+                role="listbox"
+                aria-label="Repetition picker"
+              >
+                <div
+                  className="relative rounded-lg bg-gray-950 overflow-hidden"
+                  style={{ height: "192px", width: "96px" }}
+                >
+                  <div
+                    className="absolute w-full transition-transform duration-150 ease-out pointer-events-none"
+                    style={{ top: "calc(50% - 168px)", transform: "translateY(0px)" }}
+                  >
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-arcade text-green-400"
+                      style={{
+                        opacity: 0.25,
+                        fontFamily: "'Press Start 2P', cursive",
+                      }}
+                    >
+                      2
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-arcade text-green-400"
+                      style={{
+                        opacity: 0.5,
+                        fontFamily: "'Press Start 2P', cursive",
+                      }}
+                    >
+                      3
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-arcade text-green-400"
+                      style={{
+                        opacity: 0.75,
+                        fontFamily: "'Press Start 2P', cursive",
+                      }}
+                    >
+                      4
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-5xl font-arcade text-green-400"
+                      style={{
+                        opacity: 1,
+                        fontFamily: "'Press Start 2P', cursive",
+                      }}
+                    >
+                      5
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-arcade text-green-400"
+                      style={{
+                        opacity: 0.75,
+                        fontFamily: "'Press Start 2P', cursive",
+                      }}
+                    >
+                      6
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-arcade text-green-400"
+                      style={{
+                        opacity: 0.5,
+                        fontFamily: "'Press Start 2P', cursive",
+                      }}
+                    >
+                      7
+                    </div>
+                    <div
+                      className="flex items-center justify-center transition-opacity duration-150 pointer-events-none h-12 text-3xl font-arcade text-green-400"
+                      style={{
+                        opacity: 0.25,
+                        fontFamily: "'Press Start 2P', cursive",
+                      }}
+                    >
+                      8
+                    </div>
+                  </div>
+                  <div
+                    className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-y-2 border-green-500 bg-green-900/20 pointer-events-none"
+                    style={{ height: "48px" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <p
+              className="text-gray-400 md:text-lg mt-4 font-arcade"
+              style={{ fontFamily: "'Press Start 2P', cursive" }}
+            >
+              GOAL SET
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

@@ -4,6 +4,7 @@ import { useTRPC } from '@/lib/trpc'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { RedirectToSignIn, SignedIn, AuthLoading } from '@/components/auth'
 import { Button } from '@/components/ui/button'
+import { SegmentedProgress, type ExerciseStatus } from '@/components/ui/segmented-progress'
 import { Progress } from '@/components/ui/progress'
 import {
   Card,
@@ -11,6 +12,9 @@ import {
 } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { ExercisePickerDrawer } from '@/components/exercise-picker-drawer'
+import { GameTimer } from '@/components/ui/game-timer'
+import { GameCounter } from '@/components/ui/game-counter'
+import { EquipmentGrid } from '@/components/ui/equipment-grid'
 import type { ExercisePickerConfig } from '@/components/exercise-picker-drawer'
 import {
   AlertDialog,
@@ -33,11 +37,10 @@ import {
   Repeat,
   Star,
   Plus,
-  Minus,
-  Check,
-  Package2,
+  RotateCcw,
+  Eye,
 } from 'lucide-react'
-import type { SequenceExercise, CompletedExercise, ActiveModifier, ExerciseGroup } from '@/db/types'
+import type { SequenceExercise, CompletedExercise, ActiveModifier, ExerciseGroup, ModifierEffect } from '@/db/types'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/sequences/$id/execute')({
@@ -138,6 +141,10 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   const [showSavePrompt, setShowSavePrompt] = useState(false)
   const [pendingExerciseToAdd, setPendingExerciseToAdd] = useState<{ exerciseId: number, config: ExercisePickerConfig } | null>(null)
 
+  // Review mode state (Phase 18.1)
+  const [viewingIndex, setViewingIndex] = useState<number | null>(null)
+  const isReviewing = viewingIndex !== null
+
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const exerciseStartRef = useRef<Date>(new Date())
@@ -175,6 +182,54 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
     return null
   }, [exercises, sequence])
+
+  // Get exercise status for segmented progress bar
+  const getExerciseStatus = useCallback((index: number): ExerciseStatus => {
+    if (index === currentIndex && !isReviewing) return 'current'
+    if (index < completedExercises.length) {
+      const completed = completedExercises[index]
+      return completed?.skipped ? 'skipped' : 'completed'
+    }
+    return 'pending'
+  }, [currentIndex, completedExercises, isReviewing])
+
+  // Handle navigation from segmented progress bar
+  const handleProgressNavigate = useCallback((targetIndex: number) => {
+    if (targetIndex === currentIndex) {
+      // Clicking current exercise exits review mode
+      setViewingIndex(null)
+    } else if (targetIndex < currentIndex) {
+      // Navigating to past exercise enters review mode
+      setViewingIndex(targetIndex)
+    }
+    // Cannot navigate to future exercises (targetIndex > currentIndex)
+  }, [currentIndex])
+
+  // Handle redo from review mode
+  const handleRedo = useCallback(() => {
+    if (viewingIndex === null || !exercises) return
+
+    // Remove all completed exercises from viewingIndex onwards
+    setCompletedExercises(prev => prev.slice(0, viewingIndex))
+
+    // Reset to the viewing index
+    setCurrentIndex(viewingIndex)
+    setTimeElapsed(0)
+
+    // Reset actual value to target value of that exercise
+    const targetExercise = exercises[viewingIndex]
+    if (targetExercise) {
+      setActualValue(targetExercise.config.targetValue || 0)
+    }
+
+    // Exit review mode
+    setViewingIndex(null)
+
+    // Restart exercise timer
+    exerciseStartRef.current = new Date()
+
+    toast.success('Exercise reset. Continue from here!')
+  }, [viewingIndex, exercises])
 
   // Audio beep function
   const playBeep = useCallback((frequency: number = 800, duration: number = 200) => {
@@ -229,8 +284,8 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       },
     }
 
-    // Insert after current index
-    const insertIndex = currentIndex + 1
+    // Insert before or after current index based on position
+    const insertIndex = config.position === 'before' ? currentIndex : currentIndex + 1
     const updatedExercises = [
       ...currentExercises.slice(0, insertIndex),
       newExercise,
@@ -239,6 +294,11 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
     setWorkoutExercises(updatedExercises)
 
+    // If inserting before, increment currentIndex to stay on the same exercise
+    if (config.position === 'before') {
+      setCurrentIndex(prev => prev + 1)
+    }
+
     // If user wants to save to sequence permanently
     if (saveToSequence) {
       updateSequence.mutate({
@@ -246,7 +306,8 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         exercises: updatedExercises,
       })
     } else {
-      toast.success('Exercise added to workout')
+      const positionText = config.position === 'before' ? 'before' : 'after'
+      toast.success(`Exercise added ${positionText} current`)
     }
 
     triggerHaptic(200)
@@ -277,7 +338,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
       setActualValue(currentExercise.config.targetValue || 0)
 
       // Initialize active modifiers from the exercise's assigned modifiers
-      // Pre-select all assigned modifiers with their values
+      // Pre-select all assigned modifiers with their values and effects
       if (currentExercise.modifiers && currentExercise.modifiers.length > 0) {
         const initialActiveModifiers: ActiveModifier[] = currentExercise.modifiers.map((m) => {
           const modifier = allModifiers?.find((mod) => mod.id === m.modifierId)
@@ -286,6 +347,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             value: modifier?.value !== null && modifier?.value !== undefined
               ? `${modifier.value}${modifier.unit && modifier.unit !== 'none' && modifier.unit !== 'level' ? modifier.unit : ''}`
               : undefined,
+            effect: m.effect || 'neutral', // Use pre-assigned effect
           }
         })
         setActiveModifiers(initialActiveModifiers)
@@ -295,9 +357,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     }
   }, [currentIndex, exercises, allModifiers])
 
-  // Timer effect
+  // Timer effect - pauses when in review mode
   useEffect(() => {
-    if (!isPaused && !isCompleted && exercises && currentIndex < exercises.length) {
+    if (!isPaused && !isCompleted && !isReviewing && exercises && currentIndex < exercises.length) {
       timerRef.current = setInterval(() => {
         setTimeElapsed((prev) => prev + 1)
       }, 1000)
@@ -308,7 +370,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         clearInterval(timerRef.current)
       }
     }
-  }, [isPaused, isCompleted, exercises, currentIndex])
+  }, [isPaused, isCompleted, isReviewing, exercises, currentIndex])
 
   // Beep countdown effect for time-based exercises
   useEffect(() => {
@@ -560,11 +622,19 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   }
 
   // Active workout screen
-  const currentExercise = exercises[currentIndex]
-  const isBreak = currentExercise.exerciseId === 'break'
-  const isTimeBased = currentExercise.config.measure === 'time'
-  const targetValue = currentExercise.config.targetValue || 0
+  // When reviewing, show the viewed exercise; otherwise show current
+  const displayIndex = viewingIndex ?? currentIndex
+  const displayExercise = exercises[displayIndex]
+  const isBreak = displayExercise.exerciseId === 'break'
+  const isTimeBased = displayExercise.config.measure === 'time'
+  const targetValue = displayExercise.config.targetValue || 0
   const progress = isTimeBased ? (timeElapsed / targetValue) * 100 : 0
+
+  // When reviewing, get modifiers from completed exercise record
+  const reviewedExercise = isReviewing && viewingIndex !== null ? completedExercises[viewingIndex] : null
+  const displayModifiers = isReviewing && reviewedExercise?.activeModifiers
+    ? reviewedExercise.activeModifiers
+    : activeModifiers
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -578,9 +648,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
             {sequence.name}
           </h1>
           <p className="text-xs md:text-sm text-muted-foreground">
-            Exercise {currentIndex + 1} of {exercises.length}
+            Exercise {displayIndex + 1} of {exercises.length}
             {(() => {
-              const groupContext = getGroupContext(currentIndex)
+              const groupContext = getGroupContext(displayIndex)
               if (groupContext) {
                 return ` · ${groupContext.group.name} (${groupContext.position}/${groupContext.total})`
               }
@@ -598,197 +668,193 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
         </Button>
       </header>
 
-      {/* Progress bar */}
-      <Progress
-        value={((currentIndex + (isTimeBased ? progress / 100 : 0)) / exercises.length) * 100}
-        className="h-1 rounded-none"
+      {/* Segmented Progress Bar with Navigation */}
+      <SegmentedProgress
+        totalExercises={exercises.length}
+        currentIndex={currentIndex}
+        viewingIndex={viewingIndex}
+        onNavigate={handleProgressNavigate}
+        getExerciseStatus={getExerciseStatus}
+        className="border-b"
       />
 
+      {/* Review Mode Banner */}
+      {isReviewing && viewingIndex !== null && (
+        <div className="bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-800 px-4 py-3">
+          <div className="flex items-center justify-between max-w-lg mx-auto">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                Reviewing Exercise {viewingIndex + 1} of {exercises.length}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewingIndex(null)}
+                className="h-8"
+              >
+                Resume
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleRedo}
+                className="h-8 bg-blue-600 hover:bg-blue-700"
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Redo
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-12">
-        {/* Exercise icon/indicator */}
-        <div className="mb-6 md:mb-8">
+      <main className={`flex-1 flex flex-col items-center justify-center p-2 md:p-6 min-h-0 ${isReviewing ? 'opacity-60' : ''}`}>
+        {/* Exercise name with icon */}
+        <div className="flex items-center gap-2 mb-2 md:mb-4">
           {isBreak ? (
-            <Coffee className="h-16 w-16 md:h-24 md:w-24 text-muted-foreground" />
+            <Coffee className="h-6 w-6 md:h-10 md:w-10 text-muted-foreground" />
           ) : isTimeBased ? (
-            <Clock className="h-16 w-16 md:h-24 md:w-24 text-primary" />
+            <Clock className="h-6 w-6 md:h-10 md:w-10 text-primary" />
           ) : (
-            <Repeat className="h-16 w-16 md:h-24 md:w-24 text-primary" />
+            <Repeat className="h-6 w-6 md:h-10 md:w-10 text-primary" />
           )}
+          <h2 className="text-lg md:text-3xl font-bold text-center">
+            {getExerciseName(displayExercise.exerciseId)}
+          </h2>
         </div>
 
-        {/* Exercise name */}
-        <h2 className="text-2xl md:text-4xl font-bold text-center mb-2 md:mb-4">
-          {getExerciseName(currentExercise.exerciseId)}
-        </h2>
+        {/* Game-style layout: Equipment (left) | Timer/Counter (right) */}
+        {(() => {
+          // Get equipment data
+          const sequenceAvailableModifiers = (sequence as any)?.availableModifiers as number[] | undefined
+          const hasEquipment = sequenceAvailableModifiers && sequenceAvailableModifiers.length > 0
 
-        {/* Timer/Counter */}
-        {isTimeBased ? (
-          // Time-based display
-          <div className="flex flex-col items-center mb-4 md:mb-8">
-            <div
-              className={`text-6xl md:text-8xl font-mono font-bold ${
-                timeElapsed > targetValue
-                  ? 'text-green-500'
-                  : ''
-              }`}
-            >
-              {timeElapsed <= targetValue
-                ? Math.max(0, targetValue - timeElapsed)
-                : `+${timeElapsed - targetValue}`}
-            </div>
-            {timeElapsed > targetValue && targetValue > 0 && (
-              <div className="text-2xl md:text-3xl text-muted-foreground">
-                /{targetValue}
-              </div>
-            )}
-          </div>
-        ) : (
-          // Rep-based display with +/- buttons
-          <div className="flex flex-col items-center mb-4 md:mb-8">
-            <div className="flex items-center gap-4 md:gap-8">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setActualValue(Math.max(0, actualValue - 1))}
-                className="h-12 w-12 md:h-16 md:w-16"
-              >
-                <Minus className="h-6 w-6 md:h-8 md:w-8" />
-              </Button>
-              <div className="flex flex-col items-center">
-                <div
-                  className={`text-6xl md:text-8xl font-mono font-bold ${
-                    actualValue > targetValue
-                      ? 'text-green-500'
-                      : actualValue < targetValue
-                      ? 'text-red-500'
-                      : ''
-                  }`}
-                >
-                  {actualValue}
+          // Transform modifiers to equipment items
+          const equipmentItems = hasEquipment
+            ? sequenceAvailableModifiers.map((modifierId) => {
+                const modifier = allModifiers?.find((m) => m.id === modifierId)
+                return modifier ? {
+                  id: modifier.id,
+                  name: modifier.name,
+                  value: modifier.value,
+                  unit: modifier.unit,
+                } : null
+              }).filter((item): item is NonNullable<typeof item> => item !== null)
+            : []
+
+          // Transform active modifiers to equipment format
+          const activeEquipment = displayModifiers.map((am) => ({
+            id: am.modifierId,
+            effect: am.effect || 'neutral' as ModifierEffect,
+          }))
+
+          // Handler for equipment toggle
+          const handleEquipmentToggle = (itemId: number, newEffect: ModifierEffect | null) => {
+            const modifier = allModifiers?.find((m) => m.id === itemId)
+            if (!modifier) return
+
+            const updateModifiers = (updater: (prev: ActiveModifier[]) => ActiveModifier[]) => {
+              if (isReviewing && viewingIndex !== null) {
+                setCompletedExercises(prev => prev.map((ex, i) =>
+                  i === viewingIndex
+                    ? { ...ex, activeModifiers: updater(ex.activeModifiers || []) }
+                    : ex
+                ))
+              } else {
+                setActiveModifiers(updater)
+              }
+            }
+
+            if (newEffect === null) {
+              // Turn off
+              updateModifiers((prev) => prev.filter((am) => am.modifierId !== itemId))
+            } else {
+              const val = modifier.value !== null && modifier.value !== undefined
+                ? `${modifier.value}${modifier.unit && modifier.unit !== 'none' && modifier.unit !== 'level' ? modifier.unit : ''}`
+                : undefined
+              const existing = displayModifiers.find((am) => am.modifierId === itemId)
+              if (existing) {
+                // Update effect
+                updateModifiers((prev) =>
+                  prev.map((am) =>
+                    am.modifierId === itemId ? { ...am, effect: newEffect } : am
+                  )
+                )
+              } else {
+                // Add new
+                updateModifiers((prev) => [
+                  ...prev,
+                  { modifierId: itemId, value: val, effect: newEffect },
+                ])
+              }
+            }
+          }
+
+          return (
+            <div className={`flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 w-full max-w-4xl ${!hasEquipment ? 'md:justify-center' : ''}`}>
+              {/* Equipment Grid (left side) - only show if there are modifiers */}
+              {hasEquipment && !isBreak && (
+                <div className="order-2 md:order-1">
+                  <EquipmentGrid
+                    items={equipmentItems}
+                    activeItems={activeEquipment}
+                    onToggle={handleEquipmentToggle}
+                    cols={3}
+                    rows={1}
+                    editable={true}
+                  />
                 </div>
-                {actualValue !== targetValue && targetValue > 0 && (
-                  <div className="text-2xl md:text-3xl text-muted-foreground">
-                    /{targetValue}
-                  </div>
+              )}
+
+              {/* Timer/Counter (right side or center if no equipment) */}
+              <div className="order-1 md:order-2">
+                {isTimeBased ? (
+                  // Time-based: GameTimer
+                  <GameTimer
+                    seconds={timeElapsed <= targetValue
+                      ? Math.max(0, targetValue - timeElapsed)
+                      : timeElapsed - targetValue
+                    }
+                    editable={false}
+                    label={timeElapsed > targetValue ? 'Over Target' : 'Remaining'}
+                    theme={timeElapsed > targetValue ? 'orange' : 'emerald'}
+                  />
+                ) : (
+                  // Rep-based: GameCounter
+                  <GameCounter
+                    value={actualValue}
+                    onChange={setActualValue}
+                    target={targetValue > 0 ? targetValue : undefined}
+                    label="Reps"
+                    theme={actualValue >= targetValue && targetValue > 0 ? 'cyan' : 'lime'}
+                    min={0}
+                    max={999}
+                  />
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setActualValue(actualValue + 1)}
-                className="h-12 w-12 md:h-16 md:w-16"
-              >
-                <Plus className="h-6 w-6 md:h-8 md:w-8" />
-              </Button>
             </div>
-          </div>
-        )}
-
-        <p className="text-muted-foreground md:text-lg mb-8 md:mb-12">
-          {isTimeBased
-            ? timeElapsed > targetValue
-              ? 'seconds over target'
-              : 'seconds remaining'
-            : 'repetitions'}
-        </p>
+          )
+        })()}
 
         {/* Progress for time-based */}
         {isTimeBased && (
-          <div className="w-full max-w-xs md:max-w-md mb-8 md:mb-12">
+          <div className="w-full max-w-xs md:max-w-md mt-3 md:mt-6">
             <Progress value={Math.min(progress, 100)} className="h-2 md:h-3" />
           </div>
         )}
 
         {/* Goal type indicator */}
-        <p className="text-sm md:text-base text-muted-foreground capitalize mb-4">
+        <p className="text-xs md:text-base text-muted-foreground capitalize mt-2 md:mt-4">
           {sequence?.goal || 'elastic'} goal
         </p>
-
-        {/* Available modifiers - always show ALL sequence-level modifiers */}
-        {!isBreak && (() => {
-          // Always show sequence-level availableModifiers
-          // Exercise-level assignments determine which are pre-selected and their effect colors
-          const exerciseModifiers = currentExercise.modifiers || []
-          const sequenceAvailableModifiers = (sequence as any)?.availableModifiers as number[] | undefined
-
-          if (!sequenceAvailableModifiers || sequenceAvailableModifiers.length === 0) return null
-
-          // Check if any modifiers are pre-assigned to this exercise
-          const hasPreAssigned = exerciseModifiers.length > 0
-
-          return (
-            <div className="w-full max-w-sm md:max-w-md">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Package2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">
-                  {hasPreAssigned ? 'Equipment' : 'Available Equipment'}
-                </span>
-              </div>
-              <div className="flex flex-wrap justify-center gap-2">
-                {sequenceAvailableModifiers.map((modifierId) => {
-                  const modifier = allModifiers?.find((m) => m.id === modifierId)
-                  if (!modifier) return null
-
-                  const isActive = activeModifiers.some((am) => am.modifierId === modifierId)
-
-                  // Check if this modifier is pre-assigned to the exercise (for effect color)
-                  const exerciseAssignment = exerciseModifiers.find((em) => em.modifierId === modifierId)
-                  const effect = exerciseAssignment?.effect || 'neutral'
-
-                  // Use effect color if pre-assigned, otherwise default blue
-                  const activeColor = effect === 'easier'
-                    ? 'border-green-600 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300'
-                    : effect === 'harder'
-                    ? 'border-red-600 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300'
-                    : 'border-blue-600 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
-
-                  return (
-                    <button
-                      key={modifierId}
-                      type="button"
-                      onClick={() => {
-                        if (isActive) {
-                          setActiveModifiers((prev) =>
-                            prev.filter((am) => am.modifierId !== modifierId)
-                          )
-                        } else {
-                          const val = modifier.value !== null && modifier.value !== undefined
-                            ? `${modifier.value}${modifier.unit && modifier.unit !== 'none' && modifier.unit !== 'level' ? modifier.unit : ''}`
-                            : undefined
-                          setActiveModifiers((prev) => [
-                            ...prev,
-                            { modifierId: modifierId, value: val },
-                          ])
-                        }
-                      }}
-                      className={`
-                        flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 transition-all
-                        ${isActive
-                          ? activeColor
-                          : 'border-transparent bg-muted text-muted-foreground opacity-50'
-                        }
-                      `}
-                    >
-                      {isActive && <Check className="h-3 w-3" />}
-                      <span className="text-sm font-medium">
-                        {[
-                          modifier.name,
-                          modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
-                          modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
-                        ].filter(Boolean).join(' ')}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )
-        })()}
       </main>
 
       {/* Controls */}
-      <div className="p-4 md:p-6 border-t">
+      <div className="p-3 md:p-6 border-t shrink-0">
         <div className="flex gap-3 md:gap-4 max-w-sm md:max-w-lg mx-auto">
           <Button
             variant="outline"
@@ -851,8 +917,9 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           setPendingExerciseToAdd({ exerciseId, config })
           setShowSavePrompt(true)
         }}
+        showPositionOption
         title="Add Exercise"
-        description="Select an exercise to add after the current one"
+        description="Select an exercise to add"
       />
 
       {/* Save to Sequence Prompt */}

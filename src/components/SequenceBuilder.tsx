@@ -6,6 +6,9 @@ import { ExercisePickerDrawer } from "@/components/exercise-picker-drawer";
 import type { ExercisePickerConfig } from "@/components/exercise-picker-drawer";
 import { WheelNumberInput } from "@/components/ui/wheel-number-input";
 import { WheelSelect } from "@/components/ui/wheel-select";
+import { ConfigWheels } from "@/components/ui/config-wheels";
+import { Backpack } from "@/components/ui/backpack";
+import { SequenceTypeSelector } from "@/components/ui/sequence-type-selector";
 import {
   DndContext,
   closestCenter,
@@ -63,7 +66,6 @@ import {
   Repeat,
   Package2,
   ChevronDown,
-  ChevronUp,
   ChevronRight,
   MoreHorizontal,
   Copy,
@@ -611,7 +613,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     null
   );
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [isModifiersExpanded, setIsModifiersExpanded] = useState(false);
   const [isModifierPickerOpen, setIsModifierPickerOpen] = useState(false);
 
   // Selection mode for batch operations
@@ -909,15 +910,6 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
 
     navigate({ to: "/sequences" });
   };
-
-  // Toggle modifier availability for the sequence
-  const toggleModifier = useCallback((modifierId: number) => {
-    setAvailableModifiers((prev) =>
-      prev.includes(modifierId)
-        ? prev.filter((id) => id !== modifierId)
-        : [...prev, modifierId]
-    );
-  }, []);
 
   // Update item modifiers (per exercise)
   const updateItemModifiers = useCallback(
@@ -1324,26 +1316,13 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
               </div>
 
               <div>
-                <Label>Goal Type</Label>
-                <ToggleGroup
-                  type="single"
+                <Label>Sequence Type</Label>
+                <SequenceTypeSelector
                   value={goal}
-                  onValueChange={(value: "strict" | "elastic") => {
-                    if (value) setGoal(value);
-                  }}
-                  className="justify-start"
-                >
-                  <ToggleGroupItem value="strict" className="flex-1">
-                    Strict (exact target)
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="elastic" className="flex-1">
-                    Elastic (flexible)
-                  </ToggleGroupItem>
-                </ToggleGroup>
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  Strict: Auto-advance when time target is reached. Elastic:
-                  Manual progression with option to edit value before completing.
-                </p>
+                  onChange={setGoal}
+                  size="md"
+                  className="mt-2"
+                />
               </div>
 
               {/* Default Exercise Config */}
@@ -1352,102 +1331,71 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 <p className="text-xs text-muted-foreground mb-3">
                   New exercises will use these defaults
                 </p>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <WheelNumberInput
-                      value={defaultTargetValue}
-                      onChange={setDefaultTargetValue}
-                      min={1}
-                      max={defaultMeasure === "time" ? 300 : 100}
-                      step={defaultMeasure === "time" ? 5 : 1}
-                    />
-                    <p className="text-xs text-center text-muted-foreground mt-1">
-                      Value
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    <WheelSelect
-                      value={defaultMeasure}
-                      onChange={(value) => setDefaultMeasure(value)}
-                      options={['time', 'repetitions'] as const}
-                      formatOption={(opt) => opt === 'time' ? 'sec' : 'reps'}
-                    />
-                    <p className="text-xs text-center text-muted-foreground mt-1">
-                      Unit
-                    </p>
-                  </div>
+                <div className="flex justify-center">
+                  <ConfigWheels
+                    value={defaultTargetValue}
+                    onValueChange={setDefaultTargetValue}
+                    measure={defaultMeasure}
+                    onMeasureChange={setDefaultMeasure}
+                    label=""
+                  />
                 </div>
               </div>
 
-              {/* Available Modifiers */}
+              {/* Available Mods */}
               {allModifiers && allModifiers.length > 0 && (
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    className="flex items-center justify-between w-full text-left"
-                    onClick={() => setIsModifiersExpanded(!isModifiersExpanded)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Package2 className="h-4 w-4 text-muted-foreground" />
-                      <Label className="cursor-pointer">
-                        Available Modifiers
-                      </Label>
-                      {availableModifiers.length > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {availableModifiers.length}
-                        </Badge>
-                      )}
-                    </div>
-                    {isModifiersExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </button>
-
-                  {isModifiersExpanded && (
-                    <div className="mt-3 pl-6">
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Select equipment that can be used during this sequence
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {allModifiers.map((modifier) => {
-                          const displayText = [
-                            modifier.name,
-                            modifier.value !== null &&
-                            modifier.value !== undefined
-                              ? modifier.value
-                              : null,
-                            modifier.unit && modifier.unit !== "none"
-                              ? modifier.unit
-                              : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" ");
-                          const isSelected = availableModifiers.includes(
-                            modifier.id
-                          );
-                          return (
-                            <button
+                <div>
+                  <Label>Available Mods</Label>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Select equipment for this sequence
+                  </p>
+                  <div className="flex justify-center">
+                    <Backpack.Root
+                      items={allModifiers.map((m) => ({
+                        id: m.id,
+                        name: m.name,
+                        value: m.value,
+                        unit: m.unit,
+                      }))}
+                      value={availableModifiers.map((id) => ({
+                        id,
+                        effect: "neutral" as const,
+                      }))}
+                      onChange={(items) => {
+                        setAvailableModifiers(items.map((i) => i.id as number));
+                      }}
+                      cols={3}
+                      rows={Math.ceil(allModifiers.length / 3)}
+                      editable={true}
+                    >
+                      <Backpack.Container theme="brown">
+                        <Backpack.Grid>
+                          {allModifiers.map((modifier) => (
+                            <Backpack.Slot
                               key={modifier.id}
-                              type="button"
-                              onClick={() => toggleModifier(modifier.id)}
-                              className={`
-                                px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                                ${
-                                  isSelected
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                                }
-                              `}
+                              item={{
+                                id: modifier.id,
+                                name: modifier.name,
+                                value: modifier.value,
+                                unit: modifier.unit,
+                              }}
                             >
-                              {displayText}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                              <Backpack.ItemContent
+                                item={{
+                                  id: modifier.id,
+                                  name: modifier.name,
+                                  value: modifier.value,
+                                  unit: modifier.unit,
+                                }}
+                                showBadge={false}
+                              />
+                            </Backpack.Slot>
+                          ))}
+                        </Backpack.Grid>
+                      </Backpack.Container>
+                      <Backpack.Label>Tap to select</Backpack.Label>
+                    </Backpack.Root>
+                  </div>
                 </div>
               )}
             </CardContent>

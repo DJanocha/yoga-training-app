@@ -14,9 +14,12 @@ import {
 import { Plus, Search, Coffee } from "lucide-react"
 import type { MeasureType } from "@/db/types"
 
+export type InsertPosition = "before" | "after"
+
 export type ExercisePickerConfig = {
   targetValue: number
   measure: MeasureType
+  position?: InsertPosition
 }
 
 type ExercisePickerDrawerProps = {
@@ -25,6 +28,8 @@ type ExercisePickerDrawerProps = {
   onExerciseSelected: (exerciseId: number, config: ExercisePickerConfig) => void
   onBreakSelected?: (config: ExercisePickerConfig) => void
   showBreakOption?: boolean
+  /** Show position wheel for choosing insert position (before/after current exercise) */
+  showPositionOption?: boolean
   title?: string
   description?: string
   initialConfig?: ExercisePickerConfig
@@ -36,24 +41,27 @@ export function ExercisePickerDrawer({
   onExerciseSelected,
   onBreakSelected,
   showBreakOption = true,
+  showPositionOption = false,
   title = "Add Exercise",
   description = "Select an exercise to add to your sequence",
-  initialConfig = { targetValue: 30, measure: "time" },
+  initialConfig = { targetValue: 30, measure: "time", position: "after" },
 }: ExercisePickerDrawerProps) {
   const trpc = useTRPC()
 
   // Configuration state
   const [targetValue, setTargetValue] = useState(initialConfig.targetValue)
   const [measure, setMeasure] = useState<MeasureType>(initialConfig.measure)
+  const [position, setPosition] = useState<InsertPosition>(initialConfig.position ?? "after")
 
   // Sync state when drawer opens or initialConfig changes
   useEffect(() => {
     if (open) {
       setTargetValue(initialConfig.targetValue)
       setMeasure(initialConfig.measure)
+      setPosition(initialConfig.position ?? "after")
       setSearchQuery("")
     }
-  }, [open, initialConfig.targetValue, initialConfig.measure])
+  }, [open, initialConfig.targetValue, initialConfig.measure, initialConfig.position])
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("")
@@ -74,14 +82,14 @@ export function ExercisePickerDrawer({
   }, [allExercises, searchQuery])
 
   const handleExerciseClick = (exerciseId: number) => {
-    onExerciseSelected(exerciseId, { targetValue, measure })
+    onExerciseSelected(exerciseId, { targetValue, measure, position: showPositionOption ? position : undefined })
     onOpenChange(false)
   }
 
   const handleBreakClick = () => {
     if (onBreakSelected) {
       // Breaks always use time-based config, default 10s
-      onBreakSelected({ targetValue: 10, measure: "time" })
+      onBreakSelected({ targetValue: 10, measure: "time", position: showPositionOption ? position : undefined })
       onOpenChange(false)
     }
   }
@@ -94,7 +102,7 @@ export function ExercisePickerDrawer({
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
 
-        {/* Configuration Controls - Two Wheels Side by Side */}
+        {/* Configuration Controls - Wheels Side by Side */}
         <div className="mt-4 flex items-center justify-center gap-4">
           <div className="flex flex-col items-center gap-2">
             <WheelNumberInput
@@ -115,6 +123,19 @@ export function ExercisePickerDrawer({
             />
             <span className="text-xs text-muted-foreground">Unit</span>
           </div>
+
+          {/* Position wheel - only shown during execution */}
+          {showPositionOption && (
+            <div className="flex flex-col items-center gap-2">
+              <WheelSelect
+                value={position}
+                onChange={setPosition}
+                options={['before', 'after'] as const}
+                formatOption={(opt) => opt}
+              />
+              <span className="text-xs text-muted-foreground">Position</span>
+            </div>
+          )}
         </div>
 
         {/* Search Input */}

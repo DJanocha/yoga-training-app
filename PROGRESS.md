@@ -717,41 +717,41 @@ Legend:
 
 **New Component**: `SegmentedProgressBar`
 
-- [ ] **File**: `src/components/ui/segmented-progress.tsx`
-- [ ] **Props**: `exercises`, `completedExercises`, `currentIndex`, `onNavigate`
-- [ ] **Segment Rendering** - Map exercises to colored segments based on completion status
-- [ ] **Tappable Segments** - Click/tap any segment to navigate to that exercise
-- [ ] **Arrow Buttons** - Left/right arrows at ends for explicit navigation
-- [ ] **Current Position Marker** - Blue indicator arrow pointing at current exercise
-- [ ] **Responsive Sizing** - Segments shrink on mobile for long sequences (min 8px width)
-- [ ] **Overflow Handling** - Horizontal scroll for very long sequences (>20 exercises)
+- [x] **File**: `src/components/ui/segmented-progress.tsx`
+- [x] **Props**: `exercises`, `completedExercises`, `currentIndex`, `onNavigate`
+- [x] **Segment Rendering** - Map exercises to colored segments based on completion status
+- [x] **Tappable Segments** - Click/tap any segment to navigate to that exercise
+- [x] **Arrow Buttons** - Left/right arrows at ends for explicit navigation
+- [x] **Current Position Marker** - Blue indicator arrow pointing at current exercise
+- [x] **Responsive Sizing** - Segments shrink on mobile for long sequences (min 8px width)
+- [x] **Overflow Handling** - Horizontal scroll for very long sequences (>20 exercises)
 
 **State Changes in `execute.tsx`**:
 
-- [ ] **Add `viewingIndex`** - Separate from `currentIndex` to allow reviewing past exercises
-- [ ] **Add `isReviewing` mode** - Boolean flag for review vs execution mode
-- [ ] **Review Mode Behavior**:
+- [x] **Add `viewingIndex`** - Separate from `currentIndex` to allow reviewing past exercises
+- [x] **Add `isReviewing` mode** - Boolean flag for review vs execution mode
+- [x] **Review Mode Behavior**:
   - Timer paused when reviewing
   - Show exercise details but grayed out controls
   - "Resume" button to return to `currentIndex`
   - "Redo" button to reset exercise and continue from there
-- [ ] **Navigation Handler** - `handleNavigate(targetIndex)`:
+- [x] **Navigation Handler** - `handleNavigate(targetIndex)`:
   - If `targetIndex < currentIndex`: Enter review mode
   - If `targetIndex === currentIndex`: Exit review mode
   - If `targetIndex > currentIndex`: Not allowed (can't skip ahead)
 
 **Review Mode UI**:
 
-- [ ] **Dimmed Overlay** - 50% opacity overlay on main content
-- [ ] **Review Banner** - "Reviewing Exercise 3 of 10" with Resume/Redo buttons
-- [ ] **Exercise Summary** - Show recorded value, time spent, modifiers used
-- [ ] **Redo Confirmation** - Dialog: "Redo this exercise? Previous result will be discarded."
+- [x] **Dimmed Overlay** - 50% opacity overlay on main content
+- [x] **Review Banner** - "Reviewing Exercise 3 of 10" with Resume/Redo buttons
+- [ ] **Exercise Summary** - Show recorded value, time spent, modifiers used (deferred)
+- [ ] **Redo Confirmation** - Dialog: "Redo this exercise? Previous result will be discarded." (simplified - direct redo)
 
 **Redo Logic**:
 
-- [ ] **Remove from completedExercises** - Pop all exercises from target index onwards
-- [ ] **Reset state** - `setCurrentIndex(targetIndex)`, `setTimeElapsed(0)`, `setActualValue(targetValue)`
-- [ ] **Exit review mode** - `setIsReviewing(false)`, `setViewingIndex(null)`
+- [x] **Remove from completedExercises** - Pop all exercises from target index onwards
+- [x] **Reset state** - `setCurrentIndex(targetIndex)`, `setTimeElapsed(0)`, `setActualValue(targetValue)`
+- [x] **Exit review mode** - `setIsReviewing(false)`, `setViewingIndex(null)`
 
 ---
 
@@ -773,8 +773,8 @@ Replace +/- buttons with wheel component during exercise execution.
 
 **New Implementation**:
 
-- [ ] **Import WheelNumberInput** - From `@/components/ui/wheel-number-input`
-- [ ] **Replace +/- buttons with wheel**:
+- [x] **Import WheelNumberInput** - From `@/components/ui/wheel-number-input`
+- [x] **Replace +/- buttons with wheel**:
 
 ```tsx
 <WheelNumberInput
@@ -786,11 +786,11 @@ Replace +/- buttons with wheel component during exercise execution.
 />
 ```
 
-- [ ] **Conditional Step Size**:
-  - Time-based: step=5 (5s increments for easier scrolling)
+- [x] **Conditional Step Size**:
+  - Time-based: step=5 (5s increments for easier scrolling) - N/A (time uses countdown)
   - Rep-based: step=1 (precise rep counting)
-- [ ] **Larger Display** - Increase wheel height for execution context (h-48 vs h-32)
-- [ ] **Touch-Friendly Sizing** - Minimum 48px touch targets
+- [x] **Larger Display** - Increase wheel height for execution context (size="lg" prop)
+- [x] **Touch-Friendly Sizing** - Minimum 48px touch targets
 
 **Bonus: Measure Type Switcher**:
 
@@ -891,17 +891,17 @@ function findMatchingExercises(
 
 **Progress Bar Integration**:
 
-- [ ] **Replace Progress component** - Swap `<Progress>` with `<SegmentedProgressBar>`
-- [ ] **Header layout update** - Move progress bar below header, add arrow buttons
-- [ ] **Animation** - Smooth transitions when segments change color
+- [x] **Replace Progress component** - Swap `<Progress>` with `<SegmentedProgressBar>`
+- [x] **Header layout update** - Move progress bar below header, add arrow buttons
+- [x] **Animation** - Smooth transitions when segments change color
 
 **Wheel Integration**:
 
-- [ ] **Conditional rendering** - Show wheel only for rep-based exercises (time uses countdown)
-- [ ] **Layout adjustment** - Center wheel in main content area
-- [ ] **Visual feedback** - Highlight wheel when value differs from target
+- [x] **Conditional rendering** - Show wheel only for rep-based exercises (time uses countdown)
+- [x] **Layout adjustment** - Center wheel in main content area
+- [x] **Visual feedback** - Target indicator shows when value differs from target
 
-**Config Dialog Integration**:
+**Config Dialog Integration** (deferred to Phase 18.3):
 
 - [ ] **Trigger button** - Add "Edit" button near exercise name during execution
 - [ ] **Auto-trigger** - Optionally trigger when measure type changes
@@ -909,8 +909,8 @@ function findMatchingExercises(
 
 **Accessibility**:
 
-- [ ] **ARIA labels** - All interactive elements have proper labels
-- [ ] **Focus management** - Focus moves logically through components
+- [x] **ARIA labels** - All interactive elements have proper labels
+- [x] **Focus management** - Focus moves logically through components
 - [ ] **Screen reader** - Announce navigation changes and config updates
 
 ---
@@ -946,11 +946,11 @@ Add a third wheel to the exercise picker during execution for choosing insert po
 └────────────────────────────────────────────────┘
 ```
 
-- [ ] **Add position wheel** - Third `WheelSelect` with options: "before", "after"
-- [ ] **Default to "after"** - Preserves existing behavior
-- [ ] **Dynamic description** - Update text: "Select an exercise to add {before/after} the current one"
-- [ ] **Update insert logic** - `insertIndex = position === 'before' ? currentIndex : currentIndex + 1`
-- [ ] **Pass position to handler** - Update `handleExerciseSelected` signature to include position
+- [x] **Add position wheel** - Third `WheelSelect` with options: "before", "after"
+- [x] **Default to "after"** - Preserves existing behavior
+- [x] **Dynamic description** - Update text: "Select an exercise to add"
+- [x] **Update insert logic** - `insertIndex = position === 'before' ? currentIndex : currentIndex + 1`
+- [x] **Pass position to handler** - Update `handleExerciseSelected` signature to include position
 
 **Files**: `src/components/exercise-picker-drawer.tsx`, `src/routes/sequences/$id/execute.tsx`
 
@@ -1573,6 +1573,126 @@ For compound unit modifiers during workout, show two wheels:
 - [ ] **History Display** - Show progression over time (e.g., "3 tiles → 4 tiles in 2 months")
 
 **Files**: `src/server/api/routers/executions.ts`
+
+---
+
+### Phase 28: Backpack Compound Component System
+
+Game-style equipment management primitives using compound component pattern (like Radix/shadcn).
+
+**Component Created**: `src/components/ui/backpack/`
+
+#### 28.1 Core Components (Implemented)
+
+- [x] **Backpack.Root** - Context provider with controlled/uncontrolled state management
+- [x] **Backpack.Container** - Visual backpack wrapper with themes (brown, gray, dark)
+- [x] **Backpack.Grid** - Grid layout with configurable cols/rows
+- [x] **Backpack.Slot** - Individual inventory slot with effect-based styling
+- [x] **Backpack.ItemContent** - Item display with badge and effect indicator
+- [x] **Backpack.EmptySlot** - Empty slot placeholder
+- [x] **Backpack.AddButton** - Add new item button
+- [x] **Backpack.Label** - Helper text below backpack
+
+#### 28.2 Effect System (Implemented)
+
+- [x] **BackpackEffect type** - `"easier" | "harder" | "neutral" | null`
+- [x] **Effect cycling** - Click to cycle: off → easier → harder → off
+- [x] **Visual indicators** - Green (easier ↓), Red (harder ↑), Blue (neutral •)
+- [x] **Badge labels** - E (easier), H (harder), N (neutral)
+
+#### 28.3 State Management (Implemented)
+
+- [x] **Controlled mode** - External `value` and `onChange` props
+- [x] **Uncontrolled mode** - Internal state with initial values
+- [x] **Context hook** - `useBackpackContext()` for custom components
+
+#### 28.4 Future Enhancements
+
+- [ ] **Drag & Drop** - Reorder items within backpack using dnd-kit
+- [ ] **Trash Zone** - Drag items to trash zone to remove
+- [ ] **Multiple Backpacks** - Sync items between backpacks (e.g., sequence vs exercise)
+- [ ] **Item Drawer** - Slide-up drawer for adding new items from library
+- [ ] **Animation** - Spring animations for add/remove/toggle interactions
+- [ ] **Sound Effects** - Optional audio feedback for game feel
+
+#### 28.5 Usage Example
+
+```tsx
+import { Backpack } from "@/components/ui/backpack"
+
+<Backpack.Root
+  items={equipmentItems}
+  value={activeItems}
+  onChange={setActiveItems}
+  cols={3}
+  rows={1}
+  editable={true}
+  onToggle={(id, effect) => console.log(`Item ${id} set to ${effect}`)}
+>
+  <Backpack.Container theme="brown">
+    <Backpack.Grid>
+      {items.map((item) => (
+        <Backpack.Slot key={item.id} item={item}>
+          <Backpack.ItemContent item={item} />
+        </Backpack.Slot>
+      ))}
+      <Backpack.AddButton onClick={handleAddNew} />
+      <Backpack.EmptySlot />
+    </Backpack.Grid>
+  </Backpack.Container>
+  <Backpack.Label />
+</Backpack.Root>
+```
+
+**Files**:
+- `src/components/ui/backpack/backpack.tsx` - Main component file
+- `src/components/ui/backpack/index.ts` - Exports
+
+---
+
+### Phase 29: Game-Style UI Components
+
+Collection of game-inspired UI components for workout execution.
+
+#### 29.1 Components Created
+
+- [x] **GameTimer** - Digital clock-style timer with minute:second wheels
+  - Themes: emerald, orange, blue
+  - Editable mode with wheel inputs
+  - Display-only mode with static numbers
+  - File: `src/components/ui/game-timer.tsx`
+
+- [x] **GameCounter** - Arcade scoreboard-style rep counter
+  - Themes: lime, orange, cyan
+  - Target indicator with completion checkmark
+  - Wheel input for value adjustment
+  - File: `src/components/ui/game-counter.tsx`
+
+- [x] **EquipmentGrid** - Backpack inventory grid
+  - Configurable rows/cols
+  - Effect cycling (easier/harder/off)
+  - Add button support
+  - File: `src/components/ui/equipment-grid.tsx`
+
+#### 29.2 Integration (Implemented)
+
+- [x] **Execute Screen** - Integrated game components into workout execution
+- [x] **Layout** - Equipment (left) | Timer/Counter (right) on desktop
+- [x] **Mobile** - Stacked layout with timer/counter on top
+- [x] **Theme Switching** - Dynamic theme based on workout state
+
+#### 29.3 Future Enhancements
+
+- [ ] **Sound Effects** - Game-style beeps and completion sounds
+- [ ] **Particle Effects** - Confetti on PR, sparkles on completion
+- [ ] **Achievement Badges** - Pop-up badges during workout
+- [ ] **Combo Counter** - Track consecutive successful exercises
+
+**Files**:
+- `src/components/ui/game-timer.tsx`
+- `src/components/ui/game-counter.tsx`
+- `src/components/ui/equipment-grid.tsx`
+- `src/routes/sequences/$id/execute.tsx` (integration)
 
 ---
 
