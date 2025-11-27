@@ -37,7 +37,7 @@ import {
   Check,
   Package2,
 } from 'lucide-react'
-import type { SequenceExercise, CompletedExercise, ActiveModifier } from '@/db/types'
+import type { SequenceExercise, CompletedExercise, ActiveModifier, ExerciseGroup } from '@/db/types'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/sequences/$id/execute')({
@@ -151,6 +151,30 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     if (exerciseId === 'break') return 'Break'
     return allExercises?.find((ex) => ex.id === exerciseId)?.name || `Exercise #${exerciseId}`
   }, [allExercises])
+
+  // Get group context for current exercise
+  const getGroupContext = useCallback((exerciseIndex: number): { group: ExerciseGroup; position: number; total: number } | null => {
+    if (!exercises || !sequence) return null
+
+    const groups = (sequence as any).groups as ExerciseGroup[] | undefined
+    if (!groups || groups.length === 0) return null
+
+    const currentExercise = exercises[exerciseIndex]
+    if (!currentExercise?.id) return null
+
+    for (const group of groups) {
+      const positionInGroup = group.exerciseIds.indexOf(currentExercise.id)
+      if (positionInGroup !== -1) {
+        return {
+          group,
+          position: positionInGroup + 1,
+          total: group.exerciseIds.length,
+        }
+      }
+    }
+
+    return null
+  }, [exercises, sequence])
 
   // Audio beep function
   const playBeep = useCallback((frequency: number = 800, duration: number = 200) => {
@@ -555,6 +579,13 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           </h1>
           <p className="text-xs md:text-sm text-muted-foreground">
             Exercise {currentIndex + 1} of {exercises.length}
+            {(() => {
+              const groupContext = getGroupContext(currentIndex)
+              if (groupContext) {
+                return ` · ${groupContext.group.name} (${groupContext.position}/${groupContext.total})`
+              }
+              return null
+            })()}
           </p>
         </div>
         <Button
