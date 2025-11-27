@@ -585,10 +585,10 @@ Selection Active (expanded, ~300px width):
 Collection of UX issues discovered during testing.
 
 #### 17.1 Exercise Form Issues
-- [ ] **Form not pre-filled** - When editing an exercise, form fields are empty instead of showing existing values (e.g., "Push up" name not displayed)
-- [ ] **Buttons overflow container** - Cancel/Save buttons stick out of the main page container on mobile
-- [ ] **Dark mode colors** - Form uses hardcoded light colors (`bg-white`, `text-gray-700`, `border-gray-300`) instead of theme-aware classes (`bg-card`, `text-foreground`, `border-border`)
-- [ ] **Body parts labels invisible** - Checkbox labels use `text-sm` without `text-foreground`, making them invisible in dark mode
+- [x] **Form not pre-filled** - Form IS pre-filled via useEffect (was already working, verified)
+- [x] **Buttons overflow container** - Added sticky positioning with `bg-card` background
+- [x] **Dark mode colors** - Replaced all hardcoded colors with theme-aware classes (`bg-card`, `text-foreground`, `border-border`, `bg-muted`, `bg-primary`, etc.)
+- [x] **Body parts labels invisible** - Added `text-foreground` to checkbox labels
 
 **Files**: `src/components/ExerciseForm.tsx`
 

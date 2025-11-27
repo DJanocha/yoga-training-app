@@ -103,15 +103,15 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
   if (exerciseId && isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+      <div className="bg-card rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold text-foreground mb-6">
           {exerciseId ? 'Edit Exercise' : 'New Exercise'}
         </h2>
 
@@ -124,53 +124,57 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
           )}
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <label htmlFor="exercise-name" className="block text-base font-medium text-foreground mb-2">
               Name *
             </label>
             <input
+              id="exercise-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
               placeholder="Exercise name"
               required
             />
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <label htmlFor="exercise-description" className="block text-base font-medium text-foreground mb-2">
               Description
             </label>
             <textarea
+              id="exercise-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-background text-foreground"
               placeholder="Describe the exercise..."
               rows={3}
             />
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <label htmlFor="exercise-tips" className="block text-base font-medium text-foreground mb-2">
               Tips
             </label>
             <textarea
+              id="exercise-tips"
               value={tips}
               onChange={(e) => setTips(e.target.value)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-background text-foreground"
               placeholder="Tips for proper form..."
               rows={2}
             />
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <label htmlFor="exercise-level" className="block text-base font-medium text-foreground mb-2">
               Level
             </label>
             <select
+              id="exercise-level"
               value={level || ''}
               onChange={(e) => setLevel((e.target.value as any) || undefined)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
             >
               <option value="">Select level...</option>
               <option value="beginner">Beginner</option>
@@ -180,15 +184,16 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <label htmlFor="exercise-category" className="block text-base font-medium text-foreground mb-2">
               Category
             </label>
             <select
+              id="exercise-category"
               value={category || ''}
               onChange={(e) =>
                 setCategory((e.target.value as any) || undefined)
               }
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
             >
               <option value="">Select category...</option>
               <option value="yoga">Yoga</option>
@@ -200,9 +205,9 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <span className="block text-base font-medium text-foreground mb-2">
               Body Parts
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               {(
                 [
@@ -229,18 +234,18 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                         setBodyParts(bodyParts.filter((p) => p !== part))
                       }
                     }}
-                    className="h-4 w-4 text-blue-600 rounded"
+                    className="h-4 w-4 rounded accent-primary"
                   />
-                  <span className="text-sm capitalize">{part}</span>
+                  <span className="text-sm capitalize text-foreground">{part}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <span className="block text-base font-medium text-foreground mb-2">
               Modifications
-            </label>
+            </span>
             <div className="space-y-2">
               {modifications.map((mod, i) => (
                 <div key={i} className="flex gap-2">
@@ -248,7 +253,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                     type="text"
                     value={mod}
                     readOnly
-                    className="flex-1 px-4 py-2 text-base border border-gray-300 rounded-lg bg-gray-50"
+                    className="flex-1 px-4 py-2 text-base border border-border rounded-lg bg-muted text-foreground"
                   />
                   <button
                     type="button"
@@ -257,7 +262,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                         modifications.filter((_, idx) => idx !== i),
                       )
                     }
-                    className="min-h-[44px] min-w-[44px] px-4 bg-red-50 text-red-600 text-base font-medium rounded-lg hover:bg-red-100"
+                    className="min-h-[44px] min-w-[44px] px-4 bg-destructive/10 text-destructive text-base font-medium rounded-lg hover:bg-destructive/20"
                   >
                     ✕
                   </button>
@@ -268,7 +273,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                   type="text"
                   value={modificationInput}
                   onChange={(e) => setModificationInput(e.target.value)}
-                  className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                   placeholder="Add a modification..."
                 />
                 <button
@@ -282,7 +287,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                       setModificationInput('')
                     }
                   }}
-                  className="min-h-[44px] px-6 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700"
+                  className="min-h-[44px] px-6 bg-primary text-primary-foreground text-base font-medium rounded-lg hover:bg-primary/90"
                 >
                   Add
                 </button>
@@ -291,9 +296,9 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <span className="block text-base font-medium text-foreground mb-2">
               Photo URLs
-            </label>
+            </span>
             <div className="space-y-2">
               {photoUrls.map((url, i) => (
                 <div key={i} className="space-y-2">
@@ -302,14 +307,14 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                       type="text"
                       value={url}
                       readOnly
-                      className="flex-1 px-4 py-2 text-base border border-gray-300 rounded-lg bg-gray-50"
+                      className="flex-1 px-4 py-2 text-base border border-border rounded-lg bg-muted text-foreground"
                     />
                     <button
                       type="button"
                       onClick={() =>
                         setPhotoUrls(photoUrls.filter((_, idx) => idx !== i))
                       }
-                      className="min-h-[44px] min-w-[44px] px-4 bg-red-50 text-red-600 text-base font-medium rounded-lg hover:bg-red-100"
+                      className="min-h-[44px] min-w-[44px] px-4 bg-destructive/10 text-destructive text-base font-medium rounded-lg hover:bg-destructive/20"
                     >
                       ✕
                     </button>
@@ -331,7 +336,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                   type="url"
                   value={photoUrlInput}
                   onChange={(e) => setPhotoUrlInput(e.target.value)}
-                  className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                   placeholder="https://..."
                 />
                 <button
@@ -342,7 +347,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                       setPhotoUrlInput('')
                     }
                   }}
-                  className="min-h-[44px] px-6 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700"
+                  className="min-h-[44px] px-6 bg-primary text-primary-foreground text-base font-medium rounded-lg hover:bg-primary/90"
                 >
                   Add
                 </button>
@@ -351,9 +356,9 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <span className="block text-base font-medium text-foreground mb-2">
               Video URLs (YouTube, Vimeo)
-            </label>
+            </span>
             <div className="space-y-2">
               {videoUrls.map((url, i) => (
                 <div key={i} className="space-y-2">
@@ -362,20 +367,20 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                       type="text"
                       value={url}
                       readOnly
-                      className="flex-1 px-4 py-2 text-base border border-gray-300 rounded-lg bg-gray-50"
+                      className="flex-1 px-4 py-2 text-base border border-border rounded-lg bg-muted text-foreground"
                     />
                     <button
                       type="button"
                       onClick={() =>
                         setVideoUrls(videoUrls.filter((_, idx) => idx !== i))
                       }
-                      className="min-h-[44px] min-w-[44px] px-4 bg-red-50 text-red-600 text-base font-medium rounded-lg hover:bg-red-100"
+                      className="min-h-[44px] min-w-[44px] px-4 bg-destructive/10 text-destructive text-base font-medium rounded-lg hover:bg-destructive/20"
                     >
                       ✕
                     </button>
                   </div>
                   {url && (
-                    <div className="w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                    <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted">
                       <iframe
                         src={url.includes('youtube.com') || url.includes('youtu.be')
                           ? `https://www.youtube.com/embed/${url.includes('youtu.be') ? url.split('/').pop()?.split('?')[0] : new URLSearchParams(url.split('?')[1]).get('v')}`
@@ -395,7 +400,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                   type="url"
                   value={videoUrlInput}
                   onChange={(e) => setVideoUrlInput(e.target.value)}
-                  className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                   placeholder="https://youtube.com/... or https://vimeo.com/..."
                 />
                 <button
@@ -406,7 +411,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                       setVideoUrlInput('')
                     }
                   }}
-                  className="min-h-[44px] px-6 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700"
+                  className="min-h-[44px] px-6 bg-primary text-primary-foreground text-base font-medium rounded-lg hover:bg-primary/90"
                 >
                   Add
                 </button>
@@ -415,9 +420,9 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-700 mb-2">
+            <span className="block text-base font-medium text-foreground mb-2">
               Links
-            </label>
+            </span>
             <div className="space-y-2">
               {links.map((link, i) => (
                 <div key={i} className="flex gap-2">
@@ -425,14 +430,14 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                     type="text"
                     value={link}
                     readOnly
-                    className="flex-1 px-4 py-2 text-base border border-gray-300 rounded-lg bg-gray-50"
+                    className="flex-1 px-4 py-2 text-base border border-border rounded-lg bg-muted text-foreground"
                   />
                   <button
                     type="button"
                     onClick={() =>
                       setLinks(links.filter((_, idx) => idx !== i))
                     }
-                    className="min-h-[44px] min-w-[44px] px-4 bg-red-50 text-red-600 text-base font-medium rounded-lg hover:bg-red-100"
+                    className="min-h-[44px] min-w-[44px] px-4 bg-destructive/10 text-destructive text-base font-medium rounded-lg hover:bg-destructive/20"
                   >
                     ✕
                   </button>
@@ -443,7 +448,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                   type="url"
                   value={linkInput}
                   onChange={(e) => setLinkInput(e.target.value)}
-                  className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 text-base border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                   placeholder="https://..."
                 />
                 <button
@@ -454,7 +459,7 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
                       setLinkInput('')
                     }
                   }}
-                  className="min-h-[44px] px-6 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700"
+                  className="min-h-[44px] px-6 bg-primary text-primary-foreground text-base font-medium rounded-lg hover:bg-primary/90"
                 >
                   Add
                 </button>
@@ -462,17 +467,17 @@ export function ExerciseForm({ exerciseId, onClose }: ExerciseFormProps) {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 sticky bottom-0 bg-card pb-2 -mb-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 min-h-[44px] px-6 py-3 bg-gray-100 text-gray-700 text-base font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex-1 min-h-[44px] px-6 py-3 bg-muted text-foreground text-base font-semibold rounded-lg hover:bg-muted/80 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 min-h-[44px] px-6 py-3 bg-blue-600 text-white text-base font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 min-h-[44px] px-6 py-3 bg-primary text-primary-foreground text-base font-semibold rounded-lg hover:bg-primary/90 transition-colors"
             >
               Save
             </button>
