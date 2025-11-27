@@ -987,10 +987,11 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   }, []);
 
   // Batch clone selected items (handles both groups and exercises)
+  // Clones are inserted right after their originals
+  // Groups are cloned with new IDs, containing cloned exercises
   const batchCloneSelected = useCallback(() => {
     if (selectedItems.size === 0) return;
 
-    const effectiveIds = getEffectiveSelection();
     const selectedGroupIds = new Set<string>();
 
     // Identify selected groups
@@ -1000,35 +1001,140 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       }
     }
 
+    // Identify standalone selected exercises (not part of a selected group)
+    const standaloneSelectedIds = new Set<string>();
+    for (const id of selectedItems) {
+      if (!id.startsWith("group:")) {
+        standaloneSelectedIds.add(id);
+      }
+    }
+
+    // Pre-generate ID mappings for all exercises that will be cloned
+    // This allows us to update both exercises and groups atomically
+    const idMapping = new Map<string, string>();
+    const timestamp = Date.now();
+    let counter = 0;
+
+    // Generate IDs for standalone exercises
+    for (const id of standaloneSelectedIds) {
+      // Check if this exercise is in a selected group - if so, skip (will be handled with group)
+      let isInSelectedGroup = false;
+      for (const groupId of selectedGroupIds) {
+        const group = groups.find((g) => g.id === groupId);
+        if (group?.exerciseIds.includes(id)) {
+          isInSelectedGroup = true;
+          break;
+        }
+      }
+      if (!isInSelectedGroup) {
+        const exercise = exercises.find((e) => e.id === id);
+        if (exercise) {
+          idMapping.set(id, `${exercise.exerciseId}-${timestamp}-${counter++}`);
+        }
+      }
+    }
+
+    // Generate IDs for exercises in selected groups
+    for (const groupId of selectedGroupIds) {
+      const group = groups.find((g) => g.id === groupId);
+      if (group) {
+        for (const exerciseId of group.exerciseIds) {
+          const exercise = exercises.find((e) => e.id === exerciseId);
+          if (exercise) {
+            idMapping.set(exerciseId, `${exercise.exerciseId}-${timestamp}-${counter++}`);
+          }
+        }
+      }
+    }
+
+    // Collect exercises that belong to selected groups
+    const groupExerciseIds = new Set<string>();
+    for (const groupId of selectedGroupIds) {
+      const group = groups.find((g) => g.id === groupId);
+      if (group) {
+        group.exerciseIds.forEach((id) => groupExerciseIds.add(id));
+      }
+    }
+
     // Clone exercises
     setExercises((prev) => {
       const newItems: SequenceItemWithId[] = [];
-      prev.forEach((item) => {
+
+      // Process exercises - clone standalone ones right after their originals
+      for (const item of prev) {
         newItems.push(item);
-        if (effectiveIds.has(item.id)) {
-          // Insert clone right after the original
-          newItems.push({
-            ...item,
-            id: `${item.exerciseId}-${Date.now()}-${Math.random()}`,
-          });
+
+        // Clone standalone selected exercises (insert right after original)
+        if (standaloneSelectedIds.has(item.id) && !groupExerciseIds.has(item.id)) {
+          const clonedId = idMapping.get(item.id);
+          if (clonedId) {
+            newItems.push({
+              ...item,
+              id: clonedId,
+            });
+          }
         }
-      });
+      }
+
+      // For each selected group, insert cloned exercises right after the group's last exercise
+      for (const groupId of selectedGroupIds) {
+        const group = groups.find((g) => g.id === groupId);
+        if (!group) continue;
+
+        // Find the index of the last exercise of this group in newItems
+        let lastGroupExerciseIndex = -1;
+        for (let i = 0; i < newItems.length; i++) {
+          if (group.exerciseIds.includes(newItems[i].id)) {
+            lastGroupExerciseIndex = i;
+          }
+        }
+
+        if (lastGroupExerciseIndex === -1) continue;
+
+        // Clone all exercises in this group (maintaining order)
+        const clonedGroupExercises: SequenceItemWithId[] = [];
+        for (const exerciseId of group.exerciseIds) {
+          const originalExercise = prev.find((e) => e.id === exerciseId);
+          const clonedId = idMapping.get(exerciseId);
+          if (originalExercise && clonedId) {
+            clonedGroupExercises.push({
+              ...originalExercise,
+              id: clonedId,
+            });
+          }
+        }
+
+        // Insert cloned exercises right after the last exercise of the original group
+        newItems.splice(lastGroupExerciseIndex + 1, 0, ...clonedGroupExercises);
+      }
+
       return newItems;
     });
 
-    // Clone groups (create new groups for each selected group with cloned exercise IDs)
+    // Clone groups with new IDs pointing to cloned exercises
     if (selectedGroupIds.size > 0) {
       setGroups((prev) => {
-        const newGroups = [...prev];
-        for (const groupId of selectedGroupIds) {
-          const originalGroup = prev.find((g) => g.id === groupId);
-          if (originalGroup) {
-            // Note: The cloned exercises were inserted after originals,
-            // but they have new IDs, so we need to track them
-            // For simplicity, we just clone the group structure
-            // The user can re-group cloned exercises if needed
+        const newGroups: ExerciseGroup[] = [];
+
+        for (const group of prev) {
+          newGroups.push(group);
+
+          // If this group was selected, create a cloned group right after it
+          if (selectedGroupIds.has(group.id)) {
+            const clonedExerciseIds = group.exerciseIds
+              .map((id) => idMapping.get(id))
+              .filter((id): id is string => id !== undefined);
+
+            if (clonedExerciseIds.length > 0) {
+              newGroups.push({
+                id: `group-${timestamp}-${counter++}`,
+                name: group.name, // Keep same name for cloned group
+                exerciseIds: clonedExerciseIds,
+              });
+            }
           }
         }
+
         return newGroups;
       });
     }
@@ -1036,7 +1142,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     // Clear selection and exit mode
     setSelectedItems(new Set());
     setSelectionMode(false);
-  }, [selectedItems, getEffectiveSelection]);
+  }, [selectedItems, groups, exercises]);
 
   // Batch delete selected items (handles both groups and exercises)
   const batchDeleteSelected = useCallback(() => {

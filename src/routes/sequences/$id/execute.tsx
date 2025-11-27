@@ -12,10 +12,12 @@ import {
 } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { ExercisePickerDrawer } from '@/components/exercise-picker-drawer'
+import { ExerciseConfigUpdateDialog, type UpdateScope } from '@/components/exercise-config-update-dialog'
 import { GameTimer } from '@/components/ui/game-timer'
 import { GameCounter } from '@/components/ui/game-counter'
 import { EquipmentGrid } from '@/components/ui/equipment-grid'
 import type { ExercisePickerConfig } from '@/components/exercise-picker-drawer'
+import type { MeasureType, ExerciseGroup } from '@/db/types'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,8 +41,9 @@ import {
   Plus,
   RotateCcw,
   Eye,
+  Pencil,
 } from 'lucide-react'
-import type { SequenceExercise, CompletedExercise, ActiveModifier, ExerciseGroup, ModifierEffect } from '@/db/types'
+import type { SequenceExercise, CompletedExercise, ActiveModifier, ModifierEffect } from '@/db/types'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/sequences/$id/execute')({
@@ -144,6 +147,13 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
   // Review mode state (Phase 18.1)
   const [viewingIndex, setViewingIndex] = useState<number | null>(null)
   const isReviewing = viewingIndex !== null
+
+  // Config update dialog state (Phase 18.3)
+  const [showConfigDialog, setShowConfigDialog] = useState(false)
+  const [pendingConfigChange, setPendingConfigChange] = useState<{
+    oldConfig: { measure: MeasureType; targetValue?: number }
+    newConfig: { measure: MeasureType; targetValue?: number }
+  } | null>(null)
 
   // Timer ref
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -520,6 +530,80 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
     navigate({ to: '/sequences' })
   }
 
+  // Open config edit dialog (Phase 18.3)
+  const handleOpenConfigDialog = useCallback(() => {
+    if (!exercises) return
+    const currentExercise = exercises[currentIndex]
+
+    setPendingConfigChange({
+      oldConfig: {
+        measure: currentExercise.config.measure,
+        targetValue: currentExercise.config.targetValue,
+      },
+      newConfig: {
+        measure: currentExercise.config.measure,
+        targetValue: actualValue,
+      },
+    })
+    setShowConfigDialog(true)
+  }, [exercises, currentIndex, actualValue])
+
+  // Apply config update (Phase 18.3)
+  const handleApplyConfigUpdate = useCallback((
+    _scope: UpdateScope,
+    indicesToUpdate: number[],
+    newConfig: { measure?: MeasureType; targetValue?: number },
+    persistToSequence: boolean
+  ) => {
+    if (!exercises || !sequence) return
+
+    // Create a copy of the workout exercises
+    const updatedExercises = [...(workoutExercises ?? exercises)]
+
+    // Update all matching exercises
+    for (const idx of indicesToUpdate) {
+      const exercise = updatedExercises[idx]
+      if (exercise) {
+        updatedExercises[idx] = {
+          ...exercise,
+          config: {
+            ...exercise.config,
+            ...(newConfig.measure !== undefined && { measure: newConfig.measure }),
+            ...(newConfig.targetValue !== undefined && { targetValue: newConfig.targetValue }),
+          },
+        }
+      }
+    }
+
+    // Update local state
+    setWorkoutExercises(updatedExercises)
+
+    // Also update actualValue if current exercise was updated
+    if (indicesToUpdate.includes(currentIndex) && newConfig.targetValue !== undefined) {
+      setActualValue(newConfig.targetValue)
+    }
+
+    // Persist to sequence if requested
+    if (persistToSequence) {
+      updateSequence.mutate({
+        id: sequenceId,
+        exercises: updatedExercises,
+      })
+    }
+
+    toast.success(`Updated ${indicesToUpdate.length} exercise${indicesToUpdate.length > 1 ? 's' : ''}`)
+
+    // Clear pending state
+    setPendingConfigChange(null)
+    setShowConfigDialog(false)
+  }, [exercises, sequence, workoutExercises, currentIndex, sequenceId, updateSequence])
+
+  // Cancel config update
+  const handleCancelConfigUpdate = useCallback(() => {
+    setPendingConfigChange(null)
+    setShowConfigDialog(false)
+  }, [])
+
   if (sequenceLoading || !sequence) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -713,7 +797,7 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
 
       {/* Main content */}
       <main className={`flex-1 flex flex-col items-center justify-center p-2 md:p-6 min-h-0 ${isReviewing ? 'opacity-60' : ''}`}>
-        {/* Exercise name with icon */}
+        {/* Exercise name with icon and edit button */}
         <div className="flex items-center gap-2 mb-2 md:mb-4">
           {isBreak ? (
             <Coffee className="h-6 w-6 md:h-10 md:w-10 text-muted-foreground" />
@@ -725,6 +809,18 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           <h2 className="text-lg md:text-3xl font-bold text-center">
             {getExerciseName(displayExercise.exerciseId)}
           </h2>
+          {/* Edit Config Button - only show for non-break exercises when not reviewing */}
+          {!isBreak && !isReviewing && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleOpenConfigDialog}
+              className="h-8 w-8 md:h-10 md:w-10 text-muted-foreground hover:text-foreground"
+              title="Edit exercise configuration"
+            >
+              <Pencil className="h-4 w-4 md:h-5 md:w-5" />
+            </Button>
+          )}
         </div>
 
         {/* Game-style layout: Equipment (left) | Timer/Counter (right) */}
@@ -963,6 +1059,24 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Exercise Config Update Dialog (Phase 18.3) */}
+      {pendingConfigChange && exercises && (
+        <ExerciseConfigUpdateDialog
+          open={showConfigDialog}
+          onOpenChange={setShowConfigDialog}
+          exercise={exercises[currentIndex]}
+          exerciseIndex={currentIndex}
+          exerciseName={getExerciseName(exercises[currentIndex].exerciseId)}
+          oldConfig={pendingConfigChange.oldConfig}
+          newConfig={pendingConfigChange.newConfig}
+          exercises={exercises}
+          groups={(sequence as { groups?: ExerciseGroup[] })?.groups}
+          completedCount={completedExercises.length}
+          onApply={handleApplyConfigUpdate}
+          onCancel={handleCancelConfigUpdate}
+        />
+      )}
     </div>
   )
 }

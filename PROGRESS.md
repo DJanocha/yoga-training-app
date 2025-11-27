@@ -822,8 +822,8 @@ When changing exercise config during execution, offer options to apply to multip
 
 **New Component**: `ExerciseConfigUpdateDialog`
 
-- [ ] **File**: `src/components/exercise-config-update-dialog.tsx`
-- [ ] **Props**: `exercise`, `oldConfig`, `newConfig`, `sequence`, `onApply`, `onCancel`
+- [x] **File**: `src/components/exercise-config-update-dialog.tsx`
+- [x] **Props**: `exercise`, `oldConfig`, `newConfig`, `sequence`, `onApply`, `onCancel`
 
 **Matching Logic** (find similar exercises):
 
@@ -864,26 +864,26 @@ function findMatchingExercises(
 
 **Implementation Steps**:
 
-- [ ] **Match Counter** - Show count for each option (e.g., "3 matches")
-- [ ] **Preview List** - Expandable list showing which exercises will be affected
-- [ ] **Radio Selection** - Single choice from scope options
-- [ ] **Persistence Checkbox** - "Save changes permanently to sequence"
-- [ ] **Apply Handler**:
+- [x] **Match Counter** - Show count for each option (e.g., "3 matches")
+- [x] **Preview List** - Expandable list showing which exercises will be affected
+- [x] **Radio Selection** - Single choice from scope options
+- [x] **Persistence Checkbox** - "Save changes permanently to sequence"
+- [x] **Apply Handler**:
   - Update `workoutExercises` state for session changes
   - If persist checked: call `updateSequence.mutate()` with modified exercises
   - Show toast: "Updated X exercises"
 
 **State Updates**:
 
-- [ ] **Add `pendingConfigChange`** - Track when config change is in progress
-- [ ] **Add `showConfigDialog`** - Boolean to show/hide dialog
-- [ ] **Update workoutExercises** - Modify multiple indices in array
+- [x] **Add `pendingConfigChange`** - Track when config change is in progress
+- [x] **Add `showConfigDialog`** - Boolean to show/hide dialog
+- [x] **Update workoutExercises** - Modify multiple indices in array
 
 **Edge Cases**:
 
-- [ ] **Already completed exercises** - Only update future occurrences, not completed ones
-- [ ] **Group integrity** - If updating group members, maintain group structure
-- [ ] **Undo support** - Store previous state for potential undo
+- [x] **Already completed exercises** - Only update future occurrences, not completed ones
+- [x] **Group integrity** - If updating group members, maintain group structure
+- [ ] **Undo support** - Store previous state for potential undo (deferred)
 
 ---
 
@@ -901,11 +901,11 @@ function findMatchingExercises(
 - [x] **Layout adjustment** - Center wheel in main content area
 - [x] **Visual feedback** - Target indicator shows when value differs from target
 
-**Config Dialog Integration** (deferred to Phase 18.3):
+**Config Dialog Integration**:
 
-- [ ] **Trigger button** - Add "Edit" button near exercise name during execution
-- [ ] **Auto-trigger** - Optionally trigger when measure type changes
-- [ ] **Keyboard support** - Escape to cancel, Enter to apply
+- [x] **Trigger button** - Add "Edit" button (pencil icon) near exercise name during execution
+- [ ] **Auto-trigger** - Optionally trigger when measure type changes (deferred)
+- [x] **Keyboard support** - Escape to cancel, Enter to apply (via AlertDialog built-in behavior)
 
 **Accessibility**:
 
