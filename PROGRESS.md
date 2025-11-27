@@ -599,11 +599,11 @@ Collection of UX issues discovered during testing.
 **Files**: `src/components/action-bar.tsx`
 
 #### 17.3 iOS Zoom on Input Focus
-- [ ] **Group rename input triggers zoom** - Input has `text-sm` (14px) which triggers iOS Safari auto-zoom on focus
-- [ ] **Zoom persists after editing** - After accepting rename, viewport stays zoomed in requiring manual zoom-out
-- [ ] **Fix**: Change input font-size to minimum 16px (`text-base`) to prevent iOS zoom
+- [x] **Group rename input triggers zoom** - Changed `text-sm` to `text-base` (16px)
+- [x] **Zoom persists after editing** - Fixed by using proper font size
+- [x] **Fix**: Changed input and button font-size to `text-base`, increased height to `h-8`
 
-**Files**: `src/components/SequenceBuilder.tsx` (SortableGroupItem component, line ~352)
+**Files**: `src/components/SequenceBuilder.tsx` (SortableGroupItem component)
 
 **iOS Zoom Prevention Rule**: All `<input>` and `<textarea>` elements must use `text-base` (16px) or larger font size to prevent Safari's auto-zoom behavior on focus.
 

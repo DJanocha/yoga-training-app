@@ -360,14 +360,14 @@ function SortableGroupItem({
                 setIsEditing(false);
               }
             }}
-            className="h-7 text-sm flex-1"
+            className="h-8 text-base flex-1"
             autoFocus
           />
         ) : (
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="flex-1 text-left font-medium text-sm hover:underline"
+            className="flex-1 text-left font-medium text-base hover:underline"
           >
             {group.name}
           </button>
