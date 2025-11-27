@@ -73,6 +73,7 @@ export function ActionBar({
   const [state, setState] = useState<ActionBarState>("base")
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
   const containerRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Sync with external create state control
   useEffect(() => {
@@ -93,6 +94,16 @@ export function ActionBar({
   useEffect(() => {
     setLocalSearchQuery(searchQuery)
   }, [searchQuery])
+
+  // Scroll to search input when search state is activated
+  useEffect(() => {
+    if (state === "search" && searchInputRef.current) {
+      // Small delay to allow animation to start before scrolling
+      requestAnimationFrame(() => {
+        searchInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+      })
+    }
+  }, [state])
 
   // Close when clicking outside
   useEffect(() => {
@@ -194,6 +205,7 @@ export function ActionBar({
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
+                    ref={searchInputRef}
                     placeholder={searchPlaceholder}
                     value={localSearchQuery}
                     onChange={(e) => setLocalSearchQuery(e.target.value)}

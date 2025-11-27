@@ -593,8 +593,8 @@ Collection of UX issues discovered during testing.
 **Files**: `src/components/ExerciseForm.tsx`
 
 #### 17.2 ActionBar Search UX
-- [ ] **No auto-scroll on search open** - When clicking search icon, keyboard appears but viewport doesn't scroll to show the search input
-- [ ] **No auto-focus scroll** - User has to manually scroll to see the search input after clicking
+- [x] **No auto-scroll on search open** - Added `scrollIntoView` when search state activates
+- [x] **No auto-focus scroll** - Input ref with `scrollIntoView({ behavior: "smooth", block: "center" })`
 
 **Files**: `src/components/action-bar.tsx`
 
