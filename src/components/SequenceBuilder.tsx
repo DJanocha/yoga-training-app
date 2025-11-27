@@ -71,6 +71,11 @@ import {
   Ungroup,
   FileText,
   ListOrdered,
+  Square,
+  CheckSquare,
+  HelpCircle,
+  Link,
+  X,
 } from "lucide-react";
 import type {
   SequenceExercise,
@@ -80,7 +85,13 @@ import type {
 } from "@/db/types";
 import type { Modifier } from "@/validators/entities";
 import { cn } from "@/lib/utils";
-import { UnifiedModeDock, type DockMode, type BatchConfigValues } from "@/components/ui/unified-mode-dock";
+import { Dock, type DockPrimaryAction } from "@/components/ui/dock";
+import {
+  AddExerciseContent,
+  BatchConfigureContent,
+  HelpContent,
+  type BatchConfigValues,
+} from "@/components/ui/dock-contents";
 import { EmptyState } from "@/components/empty-state";
 
 type SequenceBuilderProps = {
@@ -613,9 +624,10 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isModifierPickerOpen, setIsModifierPickerOpen] = useState(false);
 
-  // Dock mode for unified mode dock
+  // Dock mode state
+  type DockMode = "select" | "add" | "help" | "configure" | null;
   const [dockMode, setDockMode] = useState<DockMode>(null);
-  const selectionMode = dockMode === "select";
+  const selectionMode = dockMode === "select" || dockMode === "configure";
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   // Collapsed groups state
@@ -1537,76 +1549,145 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         )}
           </div>
 
-        {/* Unified Mode Dock */}
-        <UnifiedModeDock
-          activeMode={dockMode}
-          onModeChange={(mode) => {
-            setDockMode(mode);
-            if (mode !== "select" && mode !== "configure") {
+        {/* Dock */}
+        <Dock
+          actions={[
+            // Select action with secondary actions and configure content
+            {
+              id: "select",
+              icon: dockMode === "select" || dockMode === "configure" ? CheckSquare : Square,
+              badge: effectiveSelectionCount > 0 ? effectiveSelectionCount : undefined,
+              bgClassName: dockMode === "select" || dockMode === "configure" ? "bg-primary text-primary-foreground hover:bg-primary/90" : undefined,
+              secondaryActions: [
+                {
+                  id: "merge",
+                  icon: Link,
+                  onClick: mergeSelectedIntoGroup,
+                  disabled: effectiveSelectionCount < 2,
+                },
+                {
+                  id: "clone",
+                  icon: Copy,
+                  onClick: batchCloneSelected,
+                  disabled: effectiveSelectionCount === 0,
+                },
+                {
+                  id: "configure",
+                  icon: Settings,
+                  disabled: effectiveSelectionCount === 0,
+                  onClick: () => setDockMode("configure"),
+                },
+                {
+                  id: "delete",
+                  icon: Trash2,
+                  onClick: batchDeleteSelected,
+                  bgClassName: effectiveSelectionCount === 0 ? undefined : "bg-muted hover:bg-destructive/10 hover:text-destructive",
+                  disabled: effectiveSelectionCount === 0,
+                },
+              ],
+              content: dockMode === "configure" ? (
+                <BatchConfigureContent
+                  selectedCount={effectiveSelectionCount}
+                  modifiers={availableModifiers.map((modId) => {
+                    const mod = allModifiers?.find((m) => m.id === modId);
+                    return mod ? {
+                      id: mod.id,
+                      name: mod.name,
+                      value: mod.value,
+                      unit: mod.unit,
+                    } : { id: modId, name: `Modifier #${modId}` };
+                  })}
+                  onApply={(config: BatchConfigValues) => {
+                    if (selectedItems.size === 0) return;
+                    const effectiveIds = getEffectiveSelection();
+                    setExercises((prev) =>
+                      prev.map((item) =>
+                        effectiveIds.has(item.id) && item.exerciseId !== "break"
+                          ? {
+                              ...item,
+                              config: {
+                                measure: config.measure,
+                                targetValue: config.targetValue,
+                              },
+                              modifiers: config.modifiers.length > 0 ? [...config.modifiers] : undefined,
+                            }
+                          : item
+                      )
+                    );
+                    setSelectedItems(new Set());
+                    setDockMode(null);
+                  }}
+                  onClose={() => setDockMode("select")}
+                />
+              ) : undefined,
+              shouldHideSecondaryActions: dockMode === "configure",
+            },
+            // Add action
+            {
+              id: "add",
+              icon: dockMode === "add" ? X : Plus,
+              bgClassName: "bg-primary text-primary-foreground hover:bg-primary/90",
+              secondaryActions: [],
+              content: (
+                <AddExerciseContent
+                  exercises={allExercises?.map((ex) => ({
+                    id: ex.id,
+                    name: ex.name,
+                    description: ex.description,
+                  })) ?? []}
+                  onExerciseAdd={(exerciseId, config) => {
+                    handleExerciseSelected(exerciseId, config);
+                  }}
+                  onBreakAdd={() => {
+                    addBreak();
+                  }}
+                  showBreakOption
+                  defaultConfig={{
+                    targetValue: defaultTargetValue,
+                    measure: defaultMeasure,
+                  }}
+                  onClose={() => setDockMode(null)}
+                />
+              ),
+            },
+            // Help action
+            {
+              id: "help",
+              icon: HelpCircle,
+              bgClassName: dockMode === "help" ? "bg-primary text-primary-foreground hover:bg-primary/90" : undefined,
+              secondaryActions: [],
+              content: (
+                <HelpContent
+                  helpContent={{
+                    title: "Sequence Builder",
+                    description: "Build your workout sequence by adding and organizing exercises.",
+                    tips: [
+                      "Tap Select to enable multi-select mode",
+                      "Drag exercises to reorder them",
+                      "Groups let you organize related exercises",
+                      "Configure multiple exercises at once with batch edit",
+                    ],
+                  }}
+                />
+              ),
+            },
+          ]}
+          activeActionId={dockMode === "configure" ? "select" : dockMode}
+          onActionActivate={(id) => {
+            // If clicking on select while in configure mode, go back to select mode
+            if (id === "select" && dockMode === "configure") {
+              setDockMode("select");
+            } else if (id === "select" && dockMode === "select") {
+              // If clicking select while in select mode, toggle off
+              setDockMode(null);
+              setSelectedItems(new Set());
+            } else {
+              setDockMode(id as DockMode);
+            }
+            // Clear selection when exiting select/configure modes
+            if (id !== "select" && id !== "configure") {
               setSelectedItems(new Set());
             }
-          }}
-          selectedCount={effectiveSelectionCount}
-          onMerge={mergeSelectedIntoGroup}
-          onClone={batchCloneSelected}
-          onDelete={batchDeleteSelected}
-          canMerge={effectiveSelectionCount >= 2}
-          // Batch configure via dock content
-          availableModifiers={availableModifiers.map((modId) => {
-            const mod = allModifiers?.find((m) => m.id === modId);
-            return mod ? {
-              id: mod.id,
-              name: mod.name,
-              value: mod.value,
-              unit: mod.unit,
-            } : { id: modId, name: `Modifier #${modId}` };
-          })}
-          onBatchConfigure={(config: BatchConfigValues) => {
-            if (selectedItems.size === 0) return;
-            const effectiveIds = getEffectiveSelection();
-            setExercises((prev) =>
-              prev.map((item) =>
-                effectiveIds.has(item.id) && item.exerciseId !== "break"
-                  ? {
-                      ...item,
-                      config: {
-                        measure: config.measure,
-                        targetValue: config.targetValue,
-                      },
-                      modifiers: config.modifiers.length > 0 ? [...config.modifiers] : undefined,
-                    }
-                  : item
-              )
-            );
-            // Clear selection and exit modes
-            setSelectedItems(new Set());
-            setDockMode(null);
-          }}
-          exercises={allExercises?.map((ex) => ({
-            id: ex.id,
-            name: ex.name,
-            description: ex.description,
-          })) ?? []}
-          onExerciseAdd={(exerciseId, config) => {
-            handleExerciseSelected(exerciseId, config);
-          }}
-          onBreakAdd={() => {
-            addBreak();
-          }}
-          showBreakOption
-          defaultConfig={{
-            targetValue: defaultTargetValue,
-            measure: defaultMeasure,
-          }}
-          helpContent={{
-            title: "Sequence Builder",
-            description: "Build your workout sequence by adding and organizing exercises.",
-            tips: [
-              "Tap Select to enable multi-select mode",
-              "Drag exercises to reorder them",
-              "Groups let you organize related exercises",
-              "Configure multiple exercises at once with batch edit",
-            ],
           }}
         />
         </TabsContent>
@@ -1630,8 +1711,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
           {configureItem && (
             <div className="mt-4 space-y-4">
               {/* Configuration Controls - Two Wheels Side by Side */}
-              <div className="flex items-center justify-center gap-4">
-                <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center justify-center gap-4 p-3 bg-muted/30 rounded-lg">
+                <div className="flex flex-col items-center gap-1">
                   <WheelNumberInput
                     value={configureItem.config.targetValue || 30}
                     onChange={(value) =>
@@ -1641,11 +1722,12 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                     }
                     min={1}
                     max={999}
+                    size="default"
                   />
                   <span className="text-xs text-muted-foreground">Value</span>
                 </div>
 
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-1">
                   <WheelSelect
                     value={configureItem.config.measure}
                     onChange={(value) =>
@@ -1653,19 +1735,50 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                     }
                     options={['repetitions', 'time'] as const}
                     formatOption={(opt) => opt === 'repetitions' ? 'reps' : 'sec'}
+                    size="default"
                   />
                   <span className="text-xs text-muted-foreground">Unit</span>
                 </div>
               </div>
 
               {/* Modifier assignment (always visible for non-break exercises) */}
-              {configureItem.exerciseId !== "break" && (
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Package2 className="h-4 w-4 text-muted-foreground" />
-                      <Label>Assign Modifiers</Label>
-                    </div>
+              {configureItem.exerciseId !== "break" && availableModifiers.length > 0 && (
+                <Backpack.Root
+                  items={availableModifiers.map((modId) => {
+                    const mod = getModifierById(modId);
+                    if (!mod) return { id: modId, name: `Modifier #${modId}` };
+                    const displayName = [
+                      mod.name,
+                      mod.value !== null && mod.value !== undefined ? mod.value : null,
+                      mod.unit && mod.unit !== "none" ? mod.unit : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    return { id: mod.id, name: displayName };
+                  })}
+                  value={
+                    configureItem.modifiers?.map((m) => ({
+                      id: m.modifierId,
+                      effect: m.effect as any,
+                    })) || []
+                  }
+                  onChange={(activeItems) => {
+                    updateItemModifiers(
+                      configureItem.id,
+                      activeItems
+                        .filter((a) => a.effect !== null)
+                        .map((a) => ({
+                          modifierId: a.id as number,
+                          effect: a.effect as any,
+                        }))
+                    );
+                  }}
+                  cols={3}
+                  rows={1}
+                  editable
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Backpack.Label>Mods</Backpack.Label>
                     <Button
                       type="button"
                       variant="ghost"
@@ -1677,121 +1790,28 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                       <span className="ml-1 text-xs">Find more</span>
                     </Button>
                   </div>
-                  {availableModifiers.length > 0 ? (
-                    <>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Tap each modifier to cycle: Off → Neutral (○) → Easier
-                        (↓) → Harder (↑) → Off
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {availableModifiers.map((modifierId) => {
-                          const modifier = getModifierById(modifierId);
-                          if (!modifier) return null;
-
-                          const assignment = configureItem.modifiers?.find(
-                            (m) => m.modifierId === modifierId
-                          );
-                          const isAssigned = !!assignment;
-                          const displayText = [
-                            modifier.name,
-                            modifier.value !== null &&
-                            modifier.value !== undefined
-                              ? modifier.value
-                              : null,
-                            modifier.unit && modifier.unit !== "none"
-                              ? modifier.unit
-                              : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" ");
-
-                          // Cycle effect: off → neutral → easier → harder → off
-                          const cycleEffect = () => {
-                            const currentModifiers =
-                              configureItem.modifiers || [];
-                            if (!isAssigned) {
-                              // Off → Neutral
-                              updateItemModifiers(configureItem.id, [
-                                ...currentModifiers,
-                                { modifierId, effect: "neutral" },
-                              ]);
-                            } else if (assignment.effect === "neutral") {
-                              // Neutral → Easier
-                              updateItemModifiers(
-                                configureItem.id,
-                                currentModifiers.map((m) =>
-                                  m.modifierId === modifierId
-                                    ? { ...m, effect: "easier" }
-                                    : m
-                                )
-                              );
-                            } else if (assignment.effect === "easier") {
-                              // Easier → Harder
-                              updateItemModifiers(
-                                configureItem.id,
-                                currentModifiers.map((m) =>
-                                  m.modifierId === modifierId
-                                    ? { ...m, effect: "harder" }
-                                    : m
-                                )
-                              );
-                            } else {
-                              // Harder → Off
-                              updateItemModifiers(
-                                configureItem.id,
-                                currentModifiers.filter(
-                                  (m) => m.modifierId !== modifierId
-                                )
-                              );
-                            }
-                          };
-
-                          // Get badge styles based on state (ring-based design)
-                          const getBadgeStyles = () => {
-                            if (!isAssigned) {
-                              // Off state - gray ring
-                              return "ring-2 ring-gray-300 text-gray-600 bg-gray-50 hover:bg-gray-100";
-                            } else if (assignment.effect === "neutral") {
-                              // Neutral - blue ring
-                              return "ring-2 ring-blue-500 text-blue-700 bg-blue-50 hover:bg-blue-100";
-                            } else if (assignment.effect === "easier") {
-                              // Easier - green ring
-                              return "ring-2 ring-green-500 text-green-700 bg-green-50 hover:bg-green-100";
-                            } else {
-                              // Harder - red ring
-                              return "ring-2 ring-red-500 text-red-700 bg-red-50 hover:bg-red-100";
-                            }
-                          };
-
-                          // Get icon based on state
-                          const getIcon = () => {
-                            if (!isAssigned) return "";
-                            if (assignment.effect === "neutral") return " ○";
-                            if (assignment.effect === "easier") return " ↓";
-                            return " ↑";
-                          };
-
-                          return (
-                            <button
-                              key={modifierId}
-                              type="button"
-                              onClick={cycleEffect}
-                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${getBadgeStyles()}`}
-                            >
-                              {displayText}
-                              {getIcon()}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No modifiers available. Click "Find more" to add modifiers
-                      to this sequence.
-                    </p>
-                  )}
-                </div>
+                  <Backpack.Container theme="brown">
+                    <Backpack.Grid>
+                      {availableModifiers.map((modId) => {
+                        const mod = getModifierById(modId);
+                        if (!mod) return null;
+                        const displayName = [
+                          mod.name,
+                          mod.value !== null && mod.value !== undefined ? mod.value : null,
+                          mod.unit && mod.unit !== "none" ? mod.unit : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" ");
+                        const item = { id: mod.id, name: displayName };
+                        return (
+                          <Backpack.Slot key={mod.id} item={item} size="sm">
+                            <Backpack.ItemContent item={item} />
+                          </Backpack.Slot>
+                        );
+                      })}
+                    </Backpack.Grid>
+                  </Backpack.Container>
+                </Backpack.Root>
               )}
 
               <Button className="w-full" onClick={() => setConfigureItem(null)}>

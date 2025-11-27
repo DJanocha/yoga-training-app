@@ -1483,24 +1483,35 @@ Based on user feedback, the unified dock needs several UX fixes:
   - Or adjust dock z-index/position
 
 **Missing Features:**
-- [x] **ExecutionDock: Add exercise content** - Add exercise picker as `content` for the add action (reuse AddContent from UnifiedModeDock)
-- [x] **ExecutionDock: Skip confirmation as content** - Show "Skip this exercise?" as content panel instead of dialog
+- [x] **Batch configure with Backpack** - Replace badge-based modifiers with Backpack component (3×1 grid)
+- [x] **Single exercise configure with Backpack** - Match batch configure style with Backpack integration
+- [x] **Visual feedback for active state** - Add pulse animation to active buttons
+- [x] **Light mode contrast** - Add solid background to content panels
 
-**Visual Layout (Updated):**
-```
-┌─────────────────────────────┐
-│      Content Panel          │  ← inside dock container
-├─────────────────────────────┤
-│  [indicator] | [actions]    │  ← dock bar
-└─────────────────────────────┘
-         ↑
-    backdrop/mask behind
-```
+**Component Consolidation:**
+- [x] **Create reusable content components** - Extract to dock-contents/ directory
+- [x] **Refactor SequenceBuilder** - Use Dock directly, remove UnifiedModeDock wrapper
+- [x] **Refactor ActionBar** - Create ActionBarDock wrapper using Dock
+- [x] **Delete redundant wrappers** - Remove unified-mode-dock.tsx, floating-action-dock.tsx, action-bar.tsx
 
-**Files to Modify:**
-- `src/components/ui/dock.tsx` - Content inside container, backdrop, toggle fix
-- `src/components/ui/execution-dock.tsx` - Add exercise picker content, skip confirmation content
-- `src/routes/sequences/$id/edit.tsx` or layout - Hide bottom nav in edit mode
+**Files Created:**
+- `src/components/ui/dock-contents/add-exercise-content.tsx`
+- `src/components/ui/dock-contents/batch-configure-content.tsx`
+- `src/components/ui/dock-contents/help-content.tsx`
+- `src/components/ui/dock-contents/index.tsx`
+- `src/components/ui/action-bar-dock.tsx`
+
+**Files Modified:**
+- `src/components/ui/dock.tsx` - Pulse animation, bg-background content
+- `src/components/SequenceBuilder.tsx` - Direct Dock usage, Backpack in configure sheet
+- `src/components/ExerciseList.tsx` - Import ActionBarDock
+- `src/components/ModifierList.tsx` - Import ActionBarDock
+- `src/routes/sequences/index.tsx` - Import ActionBarDock
+
+**Files Deleted:**
+- `src/components/ui/unified-mode-dock.tsx`
+- `src/components/ui/floating-action-dock.tsx`
+- `src/components/action-bar.tsx`
 
 ---
 

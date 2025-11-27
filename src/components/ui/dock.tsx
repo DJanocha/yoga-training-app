@@ -132,7 +132,8 @@ function DockButton({
       className={cn(
         "rounded-full flex items-center justify-center transition-colors",
         sizeClasses[size],
-        getButtonClasses()
+        getButtonClasses(),
+        isActive && "animate-pulse"
       )}
       aria-label={action.id}
     >
@@ -333,7 +334,7 @@ export function Dock({
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="w-[320px] overflow-hidden"
+                className="w-[320px] overflow-hidden bg-background"
               >
                 {activeAction.content}
               </motion.div>
