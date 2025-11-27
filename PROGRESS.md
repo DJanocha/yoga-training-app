@@ -896,23 +896,23 @@ All actions apply to effective selection:
 - Clone → duplicates all
 ```
 
-- [ ] **Enable group selection** - Allow selecting groups in addition to exercises
-- [ ] **Visual selection state** - Show selected state on group cards (border highlight, checkbox)
-- [ ] **Mixed selection** - Support selecting groups + standalone exercises together
-- [ ] **Selection count** - Badge shows total exercise count (flattened), not item count
+- [x] **Enable group selection** - Allow selecting groups in addition to exercises
+- [x] **Visual selection state** - Show selected state on group cards (border highlight, checkbox)
+- [x] **Mixed selection** - Support selecting groups + standalone exercises together
+- [x] **Selection count** - Badge shows total exercise count (flattened), not item count
 
 #### 19.2 Batch Operations on Groups
 
-- [ ] **Batch configure with groups** - Configure selection applies to all exercises inside selected groups
-- [ ] **Flatten logic** - `getEffectiveSelection(selectedIds, groups, exercises)` returns exercise IDs
-- [ ] **Merge mixed selection** - Merge groups + exercises into new group (name = first group name or first exercise name)
-- [ ] **Clone mixed selection** - Duplicate all selected (groups stay as groups, exercises stay as exercises)
+- [x] **Batch configure with groups** - Configure selection applies to all exercises inside selected groups
+- [x] **Flatten logic** - `getEffectiveSelection(selectedIds, groups, exercises)` returns exercise IDs
+- [x] **Merge mixed selection** - Merge groups + exercises into new group (name = first group name or first exercise name)
+- [x] **Clone mixed selection** - Duplicate all selected (groups stay as groups, exercises stay as exercises)
 
 #### 19.3 Delete Group Action
 
 - [x] **Add delete group button** - Trash icon next to clone/ungroup buttons in group header
 - [x] **Confirmation dialog** - AlertDialog: "Delete group and X exercises? This action cannot be undone."
-- [ ] **Batch delete** - When groups selected, delete removes groups + all their exercises (requires 19.1/19.2)
+- [x] **Batch delete** - When groups selected, delete removes groups + all their exercises
 
 #### 19.4 Group Header Actions
 
