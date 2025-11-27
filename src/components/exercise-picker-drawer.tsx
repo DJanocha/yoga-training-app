@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/lib/trpc"
 import { WheelNumberInput } from "@/components/ui/wheel-number-input"
@@ -41,6 +41,15 @@ export function ExercisePickerDrawer({
   // Configuration state
   const [targetValue, setTargetValue] = useState(initialConfig.targetValue)
   const [measure, setMeasure] = useState<MeasureType>(initialConfig.measure)
+
+  // Sync state when drawer opens or initialConfig changes
+  useEffect(() => {
+    if (open) {
+      setTargetValue(initialConfig.targetValue)
+      setMeasure(initialConfig.measure)
+      setSearchQuery("")
+    }
+  }, [open, initialConfig.targetValue, initialConfig.measure])
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("")

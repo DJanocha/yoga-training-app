@@ -547,6 +547,8 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
   const [exercises, setExercises] = useState<SequenceItemWithId[]>([]);
   const [groups, setGroups] = useState<ExerciseGroup[]>([]);
   const [availableModifiers, setAvailableModifiers] = useState<number[]>([]);
+  const [defaultMeasure, setDefaultMeasure] = useState<MeasureType>("time");
+  const [defaultTargetValue, setDefaultTargetValue] = useState<number>(30);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // UI state
@@ -628,6 +630,12 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     setGroups((sequence.groups as ExerciseGroup[]) || []);
     // Load available modifiers for this sequence
     setAvailableModifiers((sequence.availableModifiers as number[]) || []);
+    // Load default exercise config
+    const defaultConfig = (sequence.defaultExerciseConfig as { measure: MeasureType; targetValue: number } | null);
+    if (defaultConfig) {
+      setDefaultMeasure(defaultConfig.measure);
+      setDefaultTargetValue(defaultConfig.targetValue);
+    }
     setIsInitialized(true);
   }
 
@@ -812,6 +820,10 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       exercises: exercisesToSave,
       groups,
       availableModifiers,
+      defaultExerciseConfig: {
+        measure: defaultMeasure,
+        targetValue: defaultTargetValue,
+      },
     });
 
     navigate({ to: "/sequences" });
@@ -1171,6 +1183,39 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                 </p>
               </div>
 
+              {/* Default Exercise Config */}
+              <div>
+                <Label>Default Exercise Config</Label>
+                <p className="text-xs text-muted-foreground mb-3">
+                  New exercises will use these defaults
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <WheelNumberInput
+                      value={defaultTargetValue}
+                      onChange={setDefaultTargetValue}
+                      min={1}
+                      max={defaultMeasure === "time" ? 300 : 100}
+                      step={defaultMeasure === "time" ? 5 : 1}
+                    />
+                    <p className="text-xs text-center text-muted-foreground mt-1">
+                      Value
+                    </p>
+                  </div>
+                  <div className="flex-1">
+                    <WheelSelect
+                      value={defaultMeasure}
+                      onChange={(value) => setDefaultMeasure(value)}
+                      options={['time', 'repetitions'] as const}
+                      formatOption={(opt) => opt === 'time' ? 'sec' : 'reps'}
+                    />
+                    <p className="text-xs text-center text-muted-foreground mt-1">
+                      Unit
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Available Modifiers */}
               {allModifiers && allModifiers.length > 0 && (
                 <div className="pt-2">
@@ -1296,6 +1341,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                   onExerciseSelected={handleExerciseSelected}
                   title="Select Exercise"
                   description="Choose an exercise to add to your sequence"
+                  initialConfig={{ targetValue: defaultTargetValue, measure: defaultMeasure }}
                 />
               </>
             )}

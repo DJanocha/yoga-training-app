@@ -71,6 +71,8 @@ export const sequences = pgTable(
     availableModifiers: jsonb('available_modifiers').default([]),
     // JSON structure: Array<{ id: string, name: string, exerciseIds: string[] }> - exercise groups
     groups: jsonb('groups').default([]),
+    // JSON structure: { measure: 'repetitions' | 'time', targetValue: number } - default config for new exercises
+    defaultExerciseConfig: jsonb('default_exercise_config').default({ measure: 'time', targetValue: 30 }),
     isFavorite: boolean('is_favorite').default(false),
     isPreBuilt: boolean('is_pre_built').default(false),
     deletedAt: timestamp('deleted_at'),

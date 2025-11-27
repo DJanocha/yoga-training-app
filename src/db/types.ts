@@ -55,6 +55,13 @@ export const ExerciseConfig = z.object({
 })
 export type ExerciseConfig = z.infer<typeof ExerciseConfig>
 
+// Default exercise configuration for a sequence (used when adding new exercises)
+export const DefaultExerciseConfig = z.object({
+  measure: MeasureType,
+  targetValue: z.number(),
+})
+export type DefaultExerciseConfig = z.infer<typeof DefaultExerciseConfig>
+
 // Modifier assignment for an exercise in a sequence
 export const ExerciseModifierAssignment = z.object({
   modifierId: z.number(),
@@ -142,6 +149,7 @@ export const refinedSequenceSchema = z.object({
   goal: GoalType.optional().default('elastic'), // Sequence-level goal (strict or elastic)
   exercises: z.array(SequenceExercise), // Allow empty during creation, validate when starting workout
   groups: z.array(ExerciseGroup).optional().default([]), // Exercise groups
+  defaultExerciseConfig: DefaultExerciseConfig.optional().default({ measure: 'time', targetValue: 30 }), // Default config for new exercises
   isFavorite: z.boolean().default(false).optional(),
   isPreBuilt: z.boolean().default(false).optional(),
 })

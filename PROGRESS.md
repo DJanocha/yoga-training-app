@@ -957,10 +957,10 @@ defaultExerciseConfig: {
 }
 ```
 
-- [ ] **Add schema field** - `defaultExerciseConfig` JSONB column in sequences table
-- [ ] **Migration** - Generate and apply Drizzle migration
-- [ ] **Default value** - `{ measure: 'time', targetValue: 30 }` for backwards compatibility
-- [ ] **Zod schema** - Add to `refinedSequenceSchema`
+- [x] **Add schema field** - `defaultExerciseConfig` JSONB column in sequences table
+- [x] **Migration** - Generate and apply Drizzle migration
+- [x] **Default value** - `{ measure: 'time', targetValue: 30 }` for backwards compatibility
+- [x] **Zod schema** - Add to `refinedSequenceSchema`
 
 #### 20.3 UI in Sequence Details
 
@@ -988,15 +988,15 @@ Place under Goal Type in Details tab:
 └─────────────────────────────────────────────────────┘
 ```
 
-- [ ] **Add wheels to Details tab** - Value + Unit wheels under Goal Type
-- [ ] **Label** - "Default Exercise Config" with helper text
-- [ ] **Save with sequence** - Include in update mutation
+- [x] **Add wheels to Details tab** - Value + Unit wheels under Goal Type
+- [x] **Label** - "Default Exercise Config" with helper text
+- [x] **Save with sequence** - Include in update mutation
 
 #### 20.4 Apply Defaults
 
-- [ ] **Exercise picker uses defaults** - Initialize wheels with `sequence.defaultExerciseConfig`
-- [ ] **Fallback** - If no default set, use `{ measure: 'time', targetValue: 30 }`
-- [ ] **Add Break exception** - Breaks always default to 30s time regardless of sequence default
+- [x] **Exercise picker uses defaults** - Initialize wheels with `sequence.defaultExerciseConfig`
+- [x] **Fallback** - If no default set, use `{ measure: 'time', targetValue: 30 }`
+- [x] **Add Break exception** - Breaks always default to 10s time regardless of sequence default (hardcoded in addBreak function)
 
 **Files**:
 - `src/db/schema.ts` - Add column
