@@ -400,7 +400,8 @@ function SortableGroupItem({
           )}
         </button>
 
-        {isEditing ? (
+        {/* Group name - editable only when not in selection mode */}
+        {isEditing && !selectionMode ? (
           <Input
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
@@ -414,15 +415,23 @@ function SortableGroupItem({
             }}
             className="h-8 text-base flex-1"
             autoFocus
+            onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="flex-1 text-left font-medium text-base hover:underline"
+          <span
+            className={cn(
+              "flex-1 text-left font-medium text-base truncate",
+              !selectionMode && "cursor-pointer hover:underline"
+            )}
+            onClick={(e) => {
+              if (!selectionMode) {
+                e.stopPropagation();
+                setIsEditing(true);
+              }
+            }}
           >
             {group.name}
-          </button>
+          </span>
         )}
 
         <Badge variant="secondary" className="text-xs">
@@ -525,24 +534,29 @@ function SortableGroupItem({
                       </Badge>
                     );
                   })}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onConfigureExercise(ex)}
-                  className="h-6 w-6"
-                >
-                  <Settings className="h-3 w-3" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onRemoveExercise(ex.id)}
-                  className="h-6 w-6 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                {/* Hide exercise actions in selection mode */}
+                {!selectionMode && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onConfigureExercise(ex)}
+                      className="h-6 w-6"
+                    >
+                      <Settings className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onRemoveExercise(ex.id)}
+                      className="h-6 w-6 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </>
+                )}
               </div>
             );
           })}
