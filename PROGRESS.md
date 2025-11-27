@@ -910,16 +910,13 @@ All actions apply to effective selection:
 
 #### 19.3 Delete Group Action
 
-Currently missing - can only ungroup, not delete group with its exercises.
-
-- [ ] **Add delete group button** - Place next to clone/ungroup buttons in group header
-- [ ] **Confirmation dialog** - "Delete group and X exercises?"
-- [ ] **Batch delete** - When groups selected, delete removes groups + all their exercises
+- [x] **Add delete group button** - Trash icon next to clone/ungroup buttons in group header
+- [x] **Confirmation dialog** - AlertDialog: "Delete group and X exercises? This action cannot be undone."
+- [ ] **Batch delete** - When groups selected, delete removes groups + all their exercises (requires 19.1/19.2)
 
 #### 19.4 Group Header Actions
 
-Current: `[Clone] [Ungroup]`
-New: `[Clone] [Ungroup] [Delete]`
+Implemented: `[Clone] [Ungroup] [Delete]`
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -928,8 +925,8 @@ New: `[Clone] [Ungroup] [Delete]`
 └─────────────────────────────────────────────────────┘
 ```
 
-- [ ] **Delete button** - Trash icon, red on hover
-- [ ] **Confirmation** - Alert dialog before deleting
+- [x] **Delete button** - Trash icon, red on hover (`hover:bg-destructive/10 hover:text-destructive`)
+- [x] **Confirmation** - AlertDialog with destructive action styling
 
 **Files**: `src/components/SequenceBuilder.tsx`
 

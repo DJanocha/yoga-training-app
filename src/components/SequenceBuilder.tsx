@@ -40,6 +40,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   GripVertical,
   Plus,
   Trash2,
@@ -266,6 +277,7 @@ function SortableGroupItem({
   onToggleCollapse,
   onUngroup,
   onClone,
+  onDelete,
   onRename,
   onConfigureExercise,
   onRemoveExercise,
@@ -278,6 +290,7 @@ function SortableGroupItem({
   onToggleCollapse: () => void;
   onUngroup: () => void;
   onClone: () => void;
+  onDelete: () => void;
   onRename: (newName: string) => void;
   onConfigureExercise: (exercise: SequenceItemWithId) => void;
   onRemoveExercise: (id: string) => void;
@@ -398,6 +411,37 @@ function SortableGroupItem({
           >
             <Ungroup className="h-3.5 w-3.5" />
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
+                title="Delete group"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete group "{group.name}"?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete the group and all {groupExercises.length} exercises inside it.
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={onDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -900,6 +944,17 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     setGroups((prev) => prev.filter((g) => g.id !== groupId));
   }, []);
 
+  // Delete group and all its exercises
+  const deleteGroup = useCallback((groupId: string) => {
+    const group = groups.find((g) => g.id === groupId);
+    if (!group) return;
+
+    // Remove all exercises in the group
+    setExercises((prev) => prev.filter((ex) => !group.exerciseIds.includes(ex.id)));
+    // Remove the group
+    setGroups((prev) => prev.filter((g) => g.id !== groupId));
+  }, [groups]);
+
   // Clone a group (duplicate exercises and create new group)
   const cloneGroup = useCallback(
     (groupId: string) => {
@@ -1274,6 +1329,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
                         onToggleCollapse={() => toggleGroupCollapsed(renderItem.group.id)}
                         onUngroup={() => ungroupExercises(renderItem.group.id)}
                         onClone={() => cloneGroup(renderItem.group.id)}
+                        onDelete={() => deleteGroup(renderItem.group.id)}
                         onRename={(newName) => renameGroup(renderItem.group.id, newName)}
                         onConfigureExercise={(ex) => setConfigureItem(ex)}
                         onRemoveExercise={removeItem}
