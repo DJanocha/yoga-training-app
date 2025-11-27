@@ -1285,6 +1285,297 @@ Address immediate UX issues in current floating dock:
 
 ---
 
+### Phase 23: Workout UX Enhancements
+
+Quick fixes and improvements to the workout execution experience.
+
+#### 23.1 Modifier Badges Bug Fix (CRITICAL)
+
+**Problem**: Sequence has `availableModifiers` (e.g., "Guma 25kg", "Guma 15kg") but during workout execution, modifier toggle badges don't appear. The current code only shows modifiers if they're assigned per-exercise (`currentExercise.modifiers`), not sequence-level available modifiers.
+
+**Solution**: Show sequence-level available modifiers for ALL exercises during workout, allowing user to toggle any available modifier on/off dynamically.
+
+- [ ] **Fallback to Sequence Modifiers** - If exercise has no assigned modifiers, show all `sequence.availableModifiers`
+- [ ] **Dynamic Toggle** - User can toggle any available modifier on/off during any exercise
+- [ ] **Visual Distinction** - Pre-assigned modifiers appear selected by default, available modifiers appear unselected
+- [ ] **Effect Colors** - Keep easier (green), harder (red), neutral (blue) color coding
+
+**Files**: `src/routes/sequences/$id/execute.tsx`
+
+#### 23.2 Exercise Name Typography
+
+**Problem**: Exercise name ("Pull up") during workout is small. Users need to see it clearly, especially from a distance during actual workout.
+
+- [ ] **Larger Font Size** - Increase exercise name from `text-2xl` to `text-4xl` or larger
+- [ ] **Bold Weight** - Use `font-bold` or `font-extrabold`
+- [ ] **Responsive Sizing** - Scale appropriately for mobile vs tablet/desktop
+- [ ] **High Contrast** - Ensure visibility in both light and dark modes
+
+**Files**: `src/routes/sequences/$id/execute.tsx`
+
+#### 23.3 Progress Bar Overflow Fix
+
+**Problem**: In elastic goal sequences with time-based exercises, if user goes overtime, the overall progress bar fills too quickly (exceeds 100% for that segment).
+
+- [ ] **Cap Individual Progress** - Limit per-exercise progress contribution to 100%
+- [ ] **Overtime Indicator** - Show overtime differently (e.g., pulsing, different color) without breaking total progress
+- [ ] **Verify Calculation** - Review `((currentIndex + (isTimeBased ? progress / 100 : 0)) / exercises.length) * 100`
+
+**Files**: `src/routes/sequences/$id/execute.tsx`
+
+#### 23.4 End Sequence Early (Enhanced Quit)
+
+**Problem**: Current quit button immediately exits. User may want confirmation showing what will be saved, or option to go to rating screen.
+
+- [ ] **Quit Confirmation Dialog** - "End workout early? X of Y exercises completed. Progress will be saved."
+- [ ] **Options**: "Continue Workout", "Save & Rate", "Discard & Exit"
+- [ ] **Save & Rate** - Go directly to completion/rating screen with partial progress
+
+**Files**: `src/routes/sequences/$id/execute.tsx`
+
+---
+
+### Phase 24: Celebration & Statistics Screen
+
+Redesign the workout completion screen with detailed statistics, personal records display, and (later) confetti animation.
+
+#### 24.1 Modified Exercise Tracking (Data Model)
+
+**Problem**: Currently we track exercises generically. User wants to know: "This week I did 250 pullups with 25kg band, 80 pullups with 15kg band, 40 pullups without band, 370 total."
+
+This requires treating exercise+modifier combinations as distinct trackable entities.
+
+**New Data Model Concept**:
+```
+modifiedExerciseStats {
+  id
+  userId
+  exerciseId          -- FK to exercises
+  modifierIds[]       -- Array of modifier IDs used (empty = no modifiers)
+  periodStart         -- Aggregation period start
+  periodEnd           -- Aggregation period end
+  totalReps           -- Sum of repetitions
+  totalTime           -- Sum of time (seconds)
+  sessionCount        -- Number of workout sessions
+  personalBest        -- Best single-set value
+  personalBestDate    -- When PB was achieved
+}
+```
+
+- [ ] **Design Decision** - Aggregate stats vs raw execution data vs both
+- [ ] **Schema Update** - Add `exerciseModifierStats` table or extend `sequenceExecutions`
+- [ ] **Migration Plan** - How to backfill from existing execution data
+- [ ] **Grouping Logic** - Same exercise with different modifiers = different stats
+- [ ] **No-Modifier Tracking** - Exercise without any modifier = distinct category
+
+**Files**: `src/db/schema.ts`, new migration file
+
+#### 24.2 Personal Records Redesign
+
+**Problem**: Current PR tracking is basic. User wants detailed PRs per exercise+modifier combination.
+
+**PR Types to Track**:
+- Max reps in single set (per exercise+modifier)
+- Max time held (per exercise+modifier)
+- Most reps in single workout session
+- Longest streak (days)
+- Weekly/monthly totals
+
+- [ ] **PR Schema Update** - Store PRs with modifier context
+- [ ] **PR Detection Logic** - Check for new PRs after each exercise completion
+- [ ] **PR History** - Keep history of when PRs were set (not just current best)
+
+**Files**: `src/db/schema.ts`, `src/server/api/routers/executions.ts`
+
+#### 24.3 Completion Screen - Exercise Breakdown
+
+**Problem**: Current completion screen just shows "You completed X exercises (Y skipped)". User wants detailed breakdown.
+
+**Breakdown Display**:
+```
+Workout Summary (20:23)
+━━━━━━━━━━━━━━━━━━━━━━
+🏋️ Pull-ups
+   • 25kg band: 45 reps (3 sets)
+   • 15kg band: 30 reps (2 sets)
+   • No band: 12 reps (1 set)
+
+🏋️ Dips
+   • No modifier: 60 reps (4 sets)
+
+🏋️ Squats
+   • No modifier: 80 reps (2 sets)
+━━━━━━━━━━━━━━━━━━━━━━
+Total: 227 reps across 6 exercises
+```
+
+- [ ] **Group by Exercise** - Aggregate same exercise across sequence
+- [ ] **Sub-group by Modifier** - Show modifier variations within each exercise
+- [ ] **Duration Display** - Total workout duration prominently shown
+- [ ] **Reps vs Time** - Handle both measurement types appropriately
+
+**Files**: `src/routes/sequences/$id/execute.tsx`
+
+#### 24.4 Completion Screen - Personal Records Reveal
+
+**Problem**: User wants excitement when they beat personal records.
+
+**Animated Reveal**:
+```
+🎉 New Personal Records!
+━━━━━━━━━━━━━━━━━━━━━━
+[Appears one by one with delay]
+🏆 12 pull-ups in one set (was 10)
+🏆 60 squats in workout (was 55)
+🏆 First time doing dips with 10kg!
+━━━━━━━━━━━━━━━━━━━━━━
+[Skip] button to show all immediately
+```
+
+- [ ] **PR Comparison** - Compare workout results to stored PRs
+- [ ] **New PR Detection** - Identify which records were broken
+- [ ] **Animated List** - Records appear one-by-one (500ms delay each)
+- [ ] **Skip Button** - Show all records immediately
+- [ ] **First-Time Badges** - "First time doing X with Y modifier!"
+
+**Files**: `src/routes/sequences/$id/execute.tsx`, new component `PRReveal.tsx`
+
+#### 24.5 Confetti Animation (Future Enhancement)
+
+- [ ] **Confetti Library** - Add canvas-confetti or similar
+- [ ] **Trigger Conditions** - On workout complete, on new PR
+- [ ] **Accessibility** - Respect `prefers-reduced-motion`
+- [ ] **Performance** - Don't block UI during animation
+
+**Files**: `src/routes/sequences/$id/execute.tsx`, `package.json`
+
+---
+
+### Phase 25: Time-Constrained Workouts ("Finish Before")
+
+Feature for users who need to finish by a specific time (e.g., catch a bus at 10:00).
+
+#### 25.1 Data Model
+
+- [ ] **Sequence Setting** - Add `finishByEnabled: boolean`, `finishByTime: string` (HH:mm), `warningMinutes: number` to sequence schema
+- [ ] **Per-Session Override** - Allow setting finish time when starting workout (not just in sequence settings)
+
+**Files**: `src/db/schema.ts`, migration
+
+#### 25.2 UI - Settings
+
+- [ ] **Sequence Details Tab** - Add "Finish Before" section with time picker and warning threshold
+- [ ] **Start Workout Dialog** - Optional "I need to finish by..." quick setting
+- [ ] **Default Warning** - 5 minutes before deadline
+
+**Files**: `src/components/SequenceBuilder.tsx` (Details tab), `src/routes/sequences/$id/execute.tsx`
+
+#### 25.3 UI - Countdown Display
+
+```
+┌─────────────────────────────────┐
+│  ⏰ 4:32 remaining              │  <- Appears when warning threshold reached
+│  Need to finish by 10:00        │
+└─────────────────────────────────┘
+```
+
+- [ ] **Countdown Timer** - Shows when `currentTime >= finishByTime - warningMinutes`
+- [ ] **Visual Style** - Non-intrusive but visible (top banner or floating badge)
+- [ ] **Color Coding** - Yellow (>2min left), Orange (1-2min), Red (<1min)
+- [ ] **No Sound** - Visual only, no alarms (user specifically requested this)
+- [ ] **Auto-Hide** - Disappears if user completes early
+
+**Files**: `src/routes/sequences/$id/execute.tsx`, new component `FinishByTimer.tsx`
+
+---
+
+### Phase 26: Inline Exercise Creation During Workout
+
+Allow creating new exercises without leaving the workout screen.
+
+#### 26.1 Exercise Picker Enhancement
+
+Current: Exercise picker shows existing exercises only.
+New: Add "Create New Exercise" option at top/bottom of picker.
+
+- [ ] **Create New Button** - Prominent button in exercise picker drawer
+- [ ] **Inline Form** - Minimal form (name required, description optional)
+- [ ] **Quick Create** - Create exercise and immediately add to current workout
+- [ ] **Full Details Later** - User can add details (photos, videos, tips) after workout
+
+**Files**: `src/components/exercise-picker-drawer.tsx`
+
+#### 26.2 Temporary Exercise Support
+
+- [ ] **Create via tRPC** - Use existing `exercises.create` mutation
+- [ ] **Auto-Add to Workout** - After creation, automatically add to current position
+- [ ] **Save Prompt** - After workout, ask if new exercises should be added to sequence permanently
+
+**Files**: `src/components/exercise-picker-drawer.tsx`, `src/routes/sequences/$id/execute.tsx`
+
+---
+
+### Phase 27: Advanced Modifier Units (Compound Units)
+
+Support for custom compound units like "tiles + stripes" for micro-progression tracking.
+
+#### 27.1 Data Model
+
+**Current**: Modifiers have `unit: 'kg' | 'cm' | 'lbs' | 'inches' | 'level' | 'none'`
+
+**New**: Support compound units with sub-units:
+```typescript
+type CompoundUnit = {
+  unitName: string           // e.g., "stripped tile"
+  subUnitCount: number       // e.g., 7 (each tile has 7 stripes)
+  subUnitName: string        // e.g., "stripe"
+}
+```
+
+Example: "4 tiles, 3 stripes" = 4 * 7 + 3 = 31 stripes total (for comparison/progress)
+
+- [ ] **Schema Update** - Add `compoundUnit` JSONB field to modifiers table
+- [ ] **Unit Type** - Add 'compound' to unit enum
+- [ ] **Value Storage** - Store as `{main: number, sub: number}` or total sub-units
+
+**Files**: `src/db/schema.ts`, `src/db/types.ts`
+
+#### 27.2 Modifier Form Update
+
+- [ ] **Compound Unit Toggle** - Switch between simple and compound unit
+- [ ] **Custom Fields** - Unit name, sub-unit count, sub-unit name inputs
+- [ ] **Preview** - Show how values will display (e.g., "4 tiles, 3/7 stripes")
+
+**Files**: `src/components/modifiers/ModifierForm.tsx`
+
+#### 27.3 Dual Wheel Input
+
+For compound unit modifiers during workout, show two wheels:
+
+```
+┌─────────────────────────┐
+│   [3]        [5]        │
+│  tiles    stripes/7     │
+└─────────────────────────┘
+```
+
+- [ ] **Dual Wheel Component** - Two synchronized number wheels
+- [ ] **Sub-Unit Limit** - Second wheel max = subUnitCount - 1
+- [ ] **Overflow Handling** - 7 stripes → 1 tile, 0 stripes
+- [ ] **Display Format** - "3 tiles, 5 stripes" or "3.5 tiles" (configurable)
+
+**Files**: `src/components/ui/compound-wheel-input.tsx` (new), integration in execution screen
+
+#### 27.4 Progress Tracking
+
+- [ ] **Comparison Logic** - Convert to total sub-units for progress comparison
+- [ ] **PR Detection** - Detect when user reaches new tile/stripe combination
+- [ ] **History Display** - Show progression over time (e.g., "3 tiles → 4 tiles in 2 months")
+
+**Files**: `src/server/api/routers/executions.ts`
+
+---
+
 ## Notes
 
 - All user data is scoped by `userId` for privacy
