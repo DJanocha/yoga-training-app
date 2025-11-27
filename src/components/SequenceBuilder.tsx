@@ -1085,24 +1085,20 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
       .filter((e) => effectiveIds.has(e.id))
       .map((e) => e.id);
 
-    // Get name from first selected group or default
-    let groupName = "New Group";
-    for (const id of selectedItems) {
-      if (id.startsWith("group:")) {
-        const groupId = id.replace("group:", "");
-        const existingGroup = groups.find((g) => g.id === groupId);
-        if (existingGroup) {
-          groupName = existingGroup.name;
-          break;
-        }
-      }
-    }
-
-    // Remove any selected groups (they'll be merged into the new one)
+    // Identify selected groups
     const selectedGroupIds = new Set<string>();
     for (const id of selectedItems) {
       if (id.startsWith("group:")) {
         selectedGroupIds.add(id.replace("group:", ""));
+      }
+    }
+
+    // Get name from first selected group in sequence order (based on renderItems order)
+    let groupName = "New Group";
+    for (const item of renderItems) {
+      if (item.type === "group" && selectedGroupIds.has(item.group.id)) {
+        groupName = item.group.name;
+        break;
       }
     }
 
@@ -1118,7 +1114,7 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
     ]);
     setSelectedItems(new Set());
     setSelectionMode(false);
-  }, [selectedItems, exercises, groups, getEffectiveSelection]);
+  }, [selectedItems, exercises, renderItems, getEffectiveSelection]);
 
   // Ungroup exercises (dissolve group)
   const ungroupExercises = useCallback((groupId: string) => {
