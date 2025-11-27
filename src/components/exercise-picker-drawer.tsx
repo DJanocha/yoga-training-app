@@ -11,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Plus, Search } from "lucide-react"
+import { Plus, Search, Coffee } from "lucide-react"
 import type { MeasureType } from "@/db/types"
 
 export type ExercisePickerConfig = {
@@ -23,6 +23,8 @@ type ExercisePickerDrawerProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onExerciseSelected: (exerciseId: number, config: ExercisePickerConfig) => void
+  onBreakSelected?: (config: ExercisePickerConfig) => void
+  showBreakOption?: boolean
   title?: string
   description?: string
   initialConfig?: ExercisePickerConfig
@@ -32,6 +34,8 @@ export function ExercisePickerDrawer({
   open,
   onOpenChange,
   onExerciseSelected,
+  onBreakSelected,
+  showBreakOption = true,
   title = "Add Exercise",
   description = "Select an exercise to add to your sequence",
   initialConfig = { targetValue: 30, measure: "time" },
@@ -72,6 +76,14 @@ export function ExercisePickerDrawer({
   const handleExerciseClick = (exerciseId: number) => {
     onExerciseSelected(exerciseId, { targetValue, measure })
     onOpenChange(false)
+  }
+
+  const handleBreakClick = () => {
+    if (onBreakSelected) {
+      // Breaks always use time-based config, default 10s
+      onBreakSelected({ targetValue: 10, measure: "time" })
+      onOpenChange(false)
+    }
   }
 
   return (
@@ -118,9 +130,30 @@ export function ExercisePickerDrawer({
 
         {/* Exercise List */}
         <div className="mt-4 overflow-y-auto max-h-[calc(80vh-300px)]">
-          {filteredExercises.length > 0 ? (
-            <div className="grid gap-2">
-              {filteredExercises.map((exercise) => (
+          <div className="grid gap-2">
+            {/* Break option at the top */}
+            {showBreakOption && onBreakSelected && !searchQuery && (
+              <button
+                type="button"
+                onClick={handleBreakClick}
+                className="flex items-center gap-3 p-3 text-left bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-blue-200 dark:border-blue-900"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                  <Coffee className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-blue-900 dark:text-blue-100">Break</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">
+                    Rest period (10s default)
+                  </p>
+                </div>
+                <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </button>
+            )}
+
+            {/* Exercises */}
+            {filteredExercises.length > 0 ? (
+              filteredExercises.map((exercise) => (
                 <button
                   key={exercise.id}
                   type="button"
@@ -137,15 +170,15 @@ export function ExercisePickerDrawer({
                   </div>
                   <Plus className="h-4 w-4 text-muted-foreground" />
                 </button>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-muted-foreground">
-                {searchQuery ? "No exercises found" : "No exercises available"}
-              </p>
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <p className="text-muted-foreground">
+                  {searchQuery ? "No exercises found" : "No exercises available"}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

@@ -579,25 +579,25 @@ Redesign the sequence builder action bar as a modern floating dock with smooth a
 
 #### 16.1 Floating Dock Component
 
-- [ ] **Fixed Bottom Position** - Dock floats at bottom of screen (above navigation) like iOS/macOS dock
-- [ ] **Backdrop Blur Effect** - Semi-transparent background with `backdrop-filter: blur(12px)`
-- [ ] **Circular Icon Buttons** - Replace rectangular buttons with circular icon buttons
-- [ ] **Spring Animations** - Use Framer Motion with spring physics for expand/collapse
-- [ ] **Separator Lines** - Animated vertical dividers between action groups
+- [x] **Fixed Bottom Position** - Dock floats at bottom of screen (above navigation) like iOS/macOS dock
+- [x] **Backdrop Blur Effect** - Semi-transparent background with `backdrop-filter: blur(12px)`
+- [x] **Circular Icon Buttons** - Replace rectangular buttons with circular icon buttons
+- [x] **Spring Animations** - Use Framer Motion with spring physics for expand/collapse
+- [x] **Separator Lines** - Animated vertical dividers between action groups
 
 #### 16.2 Icon-based Action Design
 
 Primary actions (always visible):
 
-- [ ] **Select** - ✓ icon (checkmark) - Toggles selection mode
-- [ ] **Add** - + icon (plus) - Opens ExercisePickerDrawer with exercises AND breaks
+- [x] **Select** - ✓ icon (checkmark) - Toggles selection mode
+- [x] **Add** - + icon (plus) - Opens ExercisePickerDrawer with exercises AND breaks
 
 Selection actions (appear when items selected):
 
-- [ ] **Merge** - ⛓️ icon (link/chain) - Merge selected into group
-- [ ] **Clone** - 📋 icon (clipboard) - Duplicate selected items
-- [ ] **Configure** - ⚙️ icon (gear) - Configure selected items with badge count (e.g., "2")
-- [ ] **Delete** - 🗑️ icon (trash) - Delete selected items
+- [x] **Merge** - ⛓️ icon (link/chain) - Merge selected into group
+- [x] **Clone** - 📋 icon (clipboard) - Duplicate selected items
+- [x] **Configure** - ⚙️ icon (gear) - Configure selected items with badge count (e.g., "2")
+- [x] **Delete** - 🗑️ icon (trash) - Delete selected items
 
 #### 16.3 Dock States & Animations
 
@@ -614,33 +614,33 @@ Selection Active (expanded, ~300px width):
            ↑ badge shows count
 ```
 
-- [ ] **Smooth Expansion** - Dock expands left-to-right when entering selection mode
-- [ ] **Icon Animations** - Icons scale up on hover/press (1.1x)
-- [ ] **Badge Count** - Show selected count on Configure button
-- [ ] **Disabled States** - Gray out unavailable actions (e.g., Merge when < 2 selected)
+- [x] **Smooth Expansion** - Dock expands left-to-right when entering selection mode
+- [x] **Icon Animations** - Icons scale up on hover/press (1.1x)
+- [x] **Badge Count** - Show selected count on Configure button
+- [x] **Disabled States** - Gray out unavailable actions (e.g., Merge when < 2 selected)
 
 #### 16.4 Break as Special Exercise
 
-- [ ] **Break in Exercise List** - Add "Break" as a special item at the TOP of ExercisePickerDrawer list
-- [ ] **Visual Distinction** - Style break with Coffee icon (☕), different background color (e.g., blue-50)
-- [ ] **Default Config** - Breaks default to 30 seconds (time-based)
-- [ ] **Simplified Add** - Remove separate "Add Break" button, unify into single "Add" action
+- [x] **Break in Exercise List** - Add "Break" as a special item at the TOP of ExercisePickerDrawer list
+- [x] **Visual Distinction** - Style break with Coffee icon (☕), different background color (e.g., blue-50)
+- [x] **Default Config** - Breaks default to 10 seconds (time-based, hardcoded)
+- [x] **Simplified Add** - Remove separate "Add Break" button, unify into single "Add" action
 
 #### 16.5 Enhanced Interactions
 
-- [ ] **Click Outside to Cancel** - Clicking outside dock or list exits selection mode
-- [ ] **Keyboard Shortcuts** - Esc to cancel selection, Delete key for delete action
-- [ ] **Touch-friendly** - Larger touch targets (48px minimum) for mobile
-- [ ] **Haptic Feedback** - Vibration on action button press (if enabled in settings)
-- [ ] **Visual Feedback** - Active state glow/highlight on pressed buttons
+- [x] **Click Outside to Cancel** - Clicking outside dock or list exits selection mode
+- [x] **Keyboard Shortcuts** - Esc to cancel selection, Delete key for delete action
+- [x] **Touch-friendly** - Larger touch targets (48px minimum) for mobile
+- [x] **Haptic Feedback** - Vibration on action button press (if enabled in settings)
+- [x] **Visual Feedback** - Active state glow/highlight on pressed buttons
 
 #### 16.6 Visual Polish
 
-- [ ] **Gradient Background** - Subtle gradient in dock background
-- [ ] **Shadow/Elevation** - Depth with `box-shadow` to lift dock above content
-- [ ] **Hover Effects** - Tooltip labels appear above icons on hover
-- [ ] **Smooth Transitions** - All state changes use spring animations (stiffness: 300, damping: 30)
-- [ ] **Reduced Motion** - Respect `prefers-reduced-motion` for accessibility
+- [ ] **Gradient Background** - Subtle gradient in dock background (skipped - kept simple bg-background/95)
+- [x] **Shadow/Elevation** - Depth with `box-shadow` to lift dock above content
+- [ ] **Hover Effects** - Tooltip labels appear above icons on hover (future enhancement)
+- [x] **Smooth Transitions** - All state changes use spring animations (stiffness: 300, damping: 30)
+- [x] **Reduced Motion** - Respect `prefers-reduced-motion` for accessibility
 
 **Benefits:**
 
@@ -1109,6 +1109,179 @@ Place under Goal Type in Details tab:
 - `src/components/SequenceBuilder.tsx` - Details tab UI
 - `src/components/exercise-picker-drawer.tsx` - Use defaults
 - `src/validators/api/sequences.ts` - Update validators
+
+---
+
+### Phase 21: Unified Mode Dock (Message-Dock Pattern)
+
+Redesign the floating action dock to follow the message-dock pattern with distinct modes that expand when active.
+
+**Design Inspiration:** `src/components/ui/shadcn-io/message-dock/index.tsx`
+
+**Core Concept:** The dock shows available modes as icons. Clicking a mode activates it and expands the dock to show mode-specific content.
+
+#### 21.1 Mode-Based Architecture
+
+```
+Collapsed (all modes visible as icons):
+┌─────────────────────────────────────────┐
+│   [☐]     [+]     [?]     [≡]           │
+│  Select   Add    Help   Menu            │
+└─────────────────────────────────────────┘
+
+Expanded (Select mode active):
+┌─────────────────────────────────────────┐
+│ [☑]  [Merge] [Clone] [Config] [Delete]  │
+│  ↑ active mode indicator                │
+└─────────────────────────────────────────┘
+
+Expanded (Add mode active - vertical expansion):
+┌─────────────────────────────────────────┐
+│  [Search exercises...]                  │
+│  ┌─────────────────────────────────┐    │
+│  │ ☕ Break (10s default)          │    │
+│  │ 🧘 Downward Dog                 │    │
+│  │ 💪 Push-up                      │    │
+│  │ ...scrollable list...           │    │
+│  └─────────────────────────────────┘    │
+│  [30] [sec]  ← config wheels            │
+│─────────────────────────────────────────│
+│   [☐]    [+]     [?]     [≡]            │
+│          ↑ active                       │
+└─────────────────────────────────────────┘
+```
+
+- [ ] **Mode Icons** - Square (select), Plus (add), HelpCircle (help), Menu (options)
+- [ ] **Active State Indicator** - Highlighted background, filled icon variant
+- [ ] **Mode Switching** - Click inactive mode to switch, click active mode to collapse
+- [ ] **Smooth Transitions** - Spring animations for expand/collapse
+
+#### 21.2 Selection Mode Content
+
+When Selection mode is active:
+
+- [ ] **Checkbox Icon States** - `Square` when off, `CheckSquare` when on (not Check/X)
+- [ ] **Selection Actions Row** - Merge, Clone, Configure, Delete buttons
+- [ ] **Badge Counts** - Show selected count on Configure button
+- [ ] **Disabled States** - Gray out Merge when < 2 selected
+- [ ] **Visual Differentiation** - Actions use distinct colors/styles (not all same)
+
+#### 21.3 Add Exercise Mode Content
+
+When Add mode is active, dock expands vertically (like action-bar pattern):
+
+- [ ] **Inline Exercise Picker** - No separate drawer, content in expanded dock
+- [ ] **Search Input** - Filter exercises by name
+- [ ] **Break at Top** - Special "Break" item with Coffee icon, blue styling
+- [ ] **Scrollable Exercise List** - Max height with overflow scroll
+- [ ] **Compact Wheel Variant** - Smaller wheel components for constrained space
+- [ ] **Quick Add** - Tap exercise to add with current config
+- [ ] **Config Wheels** - Value and Unit wheels at bottom of expanded area
+
+#### 21.4 Help Mode Content
+
+When Help mode is active:
+
+- [ ] **Contextual Tips** - 2-3 sentences about current screen
+- [ ] **Feature Hints** - Explain what each mode does
+- [ ] **Expandable Sections** - "What are groups?", "What are modifiers?"
+- [ ] **Dismiss** - Tap outside or click Help again to close
+
+#### 21.5 Compact Wheel Component Variant
+
+New size variant for wheels to fit in constrained dock space:
+
+- [ ] **Size Prop** - `size="compact" | "default" | "large"`
+- [ ] **Compact Dimensions** - Reduced height (h-24 vs h-32)
+- [ ] **Smaller Font** - Proportionally scaled text
+- [ ] **Touch Targets** - Maintain 44px minimum despite smaller visuals
+
+#### 21.6 Technical Implementation
+
+- [ ] **Refactor FloatingActionDock** - Support multiple modes with expandable content
+- [ ] **Mode State Management** - `activeMode: 'select' | 'add' | 'help' | null`
+- [ ] **Content Slots** - Pass mode-specific content as children/props
+- [ ] **Height Animation** - Animate max-height for vertical expansion
+- [ ] **Keyboard Support** - Tab between modes, Escape to collapse
+
+**Files to Modify/Create:**
+
+- `src/components/ui/floating-action-dock.tsx` - Major refactor
+- `src/components/ui/wheel-number-input.tsx` - Add compact variant
+- `src/components/ui/wheel-select.tsx` - Add compact variant
+- `src/components/SequenceBuilder.tsx` - Integrate new dock
+
+---
+
+### Phase 22: Execution Control Dock
+
+Add a floating dock to the workout execution screen for unified navigation and control.
+
+**User Stories:**
+
+1. "I want quick access to pause/resume without looking for the button"
+2. "I accidentally completed an exercise - let me go back"
+3. "I want to add an exercise mid-workout easily"
+
+#### 22.1 Execution Dock Layout
+
+```
+┌─────────────────────────────────────────────────────┐
+│  [←]    [⏸️/▶️]    [✓]    [+]    [→]                │
+│  prev   pause     done   add   next                 │
+└─────────────────────────────────────────────────────┘
+```
+
+- [ ] **Previous Button** - Navigate to previous exercise (enter review mode)
+- [ ] **Pause/Play Toggle** - Pause timer, show paused state
+- [ ] **Done/Complete Button** - Mark current exercise as complete
+- [ ] **Add Exercise Button** - Insert exercise after current (existing feature)
+- [ ] **Next Button** - Skip to next exercise (with confirmation if not completed)
+
+#### 22.2 Button States & Feedback
+
+- [ ] **Previous Disabled** - Gray out when at first exercise
+- [ ] **Next Disabled** - Gray out when at last exercise
+- [ ] **Done Highlight** - Pulse/glow when timer complete (time-based exercises)
+- [ ] **Pause State** - Visual indicator when paused (icon change, color shift)
+- [ ] **Haptic Feedback** - Vibration on button press
+
+#### 22.3 Navigation Confirmation
+
+- [ ] **Skip Confirmation** - "Skip this exercise?" dialog when pressing Next without completing
+- [ ] **Review Mode Integration** - Previous button enters review mode (from Phase 18.1)
+- [ ] **Quick Redo** - Long-press Previous to redo current exercise
+
+#### 22.4 Dock Position & Styling
+
+- [ ] **Fixed Bottom** - Always visible above safe area
+- [ ] **Backdrop Blur** - Semi-transparent with blur
+- [ ] **Shadow/Elevation** - Lifted above content
+- [ ] **Responsive Width** - Full width on mobile, centered max-width on tablet
+
+#### 22.5 Integration with Existing Controls
+
+- [ ] **Remove Scattered Buttons** - Consolidate existing prev/next/done buttons into dock
+- [ ] **Timer Display** - Keep timer prominent in main content area
+- [ ] **Exercise Info** - Keep exercise name/details in main area
+- [ ] **Segmented Progress** - Progress bar sits above dock (from Phase 18.1)
+
+**Files to Modify/Create:**
+
+- `src/components/ui/execution-dock.tsx` - New component
+- `src/routes/sequences/$id/execute.tsx` - Integrate dock, remove old controls
+
+---
+
+### Phase 16.7: Quick Fixes (Checkbox Icons) ✅
+
+Address immediate UX issues in current floating dock:
+
+- [x] **Selection Icon Fix** - Change `Check`/`X` to `Square`/`CheckSquare`
+- [x] **Icon Meaning** - Empty square = "enter selection", Checked square = "in selection mode"
+- [x] **Consistent Semantics** - Checkbox pattern matches common file manager UX
+
+**Files**: `src/components/ui/floating-action-dock.tsx`
 
 ---
 

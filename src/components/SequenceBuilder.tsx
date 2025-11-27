@@ -68,8 +68,6 @@ import {
   MoreHorizontal,
   Copy,
   Check,
-  CheckSquare,
-  X,
   Ungroup,
   FileText,
   ListOrdered,
@@ -82,7 +80,7 @@ import type {
 } from "@/db/types";
 import type { Modifier } from "@/validators/entities";
 import { cn } from "@/lib/utils";
-import { BatchActionsBar } from "@/components/batch-actions-bar";
+import { FloatingActionDock } from "@/components/ui/floating-action-dock";
 import { EmptyState } from "@/components/empty-state";
 
 type SequenceBuilderProps = {
@@ -1457,60 +1455,18 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         </TabsContent>
 
         {/* Exercises Tab */}
-        <TabsContent value="exercises" className={cn("flex-1 p-1 mt-0 flex flex-col min-h-0", selectionMode && "pb-20")}>
-          <div className="flex flex-wrap gap-2 shrink-0">
-            {exercises.length > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                isActive={selectionMode}
-                onClick={() => {
-                  setSelectionMode((v) => !v);
-                  // Clear selections when exiting selection mode
-                  if (selectionMode) {
-                    setSelectedItems(new Set());
-                  }
-                }}
-              >
-                {selectionMode ? (
-                  <X className="h-4 w-4 mr-2" />
-                ) : (
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                )}
-                {selectionMode ? "Selecting..." : "Select"}
-              </Button>
-            )}
-            {/* Add Break and Add Exercise buttons - hidden in selection mode */}
-            {!selectionMode && (
-                              <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addBreak()}
-                            >
-                              <Coffee className="h-4 w-4 mr-2" />
-                              Add Break
-                            </Button>
-            )}
-            {!selectionMode && (
-              <>
-                <Button type="button" size="sm" onClick={() => setExercisePickerOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Exercise
-                </Button>
-
-                <ExercisePickerDrawer
-                  open={exercisePickerOpen}
-                  onOpenChange={setExercisePickerOpen}
-                  onExerciseSelected={handleExerciseSelected}
-                  title="Select Exercise"
-                  description="Choose an exercise to add to your sequence"
-                  initialConfig={{ targetValue: defaultTargetValue, measure: defaultMeasure }}
-                />
-              </>
-            )}
-          </div>
+        <TabsContent value="exercises" className={cn("flex-1 p-1 mt-0 flex flex-col min-h-0", "pb-24")}>
+          {/* Exercise Picker Drawer - always mounted, controlled by open state */}
+          <ExercisePickerDrawer
+            open={exercisePickerOpen}
+            onOpenChange={setExercisePickerOpen}
+            onExerciseSelected={handleExerciseSelected}
+            onBreakSelected={() => addBreak()}
+            showBreakOption={true}
+            title="Add to Sequence"
+            description="Select an exercise or break to add"
+            initialConfig={{ targetValue: defaultTargetValue, measure: defaultMeasure }}
+          />
 
           {/* Scrollable exercise list */}
           <div className="flex-1 overflow-y-auto mt-3 min-h-0">
@@ -1580,16 +1536,23 @@ export function SequenceBuilder({ sequenceId }: SequenceBuilderProps) {
         )}
           </div>
 
-        {/* Batch action buttons (floating) */}
-        {selectionMode && (
-          <BatchActionsBar
-            selectedCount={effectiveSelectionCount}
-            onClone={batchCloneSelected}
-            onConfigure={() => setIsBatchConfigOpen(true)}
-            onDelete={batchDeleteSelected}
-            onMerge={effectiveSelectionCount >= 2 ? mergeSelectedIntoGroup : undefined}
-          />
-        )}
+        {/* Floating Action Dock */}
+        <FloatingActionDock
+          selectionMode={selectionMode}
+          onToggleSelectionMode={() => {
+            setSelectionMode((v) => !v);
+            if (selectionMode) {
+              setSelectedItems(new Set());
+            }
+          }}
+          selectedCount={effectiveSelectionCount}
+          onAdd={() => setExercisePickerOpen(true)}
+          onMerge={mergeSelectedIntoGroup}
+          onClone={batchCloneSelected}
+          onConfigure={() => setIsBatchConfigOpen(true)}
+          onDelete={batchDeleteSelected}
+          canMerge={effectiveSelectionCount >= 2}
+        />
         </TabsContent>
       </Tabs>
 
