@@ -1289,16 +1289,16 @@ Address immediate UX issues in current floating dock:
 
 Quick fixes and improvements to the workout execution experience.
 
-#### 23.1 Modifier Badges Bug Fix (CRITICAL)
+#### 23.1 Modifier Badges Bug Fix (CRITICAL) ✅
 
 **Problem**: Sequence has `availableModifiers` (e.g., "Guma 25kg", "Guma 15kg") but during workout execution, modifier toggle badges don't appear. The current code only shows modifiers if they're assigned per-exercise (`currentExercise.modifiers`), not sequence-level available modifiers.
 
 **Solution**: Show sequence-level available modifiers for ALL exercises during workout, allowing user to toggle any available modifier on/off dynamically.
 
-- [ ] **Fallback to Sequence Modifiers** - If exercise has no assigned modifiers, show all `sequence.availableModifiers`
-- [ ] **Dynamic Toggle** - User can toggle any available modifier on/off during any exercise
-- [ ] **Visual Distinction** - Pre-assigned modifiers appear selected by default, available modifiers appear unselected
-- [ ] **Effect Colors** - Keep easier (green), harder (red), neutral (blue) color coding
+- [x] **Fallback to Sequence Modifiers** - If exercise has no assigned modifiers, show all `sequence.availableModifiers`
+- [x] **Dynamic Toggle** - User can toggle any available modifier on/off during any exercise
+- [x] **Visual Distinction** - Pre-assigned modifiers appear selected by default, available modifiers appear unselected (label changes to "Available Equipment")
+- [x] **Effect Colors** - Keep easier (green), harder (red), neutral (blue) color coding + dark mode support
 
 **Files**: `src/routes/sequences/$id/execute.tsx`
 

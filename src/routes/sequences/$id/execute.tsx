@@ -705,69 +705,86 @@ function ExecuteSequenceContent({ sequenceId }: { sequenceId: number }) {
           {sequence?.goal || 'elastic'} goal
         </p>
 
-        {/* Active modifiers (only show if exercise has assigned modifiers) */}
-        {!isBreak && currentExercise.modifiers && currentExercise.modifiers.length > 0 && (
-          <div className="w-full max-w-sm md:max-w-md">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Package2 className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Active Equipment</span>
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {currentExercise.modifiers.map((assignment) => {
-                const modifier = allModifiers?.find((m) => m.id === assignment.modifierId)
-                if (!modifier) return null
+        {/* Available modifiers - always show ALL sequence-level modifiers */}
+        {!isBreak && (() => {
+          // Always show sequence-level availableModifiers
+          // Exercise-level assignments determine which are pre-selected and their effect colors
+          const exerciseModifiers = currentExercise.modifiers || []
+          const sequenceAvailableModifiers = (sequence as any)?.availableModifiers as number[] | undefined
 
-                const isActive = activeModifiers.some((am) => am.modifierId === assignment.modifierId)
-                const effect = assignment.effect || 'neutral'
-                const effectColor = effect === 'easier'
-                  ? 'border-green-600 bg-green-50 text-green-700'
-                  : effect === 'harder'
-                  ? 'border-red-600 bg-red-50 text-red-700'
-                  : 'border-blue-600 bg-blue-50 text-blue-700'
+          if (!sequenceAvailableModifiers || sequenceAvailableModifiers.length === 0) return null
 
-                return (
-                  <button
-                    key={assignment.modifierId}
-                    type="button"
-                    onClick={() => {
-                      if (isActive) {
-                        // Remove modifier
-                        setActiveModifiers((prev) =>
-                          prev.filter((am) => am.modifierId !== assignment.modifierId)
-                        )
-                      } else {
-                        // Add modifier with its value
-                        const val = modifier.value !== null && modifier.value !== undefined
-                          ? `${modifier.value}${modifier.unit && modifier.unit !== 'none' && modifier.unit !== 'level' ? modifier.unit : ''}`
-                          : undefined
-                        setActiveModifiers((prev) => [
-                          ...prev,
-                          { modifierId: assignment.modifierId, value: val },
-                        ])
-                      }
-                    }}
-                    className={`
-                      flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 transition-all
-                      ${isActive
-                        ? effectColor
-                        : 'border-transparent bg-muted text-muted-foreground opacity-50'
-                      }
-                    `}
-                  >
-                    {isActive && <Check className="h-3 w-3" />}
-                    <span className="text-sm font-medium">
-                      {[
-                        modifier.name,
-                        modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
-                        modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
-                      ].filter(Boolean).join(' ')}
-                    </span>
-                  </button>
-                )
-              })}
+          // Check if any modifiers are pre-assigned to this exercise
+          const hasPreAssigned = exerciseModifiers.length > 0
+
+          return (
+            <div className="w-full max-w-sm md:max-w-md">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Package2 className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  {hasPreAssigned ? 'Equipment' : 'Available Equipment'}
+                </span>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {sequenceAvailableModifiers.map((modifierId) => {
+                  const modifier = allModifiers?.find((m) => m.id === modifierId)
+                  if (!modifier) return null
+
+                  const isActive = activeModifiers.some((am) => am.modifierId === modifierId)
+
+                  // Check if this modifier is pre-assigned to the exercise (for effect color)
+                  const exerciseAssignment = exerciseModifiers.find((em) => em.modifierId === modifierId)
+                  const effect = exerciseAssignment?.effect || 'neutral'
+
+                  // Use effect color if pre-assigned, otherwise default blue
+                  const activeColor = effect === 'easier'
+                    ? 'border-green-600 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300'
+                    : effect === 'harder'
+                    ? 'border-red-600 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300'
+                    : 'border-blue-600 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+
+                  return (
+                    <button
+                      key={modifierId}
+                      type="button"
+                      onClick={() => {
+                        if (isActive) {
+                          setActiveModifiers((prev) =>
+                            prev.filter((am) => am.modifierId !== modifierId)
+                          )
+                        } else {
+                          const val = modifier.value !== null && modifier.value !== undefined
+                            ? `${modifier.value}${modifier.unit && modifier.unit !== 'none' && modifier.unit !== 'level' ? modifier.unit : ''}`
+                            : undefined
+                          setActiveModifiers((prev) => [
+                            ...prev,
+                            { modifierId: modifierId, value: val },
+                          ])
+                        }
+                      }}
+                      className={`
+                        flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 transition-all
+                        ${isActive
+                          ? activeColor
+                          : 'border-transparent bg-muted text-muted-foreground opacity-50'
+                        }
+                      `}
+                    >
+                      {isActive && <Check className="h-3 w-3" />}
+                      <span className="text-sm font-medium">
+                        {[
+                          modifier.name,
+                          modifier.value !== null && modifier.value !== undefined ? modifier.value : null,
+                          modifier.unit && modifier.unit !== 'none' ? modifier.unit : null,
+                        ].filter(Boolean).join(' ')}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
       </main>
 
       {/* Controls */}
