@@ -1938,6 +1938,110 @@ Collection of game-inspired UI components for workout execution.
 
 ---
 
+### Phase 31: Tablet Responsiveness & Layout Fixes
+
+Address layout issues discovered on iPad Air and other tablet devices.
+
+#### 31.1 Sidebar Orientation-Aware Layout
+
+**Problem**: On iPad in portrait mode, the full desktop sidebar is shown, taking up valuable horizontal space. Users need to scroll to see content.
+
+- [ ] **Orientation Detection** - Detect viewport orientation (portrait vs landscape)
+- [ ] **Portrait Mode** - Use mobile sidebar (collapsed/drawer) in portrait orientation
+- [ ] **Landscape Mode** - Use desktop sidebar in landscape orientation
+- [ ] **Breakpoint Logic** - Consider both screen width AND orientation for sidebar variant
+
+**Implementation Options**:
+1. CSS media queries: `@media (orientation: portrait)` combined with width
+2. JS hook: `useOrientation()` hook returning 'portrait' | 'landscape'
+3. Tailwind plugin for orientation variants
+
+**Files**: `src/components/app-sidebar.tsx`, `src/routes/__root.tsx`
+
+#### 31.2 Execute Screen Tablet Layout
+
+**Problem**: On iPad Air portrait, the execute screen requires scrolling to see the dock. The game components (EquipmentGrid + GameCounter/Timer) should fit without scrolling.
+
+- [ ] **Viewport Height** - Ensure main content + dock fits in `100dvh`
+- [ ] **Component Scaling** - Scale down game components on tablet portrait
+- [ ] **Dock Visibility** - Dock must always be visible without scrolling
+- [ ] **Safe Area** - Respect iOS safe areas for notch/home indicator
+
+**Files**: `src/routes/sequences/$id/execute.tsx`
+
+#### 31.3 Sequence Card Tablet Layout
+
+**Problem**: On tablet, the sequence card buttons (Start, View, Edit) overflow or don't fit properly.
+
+- [ ] **Card Width** - Review card min/max width on tablet
+- [ ] **Button Layout** - Stack buttons vertically on narrow cards, or use icon-only variant
+- [ ] **Grid Columns** - Adjust sequence grid from 2 columns to 1 on portrait tablet
+
+**Files**: `src/routes/sequences/index.tsx`, card components
+
+#### 31.4 Dock Centering Fix
+
+**Problem**: In sequence builder, the dock doesn't appear horizontally centered.
+
+- [ ] **Review Centering** - Check `left-1/2 -translate-x-1/2` is applied correctly
+- [ ] **Container Width** - Ensure parent container allows full-width centering
+- [ ] **Z-index/Stacking** - Verify dock isn't being pushed by sibling elements
+
+**Files**: `src/components/ui/dock.tsx`, `src/components/SequenceBuilder.tsx`
+
+---
+
+### Phase 32: Performance Optimizations
+
+Critical performance issues affecting user experience.
+
+#### 32.1 History Pagination (CRITICAL)
+
+**Problem**: `executions.getHistory` takes 10+ seconds to complete. This is unacceptable for UX.
+
+**Current**: Fetches all execution history at once.
+**Target**: First page loads in <300ms.
+
+- [ ] **Cursor-based Pagination** - Implement cursor pagination in tRPC procedure
+- [ ] **Infinite Scroll UI** - Use TanStack Query's `useInfiniteQuery` for progressive loading
+- [ ] **Page Size** - Start with 10-20 items per page
+- [ ] **Loading States** - Show skeleton while loading next page
+- [ ] **Total Count** - Optionally show "X of Y workouts" without fetching all
+
+**API Changes**:
+```typescript
+// Before
+getHistory: protectedProcedure.query(...)
+
+// After
+getHistory: protectedProcedure
+  .input(z.object({
+    cursor: z.string().optional(),
+    limit: z.number().min(1).max(50).default(20),
+  }))
+  .query(async ({ ctx, input }) => {
+    // Return { items, nextCursor }
+  })
+```
+
+**Files**:
+- `src/server/api/routers/executions.ts` - Add pagination
+- `src/routes/history/index.tsx` - Implement infinite scroll
+
+#### 32.2 Query Optimization
+
+- [ ] **Database Indexes** - Review indexes on `sequenceExecutions` table
+- [ ] **Select Optimization** - Only select needed columns, not full rows
+- [ ] **Lazy Loading** - Defer loading of detailed stats until needed
+
+#### 32.3 Future Optimizations
+
+- [ ] **SSR for History** - Server-render first page for instant display
+- [ ] **Stale-While-Revalidate** - Show cached data while fetching fresh
+- [ ] **Virtual Scrolling** - For very long lists, use virtualization
+
+---
+
 ## Notes
 
 - All user data is scoped by `userId` for privacy
